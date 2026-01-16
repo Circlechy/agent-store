@@ -1,0 +1,2 @@
+filelock>=3.10.2
+openjiuwen @ git+https://gitcode.com/SushiNinja/agent-core-contrib.git@stable-knowledge-base
