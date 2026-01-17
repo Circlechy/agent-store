@@ -91,7 +91,7 @@ class PEPKnowledgeBase:
         )
         self.embed_model = APIEmbedding(
             config=embedding_config,
-            max_retries=3,
+            max_retries=10,
             timeout=60,
         )
 
@@ -245,21 +245,6 @@ class PEPKnowledgeBase:
             retrieval_logger.info("✓ Successfully indexed %d PEP documents", len(doc_ids))
         except Exception as e:
             retrieval_logger.warning("Batch add failed: %r", e)
-            # Fallback: try adding individually
-            for doc in documents:
-                try:
-                    doc_ids = await self.knowledge_base.add_documents([doc])
-                    if doc_ids:
-                        stats["added"].extend(doc_ids)
-                except Exception:
-                    # If add fails, might already exist, try update
-                    try:
-                        updated_ids = await self.knowledge_base.update_documents([doc])
-                        if updated_ids:
-                            stats["updated"].extend(updated_ids)
-                    except Exception:
-                        pep_num = doc.metadata.get("pep_number", "unknown")
-                        retrieval_logger.error("Error adding/updating PEP %s", pep_num)
 
         return stats
 

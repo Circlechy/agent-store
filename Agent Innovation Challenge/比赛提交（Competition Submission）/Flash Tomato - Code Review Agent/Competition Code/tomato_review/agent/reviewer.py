@@ -1,0 +1,961 @@
+"""ReviewerAgent: Agent for code review using pylint and PEP knowledge base.
+
+This agent runs pylint on files, generates questions about errors, searches PEPs
+via SearcherAgent, and generates comprehensive markdown reports.
+"""
+
+import re
+import subprocess
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from openjiuwen.core.common.schema.param import Param
+from openjiuwen.core.single_agent.agents.react_agent import ReActAgent, ReActAgentConfig
+from openjiuwen.core.single_agent.schema.agent_card import AgentCard
+from tomato_review.agent.fixer import FixerAgent
+from tomato_review.agent.searcher import SearcherAgent
+from tomato_review.agent.utils import (
+    backup_file,
+    normalize_filename,
+    parse_pylint_output,
+    setup_file_logger,
+    setup_tomato_directories,
+)
+
+
+class ReviewerAgent(ReActAgent):
+    """Agent for code review using pylint and PEP knowledge base.
+
+    This agent:
+    1. Runs pylint on a list of files one-by-one
+    2. For each file's errors, prepares questions requiring PEP checks
+    3. Dispatches questions to SearcherAgent to search PEPs
+    4. Proposes changes for each error
+    5. Generates full markdown report for each file
+    """
+
+    def __init__(
+        self,
+        card: Optional[AgentCard] = None,
+        searcher_agent: Optional[SearcherAgent] = None,
+        fixer_agent: Optional[FixerAgent] = None,
+        config: Optional[ReActAgentConfig] = None,
+        generate_fixed_files: bool = True,
+    ):
+        """Initialize ReviewerAgent.
+
+        Args:
+            card: Agent card (will be created with defaults if not provided)
+            searcher_agent: SearcherAgent instance (will be created if not provided)
+            fixer_agent: FixerAgent instance (will be created if not provided)
+            config: ReActAgentConfig (will be created with defaults if not provided)
+            generate_fixed_files: Whether to automatically generate fixed files (default: True)
+        """
+        # Create default card if not provided
+        if card is None:
+            card = AgentCard(
+                name="reviewer_agent",
+                description=(
+                    "Agent for code review using pylint and PEP knowledge base. "
+                    "Runs pylint on files, generates questions about errors, searches PEPs, "
+                    "and generates comprehensive markdown reports."
+                ),
+                input_params=[
+                    Param.array(
+                        name="files",
+                        description="List of file paths to review",
+                        required=True,
+                        items=Param.string(
+                            name="file_path",
+                            description="Path to a Python file to review",
+                            required=True,
+                        ),
+                    ),
+                ],
+            )
+
+        # Initialize parent
+        super().__init__(card)
+
+        # Set up tomato directories
+        self._tomato_dirs = setup_tomato_directories()
+
+        # Store searcher agent
+        self._searcher_agent = searcher_agent
+
+        # Store fixer agent
+        self._fixer_agent = fixer_agent
+        self._generate_fixed_files = generate_fixed_files
+
+        # File loggers will be created per-file in invoke
+        self._file_loggers = {}
+
+        # Add searcher agent as an ability if provided
+        if searcher_agent is not None:
+            searcher_card = AgentCard(
+                name="searcher_agent",
+                description=searcher_agent.card.description,
+                input_params=searcher_agent.card.input_params,
+            )
+            self.add_ability(searcher_card)
+
+        # Configure agent if config provided
+        if config is not None:
+            self.configure(config)
+        else:
+            # Set default configuration
+            default_config = ReActAgentConfig()
+            self.configure(default_config)
+
+    async def _run_pylint(self, file_path: str) -> Dict[str, Any]:
+        """Run pylint on a file and return results.
+
+        Args:
+            file_path: Path to the Python file
+
+        Returns:
+            Dict with 'stdout', 'stderr', 'returncode', and parsed 'errors'
+        """
+        try:
+            # Run pylint
+            result = subprocess.run(
+                ["pylint", file_path, "--output-format=text"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,  # Don't raise exception on non-zero exit
+            )
+
+            # Parse errors from output
+            errors = parse_pylint_output(result.stdout)
+
+            return {
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "returncode": result.returncode,
+                "errors": errors,
+            }
+        except subprocess.TimeoutExpired:
+            return {
+                "stdout": "",
+                "stderr": "pylint execution timed out",
+                "returncode": -1,
+                "errors": [],
+            }
+        except FileNotFoundError:
+            return {
+                "stdout": "",
+                "stderr": "pylint not found. Please install pylint: pip install pylint",
+                "returncode": -1,
+                "errors": [],
+            }
+        except Exception as e:
+            return {
+                "stdout": "",
+                "stderr": f"Error running pylint: {str(e)}",
+                "returncode": -1,
+                "errors": [],
+            }
+
+    def _generate_pep_questions(self, errors: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        """Generate questions about errors that require PEP checks.
+
+        Args:
+            errors: List of parsed pylint errors
+
+        Returns:
+            List of question dicts with 'error', 'question', 'code_snippet'
+        """
+        questions = []
+
+        for error in errors:
+            error_type = error.get("type", "")
+            code = error.get("code", "")
+            message = error.get("message", "")
+            symbol = error.get("symbol", "")
+
+            # Generate question based on error type and code
+            question = None
+            code_snippet = None
+
+            # Type-related errors
+            if error_type == "C" or "type" in message.lower() or "typing" in message.lower():
+                question = f"What are the PEP guidelines for type hints related to: {message}?"
+                code_snippet = f"Error: {message} (code: {code})"
+
+            # Naming convention errors
+            elif "naming" in message.lower() or "name" in message.lower():
+                question = f"What are the PEP 8 naming conventions for: {message}?"
+                code_snippet = f"Error: {message} (code: {code})"
+
+            # Style errors
+            elif error_type == "W" or "style" in message.lower():
+                question = f"What are the PEP 8 style guidelines for: {message}?"
+                code_snippet = f"Error: {message} (code: {code})"
+
+            # Import errors
+            elif "import" in message.lower():
+                question = f"What are the PEP guidelines for import statements: {message}?"
+                code_snippet = f"Error: {message} (code: {code})"
+
+            # Docstring errors
+            elif "docstring" in message.lower() or "doc" in message.lower():
+                question = f"What are the PEP 257 docstring conventions for: {message}?"
+                code_snippet = f"Error: {message} (code: {code})"
+
+            # Generic question for other errors
+            else:
+                question = f"What are the Python PEP best practices for: {message}?"
+                code_snippet = f"Error: {message} (code: {code}, symbol: {symbol})"
+
+            if question:
+                questions.append(
+                    {
+                        "error": error,
+                        "question": question,
+                        "code_snippet": code_snippet,
+                    }
+                )
+
+        return questions
+
+    async def _search_peps(self, question: str, code_snippet: Optional[str] = None) -> str:
+        """Search PEPs using SearcherAgent.
+
+        Args:
+            question: Question to search
+            code_snippet: Optional code snippet
+
+        Returns:
+            Search summary string
+        """
+        if self._searcher_agent is None:
+            # Create searcher agent if not provided
+            self._searcher_agent = SearcherAgent()
+
+        # Call searcher agent
+        inputs = {
+            "query": question,
+            "code_snippet": code_snippet or "",
+        }
+
+        result = await self._searcher_agent.invoke(inputs)
+        return result.get("output", "No results found.")
+
+    def _read_file_context(self, file_path: str, line_num: int, context_lines: int = 3) -> Dict[str, Any]:
+        """Read file content with context around a specific line.
+
+        Args:
+            file_path: Path to the file
+            line_num: Line number (1-indexed)
+            context_lines: Number of lines before and after to include
+
+        Returns:
+            Dict with 'original_line', 'context_before', 'context_after', 'full_context'
+        """
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+
+            # Convert to 0-indexed
+            line_idx = line_num - 1
+
+            if line_idx < 0 or line_idx >= len(lines):
+                return {
+                    "original_line": "",
+                    "context_before": [],
+                    "context_after": [],
+                    "full_context": "",
+                }
+
+            # Get context window
+            start_idx = max(0, line_idx - context_lines)
+            end_idx = min(len(lines), line_idx + context_lines + 1)
+
+            context_before = lines[start_idx:line_idx]
+            original_line = lines[line_idx] if line_idx < len(lines) else ""
+            context_after = lines[line_idx + 1 : end_idx]
+
+            # Build full context with line numbers
+            full_context_lines = []
+            for i in range(start_idx, end_idx):
+                line_num_display = i + 1
+                prefix = ">>>" if i == line_idx else "   "
+                full_context_lines.append(f"{prefix} {line_num_display:4d} | {lines[i].rstrip()}")
+
+            return {
+                "original_line": original_line.rstrip(),
+                "context_before": [line.rstrip() for line in context_before],
+                "context_after": [line.rstrip() for line in context_after],
+                "full_context": "\n".join(full_context_lines),
+                "line_number": line_num,
+            }
+        except Exception as e:
+            return {
+                "original_line": "",
+                "context_before": [],
+                "context_after": [],
+                "full_context": f"Error reading file: {e}",
+            }
+
+    def _generate_code_fix(self, error: Dict[str, str], original_line: str, pep_summary: str) -> str:
+        """Generate a code fix suggestion based on error and PEP guidelines.
+
+        Args:
+            error: Error dict
+            original_line: Original line of code
+            pep_summary: PEP search summary
+
+        Returns:
+            Suggested fixed code line
+        """
+        message = error.get("message", "").lower()
+        code = error.get("code", "")
+        symbol = error.get("symbol", "")
+
+        # Try to generate fix based on error type
+        fixed_line = original_line
+
+        # Naming convention fixes
+        if "naming" in message or "invalid-name" in symbol:
+            if "constant" in message and "uppercase" in message:
+                # Convert constant to UPPER_CASE
+                # Extract variable name and convert
+                var_match = re.search(r'["\']?(\w+)["\']?', original_line)
+                if var_match:
+                    var_name = var_match.group(1)
+                    upper_name = var_name.upper().replace("-", "_")
+                    fixed_line = original_line.replace(var_name, upper_name)
+            elif "function" in message and "snake_case" in message:
+                # Convert function name to snake_case
+                func_match = re.search(r"def\s+(\w+)", original_line)
+                if func_match:
+                    func_name = func_match.group(1)
+                    snake_name = re.sub(r"(?<!^)(?=[A-Z])", "_", func_name).lower()
+                    fixed_line = original_line.replace(func_name, snake_name)
+            elif "class" in message and "pascalcase" in message:
+                # Convert class name to PascalCase
+                class_match = re.search(r"class\s+(\w+)", original_line)
+                if class_match:
+                    class_name = class_match.group(1)
+                    # Convert snake_case or mixed to PascalCase
+                    pascal_name = "".join(word.capitalize() for word in class_name.split("_"))
+                    fixed_line = original_line.replace(class_name, pascal_name)
+
+        # Type hint fixes
+        elif "type" in message or code.startswith("C"):
+            # This is more complex, would need AST parsing
+            # For now, just indicate that type hints should be added
+            pass
+
+        # Import fixes
+        elif "import" in message:
+            # Would need to reorganize imports
+            pass
+
+        return fixed_line if fixed_line != original_line else original_line
+
+    def _propose_changes(
+        self, error: Dict[str, str], pep_summary: str, code_context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Propose changes for an error based on PEP summary.
+
+        Args:
+            error: Error dict
+            pep_summary: PEP search summary
+            code_context: Optional code context from file
+
+        Returns:
+            Dict with 'description', 'original_code', 'fixed_code', 'pep_reference'
+        """
+        error_type = error.get("type", "")
+        message = error.get("message", "")
+        line = error.get("line", 0)
+        code = error.get("code", "")
+
+        # Extract PEP numbers and URLs from summary
+        pep_refs = []  # List of dicts with 'number' and 'url'
+        if "PEP" in pep_summary:
+            # Extract PEP numbers
+            pep_matches = re.findall(r"PEP\s+(\d+)", pep_summary)
+            # Extract URLs (looking for pep_url in the summary)
+            url_matches = re.findall(r"URL:\s*(https?://[^\s]+)", pep_summary)
+
+            # Match PEP numbers with URLs
+            pep_dict = {}
+            for pep_num in pep_matches:
+                if pep_num not in pep_dict:
+                    pep_dict[pep_num] = None
+
+            # Try to match URLs with PEP numbers (URLs often contain PEP number)
+            for url in url_matches:
+                url_pep_match = re.search(r"pep-?(\d+)", url, re.IGNORECASE)
+                if url_pep_match:
+                    pep_num = url_pep_match.group(1)
+                    if pep_num in pep_dict:
+                        pep_dict[pep_num] = url
+
+            # Also look for explicit URL patterns in the summary
+            for pep_num in pep_dict.keys():
+                # Look for URL on same line or nearby mentioning this PEP
+                pattern = rf"PEP\s+{pep_num}[^\n]*\n[^\n]*URL:\s*(https?://[^\s]+)"
+                match = re.search(pattern, pep_summary)
+                if match and not pep_dict[pep_num]:
+                    pep_dict[pep_num] = match.group(1)
+
+            # Build list of PEP references
+            for pep_num, url in pep_dict.items():
+                if url:
+                    pep_refs.append({"number": pep_num, "url": url})
+                else:
+                    # Default PEP URL format (zero-padded to 4 digits)
+                    pep_num_int = int(pep_num)
+                    pep_refs.append({"number": pep_num, "url": f"https://peps.python.org/pep-{pep_num_int:04d}/"})
+
+        # Deduplicate by PEP number
+        seen = set()
+        unique_pep_refs = []
+        for ref in pep_refs:
+            if ref["number"] not in seen:
+                seen.add(ref["number"])
+                unique_pep_refs.append(ref)
+
+        pep_ref = ""
+        if unique_pep_refs:
+            pep_nums = [ref["number"] for ref in unique_pep_refs]
+            pep_ref = f" (see PEP {', '.join(pep_nums)})"
+
+        # Get code context if available
+        original_code = ""
+        fixed_code = ""
+        code_snippet = ""
+
+        if code_context:
+            original_code = code_context.get("original_line", "")
+            code_snippet = code_context.get("full_context", "")
+            fixed_code = self._generate_code_fix(error, original_code, pep_summary)
+
+        # Generate description
+        description = f"**Line {line}** ({code}): {message}\n\n"
+        description += f"**Issue**: Based on PEP guidelines{pep_ref}, "
+
+        # Add specific suggestions based on error type
+        if error_type == "C":
+            description += "ensure proper type hints are used."
+        elif "naming" in message.lower():
+            description += "follow PEP 8 naming conventions."
+        elif error_type == "W":
+            description += "follow PEP 8 style guidelines."
+        elif "import" in message.lower():
+            description += "organize imports according to PEP 8."
+        elif "docstring" in message.lower():
+            description += "add or fix docstrings according to PEP 257."
+        else:
+            description += "address the issue according to Python best practices."
+
+        return {
+            "description": description,
+            "original_code": original_code,
+            "fixed_code": fixed_code,
+            "code_snippet": code_snippet,
+            "pep_references": unique_pep_refs,  # List of dicts with 'number' and 'url'
+            "line": line,
+            "code": code,
+            "message": message,
+        }
+
+    async def _review_file(self, file_path: str) -> Dict[str, Any]:
+        """Review a single file and generate report.
+
+        Args:
+            file_path: Path to the file to review
+
+        Returns:
+            Dict with 'file_path', 'errors', 'questions', 'pep_results', 'proposed_changes', 'report'
+        """
+        # Check if file exists
+        if not Path(file_path).exists():
+            return {
+                "file_path": file_path,
+                "errors": [],
+                "questions": [],
+                "pep_results": {},
+                "proposed_changes": [],
+                "report": f"# Code Review Report: {file_path}\n\n**Error**: File not found.",
+            }
+
+        # Run pylint
+        pylint_result = await self._run_pylint(file_path)
+        errors = pylint_result.get("errors", [])
+
+        if not errors:
+            return {
+                "file_path": file_path,
+                "errors": [],
+                "questions": [],
+                "pep_results": {},
+                "proposed_changes": [],
+                "report": f"# Code Review Report: {file_path}\n\n✅ No issues found by pylint.",
+            }
+
+        # Read file content for context
+        file_content = {}
+        for error in errors:
+            line_num = error.get("line", 0)
+            if line_num > 0:
+                file_content[line_num] = self._read_file_context(file_path, line_num, context_lines=3)
+
+        # Generate questions
+        questions = self._generate_pep_questions(errors)
+
+        # Search PEPs for each question
+        pep_results = {}
+        for q in questions:
+            question = q["question"]
+            error = q["error"]
+            line_num = error.get("line", 0)
+
+            # Include actual code context in search
+            code_context = file_content.get(line_num, {})
+            code_snippet_for_search = code_context.get("full_context", q.get("code_snippet", ""))
+
+            pep_summary = await self._search_peps(question, code_snippet_for_search)
+            pep_results[question] = pep_summary
+
+        # Propose changes with code context
+        proposed_changes = []
+        all_pep_refs = []  # Collect all PEP references for deduplication
+
+        for q in questions:
+            error = q["error"]
+            question = q["question"]
+            line_num = error.get("line", 0)
+            pep_summary = pep_results.get(question, "")
+            code_context = file_content.get(line_num, {})
+
+            change = self._propose_changes(error, pep_summary, code_context)
+            proposed_changes.append(change)
+            # Collect PEP references
+            if change.get("pep_references"):
+                all_pep_refs.extend(change["pep_references"])
+
+        # Deduplicate all PEP references across all changes
+        seen_peps = set()
+        unique_all_pep_refs = []
+        for ref in all_pep_refs:
+            if ref["number"] not in seen_peps:
+                seen_peps.add(ref["number"])
+                unique_all_pep_refs.append(ref)
+
+        # Generate markdown report
+        report = self._generate_markdown_report(
+            file_path, errors, questions, pep_results, proposed_changes, unique_all_pep_refs
+        )
+
+        return {
+            "file_path": file_path,
+            "errors": errors,
+            "questions": questions,
+            "pep_results": pep_results,
+            "proposed_changes": proposed_changes,
+            "report": report,
+            "pep_references": unique_all_pep_refs,
+        }
+
+    def _generate_markdown_report(
+        self,
+        file_path: str,
+        errors: List[Dict[str, str]],
+        questions: List[Dict[str, str]],
+        pep_results: Dict[str, str],
+        proposed_changes: List[Dict[str, Any]],
+        all_pep_refs: List[Dict[str, str]],
+    ) -> str:
+        """Generate markdown report for a file.
+
+        Args:
+            file_path: File path
+            errors: List of errors
+            questions: List of questions
+            pep_results: Dict mapping questions to PEP summaries
+            proposed_changes: List of proposed changes
+
+        Returns:
+            Markdown report string
+        """
+        report_parts = [
+            f"# Code Review Report:\n`{file_path}`",
+            "",
+            "## Summary",
+            "",
+            f"- **Total Issues**: {len(errors)}",
+            f"- **Issues Requiring PEP Check**: {len(questions)}",
+            "",
+            "## Issues Found",
+            "",
+        ]
+
+        # Add error list
+        for i, error in enumerate(errors, 1):
+            report_parts.append(f"### Issue {i}")
+            report_parts.append(f"- **Line**: {error.get('line', 'N/A')}")
+            report_parts.append(f"- **Type**: {error.get('type', 'N/A')}")
+            report_parts.append(f"- **Code**: {error.get('code', 'N/A')}")
+            report_parts.append(f"- **Message**: {error.get('message', 'N/A')}")
+            report_parts.append(f"- **Symbol**: {error.get('symbol', 'N/A')}")
+            report_parts.append("")
+
+        # Add PEP-based recommendations with code fixes
+        if questions:
+            report_parts.append("## PEP-Based Recommendations")
+            report_parts.append("")
+
+            for i, change in enumerate(proposed_changes, 1):
+                report_parts.append(f"### Recommendation {i}")
+                report_parts.append(change.get("description", ""))
+                report_parts.append("")
+
+                # Add code snippet with context
+                if change.get("code_snippet"):
+                    report_parts.append("**Code Context:**")
+                    report_parts.append("```python")
+                    report_parts.append(change["code_snippet"])
+                    report_parts.append("```")
+                    report_parts.append("")
+
+                # Add before/after if we have a fix
+                if change.get("original_code") and change.get("fixed_code"):
+                    if change["original_code"] != change["fixed_code"]:
+                        report_parts.append("**Suggested Fix:**")
+                        report_parts.append("")
+                        report_parts.append("**Before:**")
+                        report_parts.append("```python")
+                        report_parts.append(change["original_code"])
+                        report_parts.append("```")
+                        report_parts.append("")
+                        report_parts.append("**After:**")
+                        report_parts.append("```python")
+                        report_parts.append(change["fixed_code"])
+                        report_parts.append("```")
+                        report_parts.append("")
+                    else:
+                        report_parts.append("**Note:** Manual fix required based on PEP guidelines.")
+                        report_parts.append("")
+
+                # Add PEP references for this change
+                if change.get("pep_references"):
+                    report_parts.append("**PEP References:**")
+                    for ref in change["pep_references"]:
+                        report_parts.append(f"- [PEP {ref['number']}]({ref['url']})")
+                    report_parts.append("")
+
+                report_parts.append("---")
+                report_parts.append("")
+
+        # Add consolidated PEP references section
+        if all_pep_refs:
+            report_parts.append("## PEP References")
+            report_parts.append("")
+            report_parts.append("The following PEPs were referenced in this review:")
+            report_parts.append("")
+            for ref in sorted(all_pep_refs, key=lambda x: int(x["number"])):
+                report_parts.append(f"- [PEP {ref['number']}]({ref['url']})")
+            report_parts.append("")
+
+        return "\n".join(report_parts)
+
+    async def _review_fix_cycle(
+        self, original_file_path: str, initial_review: Dict[str, Any], file_logger: Optional[Any] = None
+    ) -> Optional[str]:
+        """Finite State Machine: Review → Fix → Review → Fix → ... until no errors.
+
+        States:
+        - REVIEW: Review file and find errors
+        - FIX: Apply fixes and generate fixed file
+
+        Args:
+            original_file_path: Path to the original source file
+            initial_review: Initial review results with proposed changes
+
+        Returns:
+            Path to final fixed file, or None if fixing failed
+        """
+        if self._fixer_agent is None:
+            self._fixer_agent = FixerAgent()
+
+        max_iterations = 10  # Prevent infinite loops
+        iteration = 0
+        current_file_path = original_file_path
+        current_proposed_changes = initial_review.get("proposed_changes", [])
+        cycle_history = []  # Track each cycle
+        final_fixed_file_path = None
+        last_review_errors = initial_review.get("errors", [])
+
+        while iteration < max_iterations:
+            iteration += 1
+            state = "FIX" if iteration > 1 else "INITIAL_FIX"
+
+            # State: FIX - Apply fixes to current file
+            try:
+                fix_result = await self._fixer_agent.invoke(
+                    {
+                        "file_path": current_file_path,
+                        "proposed_changes": current_proposed_changes,
+                    }
+                )
+
+                if not fix_result.get("success"):
+                    if file_logger:
+                        file_logger.warning(
+                            "Fixer failed in iteration %d: %s", iteration, fix_result.get("message", "")
+                        )
+                    break
+
+                # File is modified in place, so fixed_file_path_str is the same as current_file_path
+                fixed_file_path_str = current_file_path
+                final_fixed_file_path = fixed_file_path_str
+
+                cycle_history.append(
+                    {
+                        "iteration": iteration,
+                        "state": state,
+                        "file_path": fixed_file_path_str,
+                        "changes_applied": fix_result.get("changes_applied", 0),
+                        "ruff_fixes": fix_result.get("ruff_fixes", 0),
+                    }
+                )
+
+                if file_logger:
+                    file_logger.info(
+                        "Iteration %d: Applied %d changes, ruff fixed %d issues",
+                        iteration,
+                        fix_result.get("changes_applied", 0),
+                        fix_result.get("ruff_fixes", 0),
+                    )
+
+                # State: REVIEW - Review the fixed file
+                fixed_review = await self._review_file(fixed_file_path_str)
+                remaining_errors = fixed_review.get("errors", [])
+                last_review_errors = remaining_errors
+
+                cycle_history[-1]["errors_after_fix"] = len(remaining_errors)
+
+                # If no errors remain, we're done
+                if not remaining_errors:
+                    if file_logger:
+                        file_logger.info("File fixed successfully after %d iteration(s)", iteration)
+                    break
+
+                # Filter fixable errors for next iteration
+                fixable_errors = [
+                    e
+                    for e in remaining_errors
+                    if any(
+                        keyword in e.get("message", "").lower() or keyword in e.get("symbol", "").lower()
+                        for keyword in [
+                            "naming",
+                            "invalid-name",
+                            "docstring",
+                            "missing",
+                            "trailing",
+                            "whitespace",
+                            "import",
+                        ]
+                    )
+                ]
+
+                if not fixable_errors:
+                    # No more fixable errors
+                    if file_logger:
+                        file_logger.info("No more fixable errors after %d iteration(s)", iteration)
+                    break
+
+                # Prepare for next iteration: use fixed file and new proposed changes
+                current_file_path = fixed_file_path_str
+                current_proposed_changes = fixed_review.get("proposed_changes", [])
+
+                if not current_proposed_changes:
+                    # No proposed changes, can't continue
+                    break
+
+            except Exception as e:
+                if file_logger:
+                    file_logger.error("Error in review-fix cycle iteration %d: %s", iteration, e)
+                break
+
+        # Store cycle history in the review for debugging
+        initial_review["fix_cycle_history"] = cycle_history
+        initial_review["fix_iterations"] = iteration
+        initial_review["final_errors"] = len(last_review_errors)
+
+        return final_fixed_file_path
+
+    async def invoke(
+        self,
+        inputs: Any,
+        session: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """Execute code review on list of files.
+
+        Args:
+            inputs: Input dict with 'files' (list of file paths), or list of file paths
+            session: Session object (optional)
+
+        Returns:
+            Dict with 'output' (combined reports), 'result_type', and 'reports' (per-file)
+        """
+        # Normalize inputs
+        if isinstance(inputs, dict):
+            files = inputs.get("files") or inputs.get("file_list", [])
+        elif isinstance(inputs, list):
+            files = inputs
+        else:
+            raise ValueError("Input must be dict with 'files' or list of file paths")
+
+        if not files:
+            raise ValueError("Files list is required and cannot be empty")
+
+        # Process files in parallel
+        async def process_file(file_path: str) -> Dict[str, Any]:
+            """Process a single file: backup, review, generate report, and optionally fix."""
+            # Backup original file
+            try:
+                backup_path = backup_file(file_path, self._tomato_dirs["backup"])
+            except Exception as e:
+                import logging
+
+                logging.error("Failed to backup file %s: %s", file_path, e)
+                backup_path = None
+
+            # Set up file logger for this file
+            normalized_name = normalize_filename(file_path)
+            log_file_path = self._tomato_dirs["logs"] / f"{normalized_name}.log"
+            file_logger = setup_file_logger(log_file_path, f"tomato_review_{normalized_name}")
+            self._file_loggers[file_path] = file_logger
+
+            file_logger.info("Starting review for file: %s", file_path)
+            if backup_path:
+                file_logger.info("Backed up to: %s", backup_path)
+
+            # Review file
+            file_report = await self._review_file(file_path)
+            file_logger.info("Review completed. Found %d errors", len(file_report.get("errors", [])))
+
+            report_file_path = None
+
+            # Generate individual markdown report file
+            if file_report.get("report"):
+                try:
+                    # Use normalized filename for review
+                    review_filename = f"{normalized_name}.md"
+                    report_file_path = self._tomato_dirs["reviews"] / review_filename
+
+                    with open(report_file_path, "w", encoding="utf-8") as f:
+                        f.write(file_report["report"])
+                    file_logger.info("Review report written to: %s", report_file_path)
+                except Exception as e:
+                    file_logger.error("Failed to write report file %s: %s", report_file_path, e)
+                    report_file_path = None
+
+            # Generate fixed file using FSM (Review → Fix → Review → ...)
+            # This will modify the file in place
+            if self._generate_fixed_files and file_report.get("proposed_changes"):
+                file_logger.info(
+                    "Starting fix cycle with %d proposed changes", len(file_report.get("proposed_changes", []))
+                )
+                fixed_file_path = await self._review_fix_cycle(file_path, file_report, file_logger)
+                if fixed_file_path:
+                    file_report["fixed_file_path"] = fixed_file_path
+                    file_logger.info("Fix cycle completed. Final file: %s", fixed_file_path)
+                else:
+                    file_logger.warning("Fix cycle did not produce a fixed file")
+
+            file_logger.info("Processing completed for file: %s", file_path)
+
+            return {
+                "file_report": file_report,
+                "report_file_path": str(report_file_path) if report_file_path else None,
+                "fixed_file_path": file_path if self._generate_fixed_files else None,  # File is modified in place
+            }
+
+        # Process all files in parallel
+        import asyncio
+
+        results = await asyncio.gather(*[process_file(f) for f in files], return_exceptions=True)
+
+        # Collect results
+        reports = []
+        report_files = []
+        fixed_files = []
+
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                import logging
+
+                logging.error("Error processing file %s: %s", files[i], result)
+                continue
+
+            reports.append(result["file_report"])
+            if result["report_file_path"]:
+                report_files.append(result["report_file_path"])
+            if result["fixed_file_path"]:
+                fixed_files.append(result["fixed_file_path"])
+
+        # Combine all reports for summary output
+        combined_report_parts = [
+            "# Code Review Report - Multiple Files",
+            "",
+            f"**Total Files Reviewed**: {len(files)}",
+            "",
+            "## Generated Reports",
+            "",
+            "Individual markdown reports have been generated in `tomato/reviews/`:",
+            "",
+        ]
+
+        for report_file in report_files:
+            report_path = Path(report_file)
+            combined_report_parts.append(f"- [{report_path.name}]({report_file})")
+
+        combined_report_parts.append("")
+
+        # Add fixed files section if any were modified
+        if fixed_files:
+            combined_report_parts.append("## Modified Files")
+            combined_report_parts.append("")
+            combined_report_parts.append(
+                "The following files have been modified in place (backups stored in `tomato/backup`):"
+            )
+            combined_report_parts.append("")
+            for fixed_file in fixed_files:
+                fixed_path = Path(fixed_file)
+                combined_report_parts.append(f"- {fixed_path}")
+            combined_report_parts.append("")
+
+        combined_report_parts.append("---")
+        combined_report_parts.append("")
+
+        # Add summary of each file
+        for report in reports:
+            file_path = report.get("file_path", "Unknown")
+            error_count = len(report.get("errors", []))
+            combined_report_parts.append(f"### {Path(file_path).name}")
+            combined_report_parts.append(f"- **Issues Found**: {error_count}")
+            if report.get("pep_references"):
+                pep_count = len(report["pep_references"])
+                combined_report_parts.append(f"- **PEPs Referenced**: {pep_count}")
+            combined_report_parts.append("")
+
+        combined_report = "\n".join(combined_report_parts)
+
+        return {
+            "output": combined_report,
+            "result_type": "answer",
+            "files_reviewed": len(files),
+            "reports": reports,
+            "report_files": report_files,  # List of generated report file paths
+            "fixed_files": fixed_files,  # List of generated fixed file paths
+        }
+
+
+__all__ = ["ReviewerAgent"]

@@ -136,6 +136,7 @@ class PEPDocument(BaseModel):
 
     class Config:
         """Pydantic BaseModel Config"""
+
         use_enum_values = True
         json_encoders = {
             datetime: lambda v: v.isoformat(),
