@@ -4,6 +4,7 @@ This agent runs pylint on files, generates questions about errors, searches PEPs
 via SearcherAgent, and generates comprehensive markdown reports.
 """
 
+import logging
 import re
 import subprocess
 from pathlib import Path
@@ -16,6 +17,7 @@ from tomato_review.agent.fixer import FixerAgent
 from tomato_review.agent.searcher import SearcherAgent
 from tomato_review.agent.utils import (
     backup_file,
+    configure_from_env,
     normalize_filename,
     parse_pylint_output,
     setup_file_logger,
@@ -105,6 +107,7 @@ class ReviewerAgent(ReActAgent):
         else:
             # Set default configuration
             default_config = ReActAgentConfig()
+            configure_from_env(default_config)
             self.configure(default_config)
 
     async def _run_pylint(self, file_path: str) -> Dict[str, Any]:
@@ -239,8 +242,18 @@ class ReviewerAgent(ReActAgent):
             "code_snippet": code_snippet or "",
         }
 
-        result = await self._searcher_agent.invoke(inputs)
-        return result.get("output", "No results found.")
+        try:
+            result = await self._searcher_agent.invoke(inputs)
+            output = result.get("output", "No results found.")
+            # Check if the output indicates an error
+            if "error" in output.lower() or "failed" in output.lower() or "exception" in output.lower():
+                logging.warning("PEP search may have failed: %s", output[:20].replace("\n", " "))
+            return output
+        except Exception as e:
+            error_msg = f"Error searching PEPs: {str(e)}"
+            logging.error(error_msg)
+            # Return error message that will be visible in the report
+            return f"Error: {error_msg}. Please check your API configuration and network connection."
 
     def _read_file_context(self, file_path: str, line_num: int, context_lines: int = 3) -> Dict[str, Any]:
         """Read file content with context around a specific line.
@@ -510,6 +523,7 @@ class ReviewerAgent(ReActAgent):
 
         # Search PEPs for each question
         pep_results = {}
+        pep_search_errors = []
         for q in questions:
             question = q["question"]
             error = q["error"]
@@ -519,8 +533,26 @@ class ReviewerAgent(ReActAgent):
             code_context = file_content.get(line_num, {})
             code_snippet_for_search = code_context.get("full_context", q.get("code_snippet", ""))
 
-            pep_summary = await self._search_peps(question, code_snippet_for_search)
-            pep_results[question] = pep_summary
+            try:
+                pep_summary = await self._search_peps(question, code_snippet_for_search)
+                pep_results[question] = pep_summary
+                # Track if search failed
+                if pep_summary and ("Error:" in pep_summary or "error" in pep_summary.lower()):
+                    pep_search_errors.append(question)
+            except Exception as e:
+                # PEP search failed - log and continue, but mark as error
+                error_msg = f"PEP search failed for question '{question}': {str(e)}"
+                logging.error(error_msg)
+                pep_results[question] = f"Error: {error_msg}"
+                pep_search_errors.append(question)
+
+        # If all PEP searches failed, raise an exception to stop processing
+        if pep_search_errors and len(pep_search_errors) == len(questions):
+            raise RuntimeError(
+                f"All PEP searches failed. This usually indicates a configuration error. "
+                f"Please check your API keys and knowledge base configuration. "
+                f"First error: {pep_results.get(questions[0]['question'], 'Unknown error')}"
+            )
 
         # Propose changes with code context
         proposed_changes = []
@@ -734,11 +766,34 @@ class ReviewerAgent(ReActAgent):
                     )
 
                 # State: REVIEW - Review the fixed file
-                fixed_review = await self._review_file(fixed_file_path_str)
+                try:
+                    fixed_review = await self._review_file(fixed_file_path_str)
+                except Exception as e:
+                    # If review fails (e.g., PEP search error), stop the cycle
+                    if file_logger:
+                        file_logger.error("Review failed in iteration %d: %s", iteration, e)
+                    break
+
                 remaining_errors = fixed_review.get("errors", [])
                 last_review_errors = remaining_errors
 
                 cycle_history[-1]["errors_after_fix"] = len(remaining_errors)
+
+                # Check if PEP search failed (indicated by error messages in proposed changes)
+                proposed_changes = fixed_review.get("proposed_changes", [])
+                pep_search_failed = False
+                for change in proposed_changes:
+                    description = change.get("description", "")
+                    if "Error:" in description or "error" in description.lower():
+                        # Check if it's a PEP search error
+                        if "PEP" in description and ("error" in description.lower() or "failed" in description.lower()):
+                            pep_search_failed = True
+                            break
+
+                if pep_search_failed:
+                    if file_logger:
+                        file_logger.warning("PEP search failed, stopping fix cycle")
+                    break
 
                 # If no errors remain, we're done
                 if not remaining_errors:
@@ -822,8 +877,6 @@ class ReviewerAgent(ReActAgent):
             try:
                 backup_path = backup_file(file_path, self._tomato_dirs["backup"])
             except Exception as e:
-                import logging
-
                 logging.error("Failed to backup file %s: %s", file_path, e)
                 backup_path = None
 
@@ -890,8 +943,6 @@ class ReviewerAgent(ReActAgent):
 
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                import logging
-
                 logging.error("Error processing file %s: %s", files[i], result)
                 continue
 

@@ -1,0 +1,451 @@
+#!/usr/bin/env python
+"""Command-line interface for tomato-review.
+
+Usage:
+    tomato-review *.py
+    tomato-review file1.py file2.py
+    tomato-review --help
+"""
+
+import argparse
+import asyncio
+import glob
+import os
+import shutil
+import signal
+import sys
+import warnings
+from pathlib import Path
+from typing import List
+
+from tomato_review.agent import ReviewerAgent, SearcherAgent
+from tomato_review.agent.utils import setup_tomato_directories
+from tomato_review.config import get_kb_config, get_llm_config, load_config
+from tomato_review.kb_utils import check_knowledge_base, setup_knowledge_base_if_needed
+
+# Filter out TqdmExperimentalWarning
+warnings.filterwarnings("ignore", category=UserWarning, module="tqdm")
+
+# Conditional tqdm import (must be after warnings filter)
+try:
+    from tqdm.rich import tqdm  # noqa: E402
+except ImportError:
+    try:
+        from tqdm.auto import tqdm  # noqa: E402
+    except ImportError:
+        tqdm = None  # type: ignore
+
+
+# Global state for cleanup
+_cleanup_state = {
+    "backup_files": set(),
+    "modified_files": set(),
+    "tomato_dirs": None,
+}
+
+
+def signal_handler(signum, frame):  # noqa: ARG001
+    """Handle Ctrl+C and restore files."""
+    print("\n\n⚠️  Interrupted by user. Cleaning up...", file=sys.stderr)
+
+    # Restore modified files from backup
+    tomato_dirs = _cleanup_state.get("tomato_dirs")
+    if tomato_dirs:
+        backup_dir = tomato_dirs["backup"]
+        for modified_file in _cleanup_state["modified_files"]:
+            try:
+                source_path = Path(modified_file)
+                # Find backup file
+                try:
+                    rel_path = source_path.relative_to(Path.cwd())
+                except ValueError:
+                    rel_path = source_path.name
+
+                backup_path = backup_dir / rel_path
+                if backup_path.exists():
+                    shutil.copy2(backup_path, source_path)
+                    print(f"  ✓ Restored: {source_path}", file=sys.stderr)
+            except (OSError, shutil.Error) as e:
+                print(f"  ✗ Failed to restore {modified_file}: {e}", file=sys.stderr)
+
+    print("Cleanup complete.", file=sys.stderr)
+    sys.exit(130)
+
+
+def expand_file_patterns(patterns: List[str]) -> List[str]:
+    """Expand glob patterns and return list of existing Python files.
+
+    Args:
+        patterns: List of file patterns (may contain glob patterns like *.py)
+
+    Returns:
+        List of resolved file paths
+    """
+    files = []
+    for pattern in patterns:
+        # Check if pattern contains glob characters
+        has_glob = "*" in pattern or "?" in pattern or "[" in pattern
+
+        if has_glob:
+            # Expand glob pattern
+            # Try recursive first (for patterns like **/*.py)
+            matches = glob.glob(pattern, recursive=True)
+            # If no matches with recursive, try non-recursive
+            if not matches:
+                matches = glob.glob(pattern, recursive=False)
+        else:
+            # No glob characters, treat as literal file path
+            if os.path.isfile(pattern):
+                matches = [pattern]
+            elif os.path.isdir(pattern):
+                # If it's a directory, find all Python files in it
+                matches = list(Path(pattern).rglob("*.py"))
+                matches = [str(m) for m in matches]
+            else:
+                matches = []
+
+        if not matches:
+            print(f"Warning: No files found matching pattern: {pattern}", file=sys.stderr)
+            continue
+
+        # Filter to only Python files
+        for match in matches:
+            path = Path(match)
+            if path.is_file() and path.suffix == ".py":
+                files.append(str(path.resolve()))
+            elif path.is_file():
+                print(f"Warning: Skipping non-Python file: {match}", file=sys.stderr)
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_files = []
+    for f in files:
+        if f not in seen:
+            seen.add(f)
+            unique_files.append(f)
+
+    return unique_files
+
+
+async def main():
+    """Main CLI entry point."""
+    # Set up signal handler for cleanup
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    parser = argparse.ArgumentParser(
+        description="Tomato Review - Python code review agent using pylint and PEP knowledge base",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  tomato-review *.py                    # Review all Python files in current directory
+  tomato-review file1.py file2.py      # Review specific files
+  tomato-review src/**/*.py             # Review all Python files in src/ recursively
+        """,
+    )
+
+    parser.add_argument(
+        "files",
+        nargs="+",
+        help="Python files or glob patterns to review (e.g., *.py, file1.py file2.py)",
+    )
+
+    parser.add_argument(
+        "--no-fix",
+        action="store_true",
+        help="Only review files without applying fixes",
+    )
+
+    parser.add_argument(
+        "--config-file",
+        type=str,
+        default=None,
+        help="Path to config file (tomato.yaml, .tomato.yaml, or pyproject.toml)",
+    )
+
+    args = parser.parse_args()
+
+    # Load configuration
+    config = load_config()
+    if not config:
+        print("Warning: No configuration file found (tomato.yaml, .tomato.yaml, or pyproject.toml)", file=sys.stderr)
+        print("Some features may not work.", file=sys.stderr)
+
+    # Get KB and LLM configs
+    kb_config = get_kb_config(config)
+    llm_config = get_llm_config(config)
+
+    # Map config keys to environment variable names (agents expect specific names)
+    env_var_mapping = {
+        # LLM config
+        "api_base": "API_BASE",
+        "api_key": "API_KEY",
+        "model_name": "MODEL_NAME",
+        "model_provider": "MODEL_PROVIDER",
+        "verify_ssl": "VERIFY_SSL",
+        # KB config
+        "kb_id": "PEP_KB_ID",
+        "milvus_uri": "MILVUS_URI",
+        "milvus_token": "MILVUS_TOKEN",
+        "database_name": "MILVUS_DATABASE",
+        "embedding_model_name": "EMBEDDING_MODEL",
+        "embedding_api_key": "EMBEDDING_API_KEY",
+        "embedding_base_url": "EMBEDDING_BASE_URL",
+        "chunk_size": "PEP_CHUNK_SIZE",
+        "chunk_overlap": "PEP_CHUNK_OVERLAP",
+        "index_type": "PEP_INDEX_TYPE",
+    }
+
+    # Set environment variables for agents (they read from os.getenv)
+    all_config = {**kb_config, **llm_config}
+    for key, value in all_config.items():
+        if value:
+            env_var_name = env_var_mapping.get(key, key.upper())
+            os.environ[env_var_name] = str(value)
+
+    # Check and setup knowledge base
+    print("Checking knowledge base...")
+    is_valid, error, should_continue = check_knowledge_base(kb_config)
+
+    if not is_valid:
+        if not should_continue:
+            # Configuration or connection issue - show error and help, then exit
+            print(f"\n❌ Error: {error}", file=sys.stderr)
+            print("\nPlease check your configuration:", file=sys.stderr)
+            print("  1. Ensure Milvus is running and accessible", file=sys.stderr)
+            print("  2. Verify your configuration file (tomato.yaml, .tomato.yaml, or pyproject.toml)", file=sys.stderr)
+            print("  3. Check that all required fields are set:", file=sys.stderr)
+            print("     - kb_id", file=sys.stderr)
+            print("     - milvus_uri", file=sys.stderr)
+            print("     - database_name", file=sys.stderr)
+            print("\nExample configuration in tomato.yaml:", file=sys.stderr)
+            print("  tomato-review:", file=sys.stderr)
+            print('    kb_id: "edinburgh"', file=sys.stderr)
+            print('    milvus_uri: "http://localhost:19530"', file=sys.stderr)
+            print('    database_name: "pep_kb"', file=sys.stderr)
+            sys.exit(1)
+        else:
+            # KB just needs to be created - offer to create it
+            print(f"Knowledge base not found: {error}")
+            response = input("Create knowledge base now? (y/n, default=y): ").strip().lower()
+            if response != "n":
+                try:
+                    await setup_knowledge_base_if_needed(kb_config)
+                except Exception as e:
+                    print(f"Error setting up knowledge base: {e}", file=sys.stderr)
+                    sys.exit(1)
+            else:
+                print("Cannot continue without knowledge base.", file=sys.stderr)
+                sys.exit(1)
+    else:
+        print("✓ Knowledge base is accessible")
+        # Still update changed PEPs
+        try:
+            from tomato_review.pep_kb.pep_knowledge_base import create_pep_knowledge_base
+
+            pep_kb = await create_pep_knowledge_base(**kb_config)
+            print("Updating changed PEPs...")
+            stats = await pep_kb.update_changed_peps(filter_status=True)
+            if stats["updated"] or stats["added"]:
+                print(f"✓ Updated: {len(stats['updated'])} PEPs, Added: {len(stats['added'])} PEPs")
+        except Exception as e:
+            print(f"Warning: Could not update PEPs: {e}", file=sys.stderr)
+
+    print()
+
+    # Expand file patterns
+    files = expand_file_patterns(args.files)
+
+    if not files:
+        print("Error: No Python files found to review.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Found {len(files)} file(s) to review:")
+    cwd = Path.cwd()
+    for f in files:
+        file_path = Path(f)
+        try:
+            # Try to show relative path
+            rel_path = file_path.relative_to(cwd)
+            print(f"  - {rel_path}")
+        except ValueError:
+            # If not relative to cwd, show absolute path
+            print(f"  - {file_path}")
+    print()
+
+    # Set up tomato directories
+    _cleanup_state["tomato_dirs"] = setup_tomato_directories()
+
+    # Validate configuration before initializing agents
+    missing_llm_config = [k for k, v in llm_config.items() if not v]
+    if missing_llm_config:
+        print(f"\n❌ Error: Missing required LLM configuration: {', '.join(missing_llm_config)}", file=sys.stderr)
+        print("\nPlease check your configuration file (tomato.yaml, .tomato.yaml, or pyproject.toml)", file=sys.stderr)
+        print("Required LLM settings:", file=sys.stderr)
+        print("  - api_base", file=sys.stderr)
+        print("  - api_key", file=sys.stderr)
+        print("  - model_name", file=sys.stderr)
+        print("  - model_provider", file=sys.stderr)
+        sys.exit(1)
+
+    # Initialize agents
+    try:
+        print("Initializing agents...")
+        searcher = SearcherAgent()
+        reviewer = ReviewerAgent(
+            searcher_agent=searcher,
+            generate_fixed_files=not args.no_fix,
+        )
+        print("✓ Agents initialized\n")
+    except Exception as e:
+        error_msg = str(e).lower()
+        print(f"\n❌ Error initializing agents: {e}", file=sys.stderr)
+
+        # Provide helpful messages for common errors
+        if "api" in error_msg or "key" in error_msg or "auth" in error_msg or "unauthorized" in error_msg:
+            print("\nThis appears to be an API authentication error.", file=sys.stderr)
+            print("Please check:", file=sys.stderr)
+            print("  1. Your API key is correct and valid", file=sys.stderr)
+            print("  2. Your API base URL is correct", file=sys.stderr)
+            print("  3. Your API key has the necessary permissions", file=sys.stderr)
+        elif "connection" in error_msg or "timeout" in error_msg or "network" in error_msg:
+            print("\nThis appears to be a connection error.", file=sys.stderr)
+            print("Please check:", file=sys.stderr)
+            print("  1. Your network connection", file=sys.stderr)
+            print("  2. The API base URL is reachable", file=sys.stderr)
+            print("  3. There are no firewall restrictions", file=sys.stderr)
+        elif "embedding" in error_msg or "milvus" in error_msg:
+            print("\nThis appears to be a knowledge base or embedding error.", file=sys.stderr)
+            print("Please check:", file=sys.stderr)
+            print("  1. Your embedding API configuration", file=sys.stderr)
+            print("  2. Milvus connection settings", file=sys.stderr)
+
+        import traceback
+
+        traceback.print_exc()
+        sys.exit(1)
+
+    # Run review with progress bar
+    try:
+        print("Starting review process...")
+        print("=" * 80)
+
+        # Use tqdm if available
+        if tqdm is not None:
+            with tqdm(total=len(files), desc="Reviewing files", unit="file") as pbar:
+                result = await reviewer.invoke({"files": files})
+                pbar.update(len(files))
+        else:
+            result = await reviewer.invoke({"files": files})
+
+        # Check for errors in result
+        if not result:
+            print("\n❌ Error: Review returned no results", file=sys.stderr)
+            sys.exit(1)
+
+        # Check if any files failed to process
+        reports = result.get("reports", [])
+        if reports:
+            failed_files = []
+            for report in reports:
+                if report.get("errors") and isinstance(report.get("errors"), str):
+                    # Error message instead of error list
+                    failed_files.append(report.get("file_path", "Unknown"))
+                elif "Error" in str(report.get("report", "")):
+                    failed_files.append(report.get("file_path", "Unknown"))
+
+            if failed_files:
+                print(f"\n⚠️  Warning: {len(failed_files)} file(s) had errors during review:", file=sys.stderr)
+                for f in failed_files:
+                    print(f"  - {f}", file=sys.stderr)
+
+        # Check if review actually processed files
+        files_reviewed = result.get("files_reviewed", 0)
+        if files_reviewed == 0 and files:
+            print("\n❌ Error: No files were successfully reviewed", file=sys.stderr)
+            print("This may indicate:", file=sys.stderr)
+            print("  1. API authentication failure (check your API key)", file=sys.stderr)
+            print("  2. Network connectivity issues", file=sys.stderr)
+            print("  3. Configuration errors", file=sys.stderr)
+            print("\nCheck the logs in tomato/logs/ for more details.", file=sys.stderr)
+            sys.exit(1)
+
+        print("\n" + "=" * 80)
+        print("Review completed!")
+        print("=" * 80)
+        print()
+
+        # Track modified files for cleanup
+        if result.get("fixed_files"):
+            _cleanup_state["modified_files"].update(result["fixed_files"])
+        elif not args.no_fix and result.get("files_reviewed"):
+            # If fixes were applied, track all reviewed files as potentially modified
+            _cleanup_state["modified_files"].update(files)
+
+        # Print summary
+        if result.get("report_files"):
+            print("Review reports saved to: tomato/reviews/")
+            print(f"  ({len(result['report_files'])} report(s) generated)")
+
+        if result.get("fixed_files") and not args.no_fix:
+            print(f"\nModified {len(result['fixed_files'])} file(s) in place")
+            print("Original files backed up to: tomato/backup/")
+
+        if result.get("files_reviewed"):
+            print(f"\nTotal files reviewed: {result['files_reviewed']}")
+
+        print("\nLogs saved to: tomato/logs/")
+        print()
+
+        # Print combined report
+        if result.get("output"):
+            print(result["output"])
+
+    except KeyboardInterrupt:
+        # Signal handler will take care of cleanup
+        raise
+    except Exception as e:
+        error_msg = str(e).lower()
+        print(f"\n❌ Error during review: {e}", file=sys.stderr)
+
+        # Provide helpful messages for common errors
+        if (
+            "api" in error_msg
+            or "key" in error_msg
+            or "auth" in error_msg
+            or "unauthorized" in error_msg
+            or "401" in error_msg
+            or "403" in error_msg
+        ):
+            print("\nThis appears to be an API authentication error.", file=sys.stderr)
+            print("Please check:", file=sys.stderr)
+            print("  1. Your API key is correct and valid", file=sys.stderr)
+            print("  2. Your API base URL is correct", file=sys.stderr)
+            print("  3. Your API key has the necessary permissions", file=sys.stderr)
+            print("  4. Your embedding API key (if different) is also valid", file=sys.stderr)
+        elif "connection" in error_msg or "timeout" in error_msg or "network" in error_msg or "refused" in error_msg:
+            print("\nThis appears to be a connection error.", file=sys.stderr)
+            print("Please check:", file=sys.stderr)
+            print("  1. Your network connection", file=sys.stderr)
+            print("  2. The API base URL is reachable", file=sys.stderr)
+            print("  3. There are no firewall restrictions", file=sys.stderr)
+        elif "embedding" in error_msg or "milvus" in error_msg:
+            print("\nThis appears to be a knowledge base or embedding error.", file=sys.stderr)
+            print("Please check:", file=sys.stderr)
+            print("  1. Your embedding API configuration", file=sys.stderr)
+            print("  2. Milvus connection settings", file=sys.stderr)
+
+        print("\nCheck the logs in tomato/logs/ for more details.", file=sys.stderr)
+        import traceback
+
+        traceback.print_exc()
+        sys.exit(1)
+
+
+def cli_entry():
+    """Entry point for the CLI command."""
+    asyncio.run(main())
+
+
+if __name__ == "__main__":
+    cli_entry()

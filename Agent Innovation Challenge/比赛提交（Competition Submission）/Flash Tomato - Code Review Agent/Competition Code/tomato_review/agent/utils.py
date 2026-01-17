@@ -1,10 +1,13 @@
 """Utility functions for agent modules."""
 
 import logging
+import os
 import re
 import shutil
 from pathlib import Path
 from typing import Dict, List, Optional
+
+from openjiuwen.core.single_agent import ReActAgentConfig
 
 
 def parse_pylint_output(output: str) -> List[Dict[str, str]]:
@@ -181,3 +184,51 @@ def setup_file_logger(log_file_path: Path, logger_name: str = "tomato_review") -
     logger.addHandler(file_handler)
 
     return logger
+
+
+def get_env_var(var_name: str, required: bool = True) -> str:
+    """Get environment variable, raising error if required and not found.
+
+    Args:
+        var_name: Environment variable name
+        required: Whether the variable is required
+
+    Returns:
+        Environment variable value
+
+    Raises:
+        ValueError: If required variable is not set
+    """
+    value = os.getenv(var_name)
+    if required and not value:
+        raise ValueError(
+            f"Required environment variable '{var_name}' is not set. "
+            f"Please set it in your .env.agent file or environment."
+        )
+    return value or ""
+
+
+def configure_from_env(config: ReActAgentConfig) -> None:
+    """Configure ReActAgentConfig from environment variables.
+
+    Args:
+        config: ReActAgentConfig instance to configure
+
+    Raises:
+        ValueError: If required environment variables are not set
+    """
+    api_base = get_env_var("API_BASE", required=True)
+    api_key = get_env_var("API_KEY", required=True)
+    model_name = get_env_var("MODEL_NAME", required=True)
+    model_provider = get_env_var("MODEL_PROVIDER", required=True)
+    ssl_cert = get_env_var("VERIFY_SSL", required=False)
+
+    config.configure_model_client(
+        provider=model_provider,
+        api_key=api_key,
+        api_base=api_base,
+        model_name=model_name,
+        verify_ssl=ssl_cert != "false",
+    )
+    if ssl_cert != "true":
+        config.model_client_config.ssl_cert = ssl_cert

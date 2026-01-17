@@ -4,6 +4,7 @@ This agent takes review results and applies fixes to generate corrected versions
 of Python files based on PEP guidelines.
 """
 
+import logging
 import re
 import subprocess
 from pathlib import Path
@@ -12,7 +13,7 @@ from typing import Any, Dict, List, Optional
 from openjiuwen.core.common.schema.param import Param
 from openjiuwen.core.single_agent.agents.react_agent import ReActAgent, ReActAgentConfig
 from openjiuwen.core.single_agent.schema.agent_card import AgentCard
-from tomato_review.agent.utils import parse_pylint_output
+from tomato_review.agent.utils import configure_from_env, parse_pylint_output
 
 
 class FixerAgent(ReActAgent):
@@ -86,6 +87,7 @@ class FixerAgent(ReActAgent):
         else:
             # Set default configuration
             default_config = ReActAgentConfig()
+            configure_from_env(default_config)
             self.configure(default_config)
 
     def _apply_naming_fix(self, line: str, error_code: str, message: str) -> str:
@@ -520,15 +522,11 @@ class FixerAgent(ReActAgent):
             # Format the file with ruff (in place)
             ruff_format_result = await self._run_ruff_format(file_path)
             if not ruff_format_result.get("success"):
-                import logging
-
                 logging.warning("ruff format failed: %s", ruff_format_result.get("stderr", ""))
 
             # Auto-fix with ruff (in place)
             ruff_fix_result = await self._run_ruff_check_fix(file_path)
             if ruff_fix_result.get("fixed_count", 0) > 0:
-                import logging
-
                 logging.info("ruff fixed %d issue(s) in %s", ruff_fix_result["fixed_count"], file_path)
 
             return {

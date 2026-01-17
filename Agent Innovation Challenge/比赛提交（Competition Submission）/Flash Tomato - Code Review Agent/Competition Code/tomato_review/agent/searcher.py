@@ -3,12 +3,12 @@
 This agent uses PEPKnowledgeBase to research Python coding conventions and best practices.
 """
 
-import os
 from typing import Any, Dict, Optional
 
 from openjiuwen.core.common.schema.param import Param
 from openjiuwen.core.single_agent.agents.react_agent import ReActAgent, ReActAgentConfig
 from openjiuwen.core.single_agent.schema.agent_card import AgentCard
+from tomato_review.agent.utils import configure_from_env, get_env_var
 from tomato_review.pep_kb.pep_knowledge_base import PEPKnowledgeBase, create_pep_knowledge_base
 
 
@@ -68,51 +68,8 @@ class SearcherAgent(ReActAgent):
         else:
             # Set configuration from environment variables (all required)
             default_config = ReActAgentConfig()
-            self._configure_from_env(default_config)
+            configure_from_env(default_config)
             self.configure(default_config)
-
-    def _get_env_var(self, var_name: str, required: bool = True) -> str:
-        """Get environment variable, raising error if required and not found.
-
-        Args:
-            var_name: Environment variable name
-            required: Whether the variable is required
-
-        Returns:
-            Environment variable value
-
-        Raises:
-            ValueError: If required variable is not set
-        """
-        value = os.getenv(var_name)
-        if required and not value:
-            raise ValueError(
-                f"Required environment variable '{var_name}' is not set. "
-                f"Please set it in your .env.agent file or environment."
-            )
-        return value or ""
-
-    def _configure_from_env(self, config: ReActAgentConfig) -> None:
-        """Configure ReActAgentConfig from environment variables.
-
-        Args:
-            config: ReActAgentConfig instance to configure
-
-        Raises:
-            ValueError: If required environment variables are not set
-        """
-        api_base = self._get_env_var("API_BASE", required=True)
-        api_key = self._get_env_var("API_KEY", required=True)
-        model_name = self._get_env_var("MODEL_NAME", required=True)
-        model_provider = self._get_env_var("MODEL_PROVIDER", required=True)
-
-        config.configure_model_client(
-            provider=model_provider,
-            api_key=api_key,
-            api_base=api_base,
-            model_name=model_name,
-            verify_ssl=False,
-        )
 
     async def _get_pep_kb(self) -> PEPKnowledgeBase:
         """Get or create PEPKnowledgeBase instance.
@@ -127,8 +84,8 @@ class SearcherAgent(ReActAgent):
             # Create PEP knowledge base with configuration from environment
             # All variables are required - no defaults
             # Get integer environment variables with validation
-            chunk_size_str = self._get_env_var("PEP_CHUNK_SIZE", required=True)
-            chunk_overlap_str = self._get_env_var("PEP_CHUNK_OVERLAP", required=True)
+            chunk_size_str = get_env_var("PEP_CHUNK_SIZE", required=True)
+            chunk_overlap_str = get_env_var("PEP_CHUNK_OVERLAP", required=True)
 
             try:
                 chunk_size = int(chunk_size_str)
@@ -140,16 +97,16 @@ class SearcherAgent(ReActAgent):
                 ) from e
 
             kb_config = {
-                "kb_id": self._get_env_var("PEP_KB_ID", required=True),
-                "milvus_uri": self._get_env_var("MILVUS_URI", required=True),
-                "milvus_token": self._get_env_var("MILVUS_TOKEN", required=False),
-                "database_name": self._get_env_var("MILVUS_DATABASE", required=True),
-                "embedding_model_name": self._get_env_var("EMBEDDING_MODEL", required=True),
-                "embedding_api_key": self._get_env_var("EMBEDDING_API_KEY", required=True),
-                "embedding_base_url": self._get_env_var("EMBEDDING_BASE_URL", required=True),
+                "kb_id": get_env_var("PEP_KB_ID", required=True),
+                "milvus_uri": get_env_var("MILVUS_URI", required=True),
+                "milvus_token": get_env_var("MILVUS_TOKEN", required=False),
+                "database_name": get_env_var("MILVUS_DATABASE", required=True),
+                "embedding_model_name": get_env_var("EMBEDDING_MODEL", required=True),
+                "embedding_api_key": get_env_var("EMBEDDING_API_KEY", required=True),
+                "embedding_base_url": get_env_var("EMBEDDING_BASE_URL", required=True),
                 "chunk_size": chunk_size,
                 "chunk_overlap": chunk_overlap,
-                "index_type": self._get_env_var("PEP_INDEX_TYPE", required=True),
+                "index_type": get_env_var("PEP_INDEX_TYPE", required=True),
             }
             self._pep_kb = await create_pep_knowledge_base(**kb_config)
         return self._pep_kb
