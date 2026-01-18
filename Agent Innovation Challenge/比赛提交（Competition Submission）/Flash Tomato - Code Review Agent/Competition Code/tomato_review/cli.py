@@ -18,23 +18,18 @@ import warnings
 from pathlib import Path
 from typing import List
 
+from tqdm import TqdmExperimentalWarning
+from tqdm.auto import tqdm
+
+from openjiuwen.core.foundation.llm.model import Model
+from openjiuwen.core.foundation.llm.schema.config import ModelClientConfig, ModelRequestConfig
 from tomato_review.agent import ReviewerAgent, SearcherAgent
 from tomato_review.agent.utils import setup_tomato_directories
 from tomato_review.config import get_kb_config, get_llm_config, load_config
 from tomato_review.kb_utils import check_knowledge_base, setup_knowledge_base_if_needed
 
 # Filter out TqdmExperimentalWarning
-warnings.filterwarnings("ignore", category=UserWarning, module="tqdm")
-
-# Conditional tqdm import (must be after warnings filter)
-try:
-    from tqdm.rich import tqdm  # noqa: E402
-except ImportError:
-    try:
-        from tqdm.auto import tqdm  # noqa: E402
-    except ImportError:
-        tqdm = None  # type: ignore
-
+warnings.filterwarnings("ignore", category=TqdmExperimentalWarning, module="tqdm")
 
 # Global state for cleanup
 _cleanup_state = {
@@ -139,7 +134,7 @@ async def main():
         epilog="""
 Examples:
   tomato-review *.py                    # Review all Python files in current directory
-  tomato-review file1.py file2.py      # Review specific files
+  tomato-review file1.py file2.py       # Review specific files
   tomato-review src/**/*.py             # Review all Python files in src/ recursively
         """,
     )
@@ -151,9 +146,23 @@ Examples:
     )
 
     parser.add_argument(
+        "-m",
+        "--max-iter",
+        type=int,
+        default=10,
+        help="Maximum iterations of file fixing (default: 10)",
+    )
+
+    parser.add_argument(
         "--no-fix",
         action="store_true",
         help="Only review files without applying fixes",
+    )
+
+    parser.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="Rebuilds Knowledge Base even if it exists",
     )
 
     parser.add_argument(
@@ -183,6 +192,7 @@ Examples:
         "model_name": "MODEL_NAME",
         "model_provider": "MODEL_PROVIDER",
         "verify_ssl": "VERIFY_SSL",
+        "ssl_cert": "SSL_CERT",
         # KB config
         "kb_id": "PEP_KB_ID",
         "milvus_uri": "MILVUS_URI",
@@ -201,14 +211,33 @@ Examples:
     for key, value in all_config.items():
         if value:
             env_var_name = env_var_mapping.get(key, key.upper())
-            os.environ[env_var_name] = str(value)
+            os.environ[env_var_name] = str(value) if not isinstance(value, bool) else str(value).lower()
 
     # Check and setup knowledge base
     print("Checking knowledge base...")
     is_valid, error, should_continue = check_knowledge_base(kb_config)
+    rebuild_kb = args.rebuild
 
-    if not is_valid:
-        if not should_continue:
+    if rebuild_kb or not is_valid:
+        if rebuild_kb or should_continue:
+            # KB just needs to be created - offer to create it
+            if rebuild_kb:
+                print("Knowledge base will be rebuilt.")
+                response = "y"
+            else:
+                print(f"Knowledge base not found: {error}")
+                response = ""
+            while response not in {"", "y"}:
+                response = input("\rCreate knowledge base now? (y/n, default=y): ").strip().lower()
+                if response == "n":
+                    print("Cannot continue without knowledge base.", file=sys.stderr)
+                    sys.exit(1)
+            try:
+                await setup_knowledge_base_if_needed(kb_config)
+            except Exception as e:
+                print("Error setting up knowledge base", file=sys.stderr)
+                raise e
+        else:
             # Configuration or connection issue - show error and help, then exit
             print(f"\n❌ Error: {error}", file=sys.stderr)
             print("\nPlease check your configuration:", file=sys.stderr)
@@ -224,19 +253,6 @@ Examples:
             print('    milvus_uri: "http://localhost:19530"', file=sys.stderr)
             print('    database_name: "pep_kb"', file=sys.stderr)
             sys.exit(1)
-        else:
-            # KB just needs to be created - offer to create it
-            print(f"Knowledge base not found: {error}")
-            response = input("Create knowledge base now? (y/n, default=y): ").strip().lower()
-            if response != "n":
-                try:
-                    await setup_knowledge_base_if_needed(kb_config)
-                except Exception as e:
-                    print(f"Error setting up knowledge base: {e}", file=sys.stderr)
-                    sys.exit(1)
-            else:
-                print("Cannot continue without knowledge base.", file=sys.stderr)
-                sys.exit(1)
     else:
         print("✓ Knowledge base is accessible")
         # Still update changed PEPs
@@ -277,7 +293,7 @@ Examples:
     _cleanup_state["tomato_dirs"] = setup_tomato_directories()
 
     # Validate configuration before initializing agents
-    missing_llm_config = [k for k, v in llm_config.items() if not v]
+    missing_llm_config = [k for k, v in llm_config.items() if v == ""]
     if missing_llm_config:
         print(f"\n❌ Error: Missing required LLM configuration: {', '.join(missing_llm_config)}", file=sys.stderr)
         print("\nPlease check your configuration file (tomato.yaml, .tomato.yaml, or pyproject.toml)", file=sys.stderr)
@@ -288,18 +304,52 @@ Examples:
         print("  - model_provider", file=sys.stderr)
         sys.exit(1)
 
-    # Initialize agents
+    # Verify LLM connectivity before initializing agents
+    print("Verifying LLM connectivity...")
     try:
-        print("Initializing agents...")
-        searcher = SearcherAgent()
-        reviewer = ReviewerAgent(
-            searcher_agent=searcher,
-            generate_fixed_files=not args.no_fix,
+        # Parse verify_ssl
+        verify_ssl_value = llm_config.get("verify_ssl")
+        if isinstance(verify_ssl_value, str):
+            verify_ssl = verify_ssl_value.lower() == "true"
+        else:
+            verify_ssl = verify_ssl_value if verify_ssl_value is not None else True
+
+        # Get ssl_cert if provided
+        ssl_cert = llm_config.get("ssl_cert")
+
+        # Create Model configs from llm_config
+        model_client_config = ModelClientConfig(
+            client_provider=llm_config.get("model_provider", "OpenAI"),
+            api_key=llm_config.get("api_key", ""),
+            api_base=llm_config.get("api_base", ""),
+            verify_ssl=verify_ssl,
+            ssl_cert=ssl_cert,
         )
-        print("✓ Agents initialized\n")
+        model_request_config = ModelRequestConfig(
+            model_name=llm_config.get("model_name", ""),
+        )
+
+        # Create Model instance
+        test_model = Model(
+            model_client_config=model_client_config,
+            model_config=model_request_config,
+        )
+
+        # Test with minimal invocation (1 token input, 1 token output)
+        test_response = await test_model.invoke(
+            "test",
+            model=llm_config.get("model_name", ""),
+            max_tokens=1,
+            timeout=10.0,
+        )
+
+        if not test_response or not test_response.content:
+            raise ValueError("LLM returned empty response")
+
+        print("✓ LLM connectivity verified")
     except Exception as e:
         error_msg = str(e).lower()
-        print(f"\n❌ Error initializing agents: {e}", file=sys.stderr)
+        print(f"\n❌ LLM connectivity verification failed: {e}", file=sys.stderr)
 
         # Provide helpful messages for common errors
         if "api" in error_msg or "key" in error_msg or "auth" in error_msg or "unauthorized" in error_msg:
@@ -314,132 +364,166 @@ Examples:
             print("  1. Your network connection", file=sys.stderr)
             print("  2. The API base URL is reachable", file=sys.stderr)
             print("  3. There are no firewall restrictions", file=sys.stderr)
-        elif "embedding" in error_msg or "milvus" in error_msg:
-            print("\nThis appears to be a knowledge base or embedding error.", file=sys.stderr)
+        elif "model" in error_msg or "not found" in error_msg:
+            print("\nThis appears to be a model configuration error.", file=sys.stderr)
             print("Please check:", file=sys.stderr)
-            print("  1. Your embedding API configuration", file=sys.stderr)
-            print("  2. Milvus connection settings", file=sys.stderr)
+            print("  1. Your model name is correct", file=sys.stderr)
+            print("  2. The model is available in your API provider", file=sys.stderr)
 
-        import traceback
+        raise e
 
-        traceback.print_exc()
-        sys.exit(1)
+    # Initialize agents
+    with tqdm(total=len(files), desc="Reviewing files", unit="file") as pbar:
+        try:
+            print("\nInitializing agents...")
+            searcher = SearcherAgent()
+            reviewer = ReviewerAgent(
+                searcher_agent=searcher,
+                generate_fixed_files=not args.no_fix,
+                max_iterations=args.max_iter,
+                pbar=pbar,
+            )
+            print("✓ Agents initialized\n")
+        except Exception as e:
+            error_msg = str(e).lower()
+            print(f"\n❌ Error initializing agents: {e}", file=sys.stderr)
 
-    # Run review with progress bar
-    try:
-        print("Starting review process...")
-        print("=" * 80)
+            # Provide helpful messages for common errors
+            if "api" in error_msg or "key" in error_msg or "auth" in error_msg or "unauthorized" in error_msg:
+                print("\nThis appears to be an API authentication error.", file=sys.stderr)
+                print("Please check:", file=sys.stderr)
+                print("  1. Your API key is correct and valid", file=sys.stderr)
+                print("  2. Your API base URL is correct", file=sys.stderr)
+                print("  3. Your API key has the necessary permissions", file=sys.stderr)
+            elif "connection" in error_msg or "timeout" in error_msg or "network" in error_msg:
+                print("\nThis appears to be a connection error.", file=sys.stderr)
+                print("Please check:", file=sys.stderr)
+                print("  1. Your network connection", file=sys.stderr)
+                print("  2. The API base URL is reachable", file=sys.stderr)
+                print("  3. There are no firewall restrictions", file=sys.stderr)
+            elif "embedding" in error_msg or "milvus" in error_msg:
+                print("\nThis appears to be a knowledge base or embedding error.", file=sys.stderr)
+                print("Please check:", file=sys.stderr)
+                print("  1. Your embedding API configuration", file=sys.stderr)
+                print("  2. Milvus connection settings", file=sys.stderr)
 
-        # Use tqdm if available
-        if tqdm is not None:
-            with tqdm(total=len(files), desc="Reviewing files", unit="file") as pbar:
-                result = await reviewer.invoke({"files": files})
-                pbar.update(len(files))
-        else:
+            import traceback
+
+            traceback.print_exc()
+            sys.exit(1)
+
+        # Run review with progress bar
+        try:
+            print("Starting review process...")
+            print("=" * 80)
+
             result = await reviewer.invoke({"files": files})
 
-        # Check for errors in result
-        if not result:
-            print("\n❌ Error: Review returned no results", file=sys.stderr)
-            sys.exit(1)
+            # Check for errors in result
+            if not result:
+                print("\n❌ Error: Review returned no results", file=sys.stderr)
+                sys.exit(1)
 
-        # Check if any files failed to process
-        reports = result.get("reports", [])
-        if reports:
-            failed_files = []
-            for report in reports:
-                if report.get("errors") and isinstance(report.get("errors"), str):
-                    # Error message instead of error list
-                    failed_files.append(report.get("file_path", "Unknown"))
-                elif "Error" in str(report.get("report", "")):
-                    failed_files.append(report.get("file_path", "Unknown"))
+            # Check if any files failed to process
+            reports = result.get("reports", [])
+            if reports:
+                failed_files = []
+                for report in reports:
+                    if report.get("errors") and isinstance(report.get("errors"), str):
+                        # Error message instead of error list
+                        failed_files.append(report.get("file_path", "Unknown"))
+                    elif "Error" in str(report.get("report", "")):
+                        failed_files.append(report.get("file_path", "Unknown"))
 
-            if failed_files:
-                print(f"\n⚠️  Warning: {len(failed_files)} file(s) had errors during review:", file=sys.stderr)
-                for f in failed_files:
-                    print(f"  - {f}", file=sys.stderr)
+                if failed_files:
+                    print(f"\n⚠️  Warning: {len(failed_files)} file(s) had errors during review:", file=sys.stderr)
+                    for f in failed_files:
+                        print(f"  - {f}", file=sys.stderr)
 
-        # Check if review actually processed files
-        files_reviewed = result.get("files_reviewed", 0)
-        if files_reviewed == 0 and files:
-            print("\n❌ Error: No files were successfully reviewed", file=sys.stderr)
-            print("This may indicate:", file=sys.stderr)
-            print("  1. API authentication failure (check your API key)", file=sys.stderr)
-            print("  2. Network connectivity issues", file=sys.stderr)
-            print("  3. Configuration errors", file=sys.stderr)
+            # Check if review actually processed files
+            files_reviewed = result.get("files_reviewed", 0)
+            if files_reviewed == 0 and files:
+                print("\n❌ Error: No files were successfully reviewed", file=sys.stderr)
+                print("This may indicate:", file=sys.stderr)
+                print("  1. API authentication failure (check your API key)", file=sys.stderr)
+                print("  2. Network connectivity issues", file=sys.stderr)
+                print("  3. Configuration errors", file=sys.stderr)
+                print("\nCheck the logs in tomato/logs/ for more details.", file=sys.stderr)
+                sys.exit(1)
+
+            print("\n" + "=" * 80)
+            print("Review completed!")
+            print("=" * 80)
+            print()
+
+            # Track modified files for cleanup
+            if result.get("fixed_files"):
+                _cleanup_state["modified_files"].update(result["fixed_files"])
+            elif not args.no_fix and result.get("files_reviewed"):
+                # If fixes were applied, track all reviewed files as potentially modified
+                _cleanup_state["modified_files"].update(files)
+
+            # Print summary
+            if result.get("report_files"):
+                print("Review reports saved to: tomato/reviews/")
+                print(f"  ({len(result['report_files'])} report(s) generated)")
+
+            if result.get("fixed_files") and not args.no_fix:
+                print(f"\nModified {len(result['fixed_files'])} file(s) in place")
+                print("Original files backed up to: tomato/backup/")
+
+            if result.get("files_reviewed"):
+                print(f"\nTotal files reviewed: {result['files_reviewed']}")
+
+            print("\nLogs saved to: tomato/logs/")
+            print()
+
+            # Print combined report
+            if result.get("output"):
+                print(result["output"])
+
+        except KeyboardInterrupt:
+            # Signal handler will take care of cleanup
+            raise
+
+        except Exception as e:
+            error_msg = str(e).lower()
+            print(f"\n❌ Error during review: {e}", file=sys.stderr)
+
+            # Provide helpful messages for common errors
+            if (
+                "api" in error_msg
+                or "key" in error_msg
+                or "auth" in error_msg
+                or "unauthorized" in error_msg
+                or "401" in error_msg
+                or "403" in error_msg
+            ):
+                print("\nThis appears to be an API authentication error.", file=sys.stderr)
+                print("Please check:", file=sys.stderr)
+                print("  1. Your API key is correct and valid", file=sys.stderr)
+                print("  2. Your API base URL is correct", file=sys.stderr)
+                print("  3. Your API key has the necessary permissions", file=sys.stderr)
+                print("  4. Your embedding API key (if different) is also valid", file=sys.stderr)
+            elif (
+                "connection" in error_msg or "timeout" in error_msg or "network" in error_msg or "refused" in error_msg
+            ):
+                print("\nThis appears to be a connection error.", file=sys.stderr)
+                print("Please check:", file=sys.stderr)
+                print("  1. Your network connection", file=sys.stderr)
+                print("  2. The API base URL is reachable", file=sys.stderr)
+                print("  3. There are no firewall restrictions", file=sys.stderr)
+            elif "embedding" in error_msg or "milvus" in error_msg:
+                print("\nThis appears to be a knowledge base or embedding error.", file=sys.stderr)
+                print("Please check:", file=sys.stderr)
+                print("  1. Your embedding API configuration", file=sys.stderr)
+                print("  2. Milvus connection settings", file=sys.stderr)
+
             print("\nCheck the logs in tomato/logs/ for more details.", file=sys.stderr)
+            import traceback
+
+            traceback.print_exc()
             sys.exit(1)
-
-        print("\n" + "=" * 80)
-        print("Review completed!")
-        print("=" * 80)
-        print()
-
-        # Track modified files for cleanup
-        if result.get("fixed_files"):
-            _cleanup_state["modified_files"].update(result["fixed_files"])
-        elif not args.no_fix and result.get("files_reviewed"):
-            # If fixes were applied, track all reviewed files as potentially modified
-            _cleanup_state["modified_files"].update(files)
-
-        # Print summary
-        if result.get("report_files"):
-            print("Review reports saved to: tomato/reviews/")
-            print(f"  ({len(result['report_files'])} report(s) generated)")
-
-        if result.get("fixed_files") and not args.no_fix:
-            print(f"\nModified {len(result['fixed_files'])} file(s) in place")
-            print("Original files backed up to: tomato/backup/")
-
-        if result.get("files_reviewed"):
-            print(f"\nTotal files reviewed: {result['files_reviewed']}")
-
-        print("\nLogs saved to: tomato/logs/")
-        print()
-
-        # Print combined report
-        if result.get("output"):
-            print(result["output"])
-
-    except KeyboardInterrupt:
-        # Signal handler will take care of cleanup
-        raise
-    except Exception as e:
-        error_msg = str(e).lower()
-        print(f"\n❌ Error during review: {e}", file=sys.stderr)
-
-        # Provide helpful messages for common errors
-        if (
-            "api" in error_msg
-            or "key" in error_msg
-            or "auth" in error_msg
-            or "unauthorized" in error_msg
-            or "401" in error_msg
-            or "403" in error_msg
-        ):
-            print("\nThis appears to be an API authentication error.", file=sys.stderr)
-            print("Please check:", file=sys.stderr)
-            print("  1. Your API key is correct and valid", file=sys.stderr)
-            print("  2. Your API base URL is correct", file=sys.stderr)
-            print("  3. Your API key has the necessary permissions", file=sys.stderr)
-            print("  4. Your embedding API key (if different) is also valid", file=sys.stderr)
-        elif "connection" in error_msg or "timeout" in error_msg or "network" in error_msg or "refused" in error_msg:
-            print("\nThis appears to be a connection error.", file=sys.stderr)
-            print("Please check:", file=sys.stderr)
-            print("  1. Your network connection", file=sys.stderr)
-            print("  2. The API base URL is reachable", file=sys.stderr)
-            print("  3. There are no firewall restrictions", file=sys.stderr)
-        elif "embedding" in error_msg or "milvus" in error_msg:
-            print("\nThis appears to be a knowledge base or embedding error.", file=sys.stderr)
-            print("Please check:", file=sys.stderr)
-            print("  1. Your embedding API configuration", file=sys.stderr)
-            print("  2. Milvus connection settings", file=sys.stderr)
-
-        print("\nCheck the logs in tomato/logs/ for more details.", file=sys.stderr)
-        import traceback
-
-        traceback.print_exc()
-        sys.exit(1)
 
 
 def cli_entry():

@@ -155,7 +155,7 @@ def build_pep_documents(cache_manager: Optional[CacheManager] = None, filter_sta
         cache_manager = CacheManager()
 
     # Get PEP collection (content)
-    pep_collection = cache_manager.get_current_pep_collection()
+    pep_collection = cache_manager.update_pep_collection()
 
     # Get API metadata
     remote_last_updated, pep_index = get_remote_last_updated()
@@ -173,13 +173,6 @@ def build_pep_documents(cache_manager: Optional[CacheManager] = None, filter_sta
 
         # Get last updated date
         last_updated = remote_last_updated.get(pep_number)
-        if not last_updated:
-            # Fallback: use created date or current time
-            try:
-                created_str = api_metadata.get("created", "")
-                last_updated = parse_date_str(created_str) if created_str else datetime.now()
-            except (ValueError, TypeError):
-                last_updated = datetime.now()
 
         try:
             # Process into PEPDocument

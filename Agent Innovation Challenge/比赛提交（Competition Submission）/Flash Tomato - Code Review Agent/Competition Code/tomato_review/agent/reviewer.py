@@ -2,15 +2,22 @@
 
 This agent runs pylint on files, generates questions about errors, searches PEPs
 via SearcherAgent, and generates comprehensive markdown reports.
+Uses LLM reasoning through ReActAgent framework.
 """
 
-import logging
 import re
 import subprocess
+import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from tqdm import tqdm
+
+from openjiuwen.core.common.exception.exception import JiuWenBaseException
 from openjiuwen.core.common.schema.param import Param
+from openjiuwen.core.foundation.llm import ToolCall, ToolMessage
+from openjiuwen.core.foundation.tool import tool
+from openjiuwen.core.session.session import Session
 from openjiuwen.core.single_agent.agents.react_agent import ReActAgent, ReActAgentConfig
 from openjiuwen.core.single_agent.schema.agent_card import AgentCard
 from tomato_review.agent.fixer import FixerAgent
@@ -18,6 +25,7 @@ from tomato_review.agent.searcher import SearcherAgent
 from tomato_review.agent.utils import (
     backup_file,
     configure_from_env,
+    extract_reasoning_content,
     normalize_filename,
     parse_pylint_output,
     setup_file_logger,
@@ -43,6 +51,9 @@ class ReviewerAgent(ReActAgent):
         fixer_agent: Optional[FixerAgent] = None,
         config: Optional[ReActAgentConfig] = None,
         generate_fixed_files: bool = True,
+        max_iterations: int = 10,
+        pbar: Optional[tqdm] = None,
+        lock: threading.Lock = threading.Lock(),
     ):
         """Initialize ReviewerAgent.
 
@@ -52,6 +63,9 @@ class ReviewerAgent(ReActAgent):
             fixer_agent: FixerAgent instance (will be created if not provided)
             config: ReActAgentConfig (will be created with defaults if not provided)
             generate_fixed_files: Whether to automatically generate fixed files (default: True)
+            max_iterations: Maximum iterations of file fixing (default: 10)
+            pbar: Tqdm progress bar (default: None)
+            lock: thread lock
         """
         # Create default card if not provided
         if card is None:
@@ -79,36 +93,248 @@ class ReviewerAgent(ReActAgent):
         # Initialize parent
         super().__init__(card)
 
+        # Progress tracking
+        self.max_iterations = max_iterations
+        self.pbar_unit = 1 / self.max_iterations
+        self.pbar = pbar
+        self.lock = lock
+
         # Set up tomato directories
         self._tomato_dirs = setup_tomato_directories()
 
         # Store searcher agent
         self._searcher_agent = searcher_agent
+        if searcher_agent:
+            searcher_agent.pbar = pbar
+            searcher_agent.lock = lock
 
         # Store fixer agent
         self._fixer_agent = fixer_agent
         self._generate_fixed_files = generate_fixed_files
+        if fixer_agent:
+            fixer_agent.pbar = pbar
+            fixer_agent.lock = lock
 
         # File loggers will be created per-file in invoke
         self._file_loggers = {}
 
+        # Store tool instances for local execution
+        self._local_tools: Dict[str, Any] = {}
+
+        # OpenJiuwen doesn't support this yet
         # Add searcher agent as an ability if provided
-        if searcher_agent is not None:
-            searcher_card = AgentCard(
-                name="searcher_agent",
-                description=searcher_agent.card.description,
-                input_params=searcher_agent.card.input_params,
-            )
-            self.add_ability(searcher_card)
+        # if searcher_agent is not None:
+        #     searcher_card = AgentCard(
+        #         name="searcher_agent",
+        #         description=searcher_agent.card.description,
+        #         input_params=searcher_agent.card.input_params,
+        #     )
+        #     self.add_ability(searcher_card)
 
         # Configure agent if config provided
         if config is not None:
+            self.config = config
             self.configure(config)
         else:
             # Set default configuration
             default_config = ReActAgentConfig()
             configure_from_env(default_config)
+            self.config = default_config
             self.configure(default_config)
+
+        # Set up system prompt and tools
+        self._setup_prompt()
+        self._register_tools()
+
+    def _setup_prompt(self):
+        """Set up system prompt for LLM reasoning."""
+        system_prompt = """You are an expert Python code reviewer. Your task is to review Python files for code quality, style, and best practices.
+
+When reviewing a file:
+1. Use run_pylint tool to check for linting errors
+2. For each error, use read_file_context to understand the code around the error
+3. Use search_peps (via searcher_agent) to find relevant PEP guidelines for each error
+4. Analyze the errors and PEP guidelines to propose fixes
+5. Use generate_report to create a comprehensive markdown report
+
+Your review should:
+- Identify all code quality issues
+- Reference relevant PEP guidelines
+- Propose specific, actionable fixes
+- Provide clear explanations for each recommendation
+
+Be thorough, accurate, and focus on Python best practices."""
+
+        self.config.configure_prompt_template([{"role": "system", "content": system_prompt}])
+        self.configure(self.config)
+
+    def _register_tools(self):
+        """Register tools as abilities for the LLM to use."""
+        agent_instance = self
+
+        # Tool: Run pylint
+        async def run_pylint(file_path: str) -> str:
+            """Run pylint on a Python file and return parsed errors.
+
+            Args:
+                file_path: Path to the Python file to check
+
+            Returns:
+                JSON string with errors list, each error has: file, line, column, type, code, message, symbol
+            """
+            import json
+
+            result = await agent_instance.run_pylint_tool(file_path)
+            errors = result.get("errors", [])
+            return json.dumps({"errors": errors, "count": len(errors)}, indent=2)
+
+        # Tool: Read file context
+        async def read_file_context(file_path: str, line_num: int, context_lines: int = 3) -> str:
+            """Read file content with context around a specific line.
+
+            Args:
+                file_path: Path to the file
+                line_num: Line number (1-indexed)
+                context_lines: Number of lines before and after to include
+
+            Returns:
+                JSON string with context information
+            """
+            import json
+
+            context = agent_instance.read_file_context_tool(file_path, line_num, context_lines)
+            return json.dumps(context, indent=2)
+
+        # Tool: Search PEPs (uses searcher agent)
+        async def search_peps(question: str, code_snippet: str = "") -> str:
+            """Search PEP knowledge base for relevant guidelines.
+
+            Args:
+                question: Question about Python coding conventions
+                code_snippet: Optional code snippet for context
+
+            Returns:
+                Summary of relevant PEPs
+            """
+            searcher = agent_instance.get_searcher_agent()
+            if searcher is None:
+                searcher = SearcherAgent(pbar=self.pbar, lock=self.lock)
+                setattr(agent_instance, "_searcher_agent", searcher)
+
+            result = await searcher.invoke(
+                {
+                    "query": question,
+                    "code_snippet": code_snippet,
+                }
+            )
+            return result.get("output", "No results found.")
+
+        # Create tools
+        pylint_tool = tool(
+            name="run_pylint",
+            description="Run pylint static analysis on a Python file to find code quality issues, style violations, and best practice violations.",
+            input_params={
+                "type": "object",
+                "properties": {"file_path": {"type": "string", "description": "Path to the Python file to analyze"}},
+                "required": ["file_path"],
+            },
+        )(run_pylint)
+
+        read_tool = tool(
+            name="read_file_context",
+            description="Read a file with context around a specific line number. Useful for understanding code context when analyzing errors.",
+            input_params={
+                "type": "object",
+                "properties": {
+                    "file_path": {"type": "string", "description": "Path to the file to read"},
+                    "line_num": {"type": "integer", "description": "Line number (1-indexed) to get context around"},
+                    "context_lines": {
+                        "type": "integer",
+                        "description": "Number of lines before and after to include (default: 3)",
+                        "default": 3,
+                    },
+                },
+                "required": ["file_path", "line_num"],
+            },
+        )(read_file_context)
+
+        search_tool = tool(
+            name="search_peps",
+            description="Search Python Enhancement Proposals (PEPs) for guidelines related to a question about Python coding conventions or best practices.",
+            input_params={
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "Question about Python coding conventions or best practices",
+                    },
+                    "code_snippet": {"type": "string", "description": "Optional code snippet related to the question"},
+                },
+                "required": ["question"],
+            },
+        )(search_peps)
+
+        # Store tool instances for local execution
+        self._local_tools["run_pylint"] = pylint_tool
+        self._local_tools["read_file_context"] = read_tool
+        self._local_tools["search_peps"] = search_tool
+
+        # Register tool cards
+        self.add_ability(pylint_tool.card)
+        self.add_ability(read_tool.card)
+        self.add_ability(search_tool.card)
+
+    async def _execute_ability(self, tool_calls: Any, session: Session) -> list[tuple[Any, ToolMessage]]:
+        """Override to handle local tool execution."""
+        import json
+
+        # Convert single tool_call to list
+        if not isinstance(tool_calls, list):
+            tool_calls = [tool_calls]
+
+        results = []
+        for tool_call in tool_calls:
+            tool_name = tool_call.name if isinstance(tool_call, ToolCall) else tool_call.get("name", "")
+
+            # Check if it's a local tool
+            if tool_name in self._local_tools:
+                local_tool = self._local_tools[tool_name]
+                # Parse arguments
+                if isinstance(tool_call, ToolCall):
+                    tool_args = (
+                        json.loads(tool_call.arguments) if isinstance(tool_call.arguments, str) else tool_call.arguments
+                    )
+                    tool_call_id = tool_call.id
+                else:
+                    tool_args = tool_call.get("arguments", {})
+                    tool_call_id = tool_call.get("id", "")
+
+                try:
+                    result = await local_tool.invoke(tool_args)
+                    tool_message = ToolMessage(content=str(result), tool_call_id=tool_call_id)
+                    results.append((result, tool_message))
+                except Exception as e:
+                    error_msg = f"Local tool execution error: {str(e)}"
+                    tool_message = ToolMessage(content=error_msg, tool_call_id=tool_call_id)
+                    results.append((None, tool_message))
+            else:
+                # Fall back to parent implementation
+                parent_results = await super()._execute_ability(tool_calls, session)
+                results.extend(parent_results if isinstance(parent_results, list) else [parent_results])
+
+        return results
+
+    def get_searcher_agent(self) -> Optional[SearcherAgent]:
+        """Get searcher agent instance."""
+        return self._searcher_agent
+
+    async def run_pylint_tool(self, file_path: str) -> Dict[str, Any]:
+        """Public method for running pylint (used by tools)."""
+        return await self._run_pylint(file_path)
+
+    def read_file_context_tool(self, file_path: str, line_num: int, context_lines: int = 3) -> Dict[str, Any]:
+        """Public method for reading file context (used by tools)."""
+        return self._read_file_context(file_path, line_num, context_lines)
 
     async def _run_pylint(self, file_path: str) -> Dict[str, Any]:
         """Run pylint on a file and return results.
@@ -222,11 +448,12 @@ class ReviewerAgent(ReActAgent):
 
         return questions
 
-    async def _search_peps(self, question: str, code_snippet: Optional[str] = None) -> str:
+    async def _search_peps(self, question: str, file_path: str, code_snippet: Optional[str] = None) -> str:
         """Search PEPs using SearcherAgent.
 
         Args:
             question: Question to search
+            file_path: File path
             code_snippet: Optional code snippet
 
         Returns:
@@ -234,7 +461,7 @@ class ReviewerAgent(ReActAgent):
         """
         if self._searcher_agent is None:
             # Create searcher agent if not provided
-            self._searcher_agent = SearcherAgent()
+            self._searcher_agent = SearcherAgent(pbar=self.pbar, lock=self.lock)
 
         # Call searcher agent
         inputs = {
@@ -247,11 +474,13 @@ class ReviewerAgent(ReActAgent):
             output = result.get("output", "No results found.")
             # Check if the output indicates an error
             if "error" in output.lower() or "failed" in output.lower() or "exception" in output.lower():
-                logging.warning("PEP search may have failed: %s", output[:20].replace("\n", " "))
+                self._file_loggers[file_path].warning(
+                    "PEP search may have failed: %s", "\n".join(output.splitlines()[:10])
+                )
             return output
         except Exception as e:
             error_msg = f"Error searching PEPs: {str(e)}"
-            logging.error(error_msg)
+            self._file_loggers[file_path].error(error_msg)
             # Return error message that will be visible in the report
             return f"Error: {error_msg}. Please check your API configuration and network connection."
 
@@ -478,7 +707,7 @@ class ReviewerAgent(ReActAgent):
         }
 
     async def _review_file(self, file_path: str) -> Dict[str, Any]:
-        """Review a single file and generate report.
+        """Review a single file using LLM reasoning.
 
         Args:
             file_path: Path to the file to review
@@ -486,6 +715,143 @@ class ReviewerAgent(ReActAgent):
         Returns:
             Dict with 'file_path', 'errors', 'questions', 'pep_results', 'proposed_changes', 'report'
         """
+        # Check if file exists
+        if not Path(file_path).exists():
+            return {
+                "file_path": file_path,
+                "errors": [],
+                "questions": [],
+                "pep_results": {},
+                "proposed_changes": [],
+                "report": f"# Code Review Report: {file_path}\n\n**Error**: File not found.",
+            }
+
+        # Use LLM to review the file - LLM will use tools to:
+        # 1. Run pylint
+        # 2. Read file context for errors
+        # 3. Search PEPs for guidelines
+        # 4. Generate recommendations
+
+        user_query = f"""Please review the Python file: {file_path}
+
+Your task:
+1. Use run_pylint tool to check for linting errors
+2. For each error found, use read_file_context to understand the code around the error
+3. Use search_peps to find relevant PEP guidelines for each error
+4. Analyze the errors and PEP guidelines
+5. Provide a comprehensive review with:
+   - List of all errors found
+   - For each error: explanation, relevant PEP guidelines, and proposed fix
+   - A summary of recommendations
+
+Format your response as a detailed markdown report."""
+
+        try:
+            # Use parent's ReAct loop - LLM will reason and use tools
+            llm_result = await super().invoke({"query": user_query}, session=None)
+            llm_output, llm_reasoning = extract_reasoning_content(llm_result.get("output", ""))
+
+            # Run pylint ourselves to get structured error data (for compatibility with existing code)
+            pylint_result = await self._run_pylint(file_path)
+            errors = pylint_result.get("errors", [])
+
+            # Generate a structured report from LLM output
+            no_issues = "\n\n✅ No issues found by pylint." if not errors else ""
+            sep = "-" * 80
+            report = f"# Code Review Report:\n`{file_path}`{no_issues}\n\n{llm_output}"
+
+            if not errors:
+                return {
+                    "file_path": file_path,
+                    "errors": [],
+                    "questions": [],
+                    "pep_results": {},
+                    "proposed_changes": [],
+                    "report": report,
+                }
+
+            # Extract proposed changes from LLM output (basic parsing)
+            # In a full implementation, the LLM would structure this better or we'd parse tool call results
+            proposed_changes = self._extract_changes_from_llm_output(llm_output, errors)
+
+            # Extract PEP references from LLM output
+            pep_refs = self._extract_pep_references_from_llm_output(llm_output)
+            if pep_refs:
+                report += f"\n{sep}\n## The following PEPs were referenced in this review:\n"
+                for ref in sorted(pep_refs, key=lambda x: int(x["number"])):
+                    report += f"- [PEP {ref['number']}]({ref['url']})\n"
+
+            if llm_reasoning:
+                report += "\n" + sep + f"\n**Tomato Reviewer's Thinking Process:**\n{llm_reasoning}\n" + sep
+
+            return {
+                "file_path": file_path,
+                "errors": errors,
+                "questions": [],  # LLM handles this internally
+                "pep_results": {},  # LLM handles this internally
+                "proposed_changes": proposed_changes,
+                "pep_references": pep_refs,
+                "report": report,
+            }
+        except JiuWenBaseException:
+            raise
+        except Exception as e:
+            self._file_loggers[file_path].error("LLM review failed for %s: %s", file_path, e)
+            # Fallback to rule-based review
+            return await self._review_file_rule_based(file_path)
+
+    def _extract_changes_from_llm_output(self, llm_output: str, errors: List[Dict[str, str]]) -> List[Dict[str, Any]]:
+        """Extract proposed changes from LLM output.
+
+        This is a basic parser - in a full implementation, the LLM would
+        return structured data or we'd use a more sophisticated extraction.
+        """
+        changes = []
+        # Basic extraction - look for error mentions and line numbers
+        for error in errors:
+            line_num = error.get("line", 0)
+            code = error.get("code", "")
+            message = error.get("message", "")
+
+            # Check if LLM mentioned this error
+            if str(line_num) in llm_output or code in llm_output:
+                changes.append(
+                    {
+                        "line": line_num,
+                        "code": code,
+                        "message": message,
+                        "description": f"LLM recommendation for {code}: {message}",
+                        "original_code": "",
+                        "fixed_code": "",
+                        "code_snippet": "",
+                        "pep_references": [],
+                    }
+                )
+        return changes
+
+    def _extract_pep_references_from_llm_output(self, llm_output: str) -> List[Dict[str, str]]:
+        """Extract PEP references from LLM output."""
+        pep_refs = []
+        # Look for PEP references in the format: PEP 8, PEP 257, etc.
+        pep_pattern = r"PEP\s+(\d+)"
+        for match in re.finditer(pep_pattern, llm_output, re.IGNORECASE):
+            pep_num = match.group(1)
+            # Try to find URL in nearby text
+            url = f"https://peps.python.org/pep-{pep_num.zfill(4)}/"
+            pep_refs.append({"number": pep_num, "url": url})
+
+        # Deduplicate
+        seen = set()
+        unique_refs = []
+        for ref in pep_refs:
+            if ref["number"] not in seen:
+                seen.add(ref["number"])
+                unique_refs.append(ref)
+
+        return unique_refs
+
+    async def _review_file_rule_based(self, file_path: str) -> Dict[str, Any]:
+        """Fallback rule-based review (original implementation)."""
         # Check if file exists
         if not Path(file_path).exists():
             return {
@@ -534,15 +900,17 @@ class ReviewerAgent(ReActAgent):
             code_snippet_for_search = code_context.get("full_context", q.get("code_snippet", ""))
 
             try:
-                pep_summary = await self._search_peps(question, code_snippet_for_search)
+                pep_summary = await self._search_peps(question, file_path, code_snippet_for_search)
                 pep_results[question] = pep_summary
                 # Track if search failed
                 if pep_summary and ("Error:" in pep_summary or "error" in pep_summary.lower()):
                     pep_search_errors.append(question)
+            except JiuWenBaseException:
+                raise
             except Exception as e:
                 # PEP search failed - log and continue, but mark as error
                 error_msg = f"PEP search failed for question '{question}': {str(e)}"
-                logging.error(error_msg)
+                self._file_loggers[file_path].error(error_msg)
                 pep_results[question] = f"Error: {error_msg}"
                 pep_search_errors.append(question)
 
@@ -713,9 +1081,8 @@ class ReviewerAgent(ReActAgent):
             Path to final fixed file, or None if fixing failed
         """
         if self._fixer_agent is None:
-            self._fixer_agent = FixerAgent()
+            self._fixer_agent = FixerAgent(pbar=self.pbar, lock=self.lock)
 
-        max_iterations = 10  # Prevent infinite loops
         iteration = 0
         current_file_path = original_file_path
         current_proposed_changes = initial_review.get("proposed_changes", [])
@@ -723,7 +1090,9 @@ class ReviewerAgent(ReActAgent):
         final_fixed_file_path = None
         last_review_errors = initial_review.get("errors", [])
 
-        while iteration < max_iterations:
+        while iteration < self.max_iterations:
+            with self.lock:
+                self.pbar.update(self.pbar_unit)
             iteration += 1
             state = "FIX" if iteration > 1 else "INITIAL_FIX"
 
@@ -838,6 +1207,10 @@ class ReviewerAgent(ReActAgent):
                     file_logger.error("Error in review-fix cycle iteration %d: %s", iteration, e)
                 break
 
+        if iteration < self.max_iterations:
+            with self.lock:
+                self.pbar.update(1 - iteration * self.pbar_unit)
+
         # Store cycle history in the review for debugging
         initial_review["fix_cycle_history"] = cycle_history
         initial_review["fix_iterations"] = iteration
@@ -850,7 +1223,7 @@ class ReviewerAgent(ReActAgent):
         inputs: Any,
         session: Optional[Any] = None,
     ) -> Dict[str, Any]:
-        """Execute code review on list of files.
+        """Execute code review on list of files using LLM reasoning.
 
         Args:
             inputs: Input dict with 'files' (list of file paths), or list of file paths
@@ -870,21 +1243,27 @@ class ReviewerAgent(ReActAgent):
         if not files:
             raise ValueError("Files list is required and cannot be empty")
 
+        # For now, use LLM to review each file individually
+        # The LLM will use tools to: run pylint, read context, search PEPs, and generate recommendations
+        # We still handle file processing, backup, and report generation in the orchestration layer
+        # but let LLM make the review decisions
+
         # Process files in parallel
         async def process_file(file_path: str) -> Dict[str, Any]:
             """Process a single file: backup, review, generate report, and optionally fix."""
+
+            # Set up file logger for this file
+            normalized_name = normalize_filename(file_path)
+            log_file_path = self._tomato_dirs["logs"] / f"{file_path}.log"
+            file_logger = setup_file_logger(log_file_path, f"tomato_review_{normalized_name}")
+            self._file_loggers[file_path] = file_logger
+
             # Backup original file
             try:
                 backup_path = backup_file(file_path, self._tomato_dirs["backup"])
             except Exception as e:
-                logging.error("Failed to backup file %s: %s", file_path, e)
+                file_logger.error("Failed to backup file %s: %s", file_path, e)
                 backup_path = None
-
-            # Set up file logger for this file
-            normalized_name = normalize_filename(file_path)
-            log_file_path = self._tomato_dirs["logs"] / f"{normalized_name}.log"
-            file_logger = setup_file_logger(log_file_path, f"tomato_review_{normalized_name}")
-            self._file_loggers[file_path] = file_logger
 
             file_logger.info("Starting review for file: %s", file_path)
             if backup_path:
@@ -900,7 +1279,7 @@ class ReviewerAgent(ReActAgent):
             if file_report.get("report"):
                 try:
                     # Use normalized filename for review
-                    review_filename = f"{normalized_name}.md"
+                    review_filename = f"{file_path}.md"
                     report_file_path = self._tomato_dirs["reviews"] / review_filename
 
                     with open(report_file_path, "w", encoding="utf-8") as f:
@@ -943,7 +1322,7 @@ class ReviewerAgent(ReActAgent):
 
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                logging.error("Error processing file %s: %s", files[i], result)
+                self._file_loggers[files[i]].error("Error processing file %s: %s", files[i], result)
                 continue
 
             reports.append(result["file_report"])

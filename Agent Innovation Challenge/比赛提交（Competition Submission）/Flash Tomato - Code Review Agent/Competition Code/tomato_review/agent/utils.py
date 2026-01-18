@@ -114,6 +114,9 @@ def setup_tomato_directories(base_path: Optional[Path] = None) -> Dict[str, Path
     reviews_dir = tomato_dir / "reviews"
     logs_dir = tomato_dir / "logs"
 
+    if tomato_dir.exists():
+        shutil.rmtree(tomato_dir)
+
     # Create directories
     backup_dir.mkdir(parents=True, exist_ok=True)
     reviews_dir.mkdir(parents=True, exist_ok=True)
@@ -221,14 +224,23 @@ def configure_from_env(config: ReActAgentConfig) -> None:
     api_key = get_env_var("API_KEY", required=True)
     model_name = get_env_var("MODEL_NAME", required=True)
     model_provider = get_env_var("MODEL_PROVIDER", required=True)
-    ssl_cert = get_env_var("VERIFY_SSL", required=False)
+    verify_ssl = get_env_var("VERIFY_SSL", required=False)
+    ssl_cert = get_env_var("SSL_CERT", required=False)
 
     config.configure_model_client(
         provider=model_provider,
         api_key=api_key,
         api_base=api_base,
         model_name=model_name,
-        verify_ssl=ssl_cert != "false",
+        verify_ssl=verify_ssl == "true",
     )
-    if ssl_cert != "true":
+    if ssl_cert == "true":
         config.model_client_config.ssl_cert = ssl_cert
+
+
+def extract_reasoning_content(content: str, reasoning_pattern: str = r"<think>(.*)</think>") -> tuple[str, str]:
+    """Extract reasoning content from LLM response"""
+    reasoning = re.match(reasoning_pattern, content, flags=re.DOTALL)
+    if reasoning:
+        return content[reasoning.end() :].strip(), reasoning.group(1)
+    return content.strip(), ""

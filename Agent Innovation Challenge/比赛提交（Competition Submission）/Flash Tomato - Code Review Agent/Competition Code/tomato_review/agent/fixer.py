@@ -2,15 +2,21 @@
 
 This agent takes review results and applies fixes to generate corrected versions
 of Python files based on PEP guidelines.
+Uses LLM reasoning through ReActAgent framework.
 """
 
-import logging
 import re
 import subprocess
+import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from tqdm import tqdm
+
 from openjiuwen.core.common.schema.param import Param
+from openjiuwen.core.foundation.llm import ToolCall, ToolMessage
+from openjiuwen.core.foundation.tool import tool
+from openjiuwen.core.session.session import Session
 from openjiuwen.core.single_agent.agents.react_agent import ReActAgent, ReActAgentConfig
 from openjiuwen.core.single_agent.schema.agent_card import AgentCard
 from tomato_review.agent.utils import configure_from_env, parse_pylint_output
@@ -27,12 +33,16 @@ class FixerAgent(ReActAgent):
         self,
         card: Optional[AgentCard] = None,
         config: Optional[ReActAgentConfig] = None,
+        pbar: Optional[tqdm] = None,
+        lock: threading.Lock = threading.Lock(),
     ):
         """Initialize FixerAgent.
 
         Args:
             card: Agent card (will be created with defaults if not provided)
             config: ReActAgentConfig (will be created with defaults if not provided)
+            pbar: Tqdm progress bar (default: None)
+            lock: thread lock
         """
         # Create default card if not provided
         if card is None:
@@ -81,14 +91,247 @@ class FixerAgent(ReActAgent):
         # Initialize parent
         super().__init__(card)
 
+        # Progress tracking
+        self.pbar = pbar
+        self.lock = lock
+
+        # Store tool instances for local execution
+        self._local_tools: Dict[str, Any] = {}
+
         # Configure agent if config provided
         if config is not None:
+            self.config = config
             self.configure(config)
         else:
             # Set default configuration
             default_config = ReActAgentConfig()
             configure_from_env(default_config)
+            self.config = default_config
             self.configure(default_config)
+
+        # Set up system prompt and tools
+        self._setup_prompt()
+        self._register_tools()
+
+    def _setup_prompt(self):
+        """Set up system prompt for LLM reasoning."""
+        system_prompt = """You are an expert Python code fixer. Your task is to apply fixes to Python code based on review recommendations and PEP guidelines.
+
+When fixing code:
+1. Use read_file to read the current file content
+2. Analyze the proposed changes and review recommendations
+3. Apply fixes carefully, preserving code logic while fixing style, naming, and best practice issues
+4. Use write_file to write the fixed code
+5. Use run_pylint to verify the fixes resolved the issues
+6. Use run_ruff_format and run_ruff_check_fix to ensure proper formatting
+
+Your fixes should:
+- Follow PEP 8 style guidelines
+- Maintain code functionality
+- Improve code quality and readability
+- Address all identified issues systematically
+
+Be precise and careful - don't break working code."""
+
+        self.config.configure_prompt_template([{"role": "system", "content": system_prompt}])
+        self.configure(self.config)
+
+    def _register_tools(self):
+        """Register tools as abilities for the LLM to use."""
+        agent_instance = self
+
+        # Tool: Read file
+        async def read_file(file_path: str) -> str:
+            """Read the contents of a file.
+
+            Args:
+                file_path: Path to the file to read
+
+            Returns:
+                File contents as string
+            """
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
+
+        # Tool: Write file
+        async def write_file(file_path: str, content: str) -> str:
+            """Write content to a file.
+
+            Args:
+                file_path: Path to the file to write
+                content: Content to write
+
+            Returns:
+                Success message
+            """
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            return f"Successfully wrote {len(content)} characters to {file_path}"
+
+        # Tool: Run pylint
+        async def run_pylint(file_path: str) -> str:
+            """Run pylint on a file to check for remaining errors.
+
+            Args:
+                file_path: Path to the file to check
+
+            Returns:
+                JSON string with errors
+            """
+            import json
+
+            result = await agent_instance.run_pylint_tool(file_path)
+            errors = result.get("errors", [])
+            return json.dumps({"errors": errors, "count": len(errors)}, indent=2)
+
+        # Tool: Run ruff format
+        async def run_ruff_format(file_path: str) -> str:
+            """Format a file using ruff format.
+
+            Args:
+                file_path: Path to the file to format
+
+            Returns:
+                Success message
+            """
+            result = await agent_instance.run_ruff_format_tool(file_path)
+            if result.get("success"):
+                return "File formatted successfully"
+            return f"Formatting failed: {result.get('stderr', 'Unknown error')}"
+
+        # Tool: Run ruff check --fix
+        async def run_ruff_check_fix(file_path: str) -> str:
+            """Auto-fix issues in a file using ruff check --fix.
+
+            Args:
+                file_path: Path to the file to fix
+
+            Returns:
+                Message with number of fixes applied
+            """
+            result = await agent_instance.run_ruff_check_fix_tool(file_path)
+            fixed_count = result.get("fixed_count", 0)
+            return f"Ruff auto-fixed {fixed_count} issue(s)"
+
+        # Create and register tools
+        read_tool = tool(
+            name="read_file",
+            description="Read the contents of a Python file.",
+            input_params={
+                "type": "object",
+                "properties": {"file_path": {"type": "string", "description": "Path to the file to read"}},
+                "required": ["file_path"],
+            },
+        )(read_file)
+
+        write_tool = tool(
+            name="write_file",
+            description="Write content to a Python file. Use this to apply fixes.",
+            input_params={
+                "type": "object",
+                "properties": {
+                    "file_path": {"type": "string", "description": "Path to the file to write"},
+                    "content": {"type": "string", "description": "Content to write to the file"},
+                },
+                "required": ["file_path", "content"],
+            },
+        )(write_file)
+
+        pylint_tool = tool(
+            name="run_pylint",
+            description="Run pylint to check for remaining errors after applying fixes.",
+            input_params={
+                "type": "object",
+                "properties": {"file_path": {"type": "string", "description": "Path to the file to check"}},
+                "required": ["file_path"],
+            },
+        )(run_pylint)
+
+        ruff_format_tool = tool(
+            name="run_ruff_format",
+            description="Format a Python file using ruff format.",
+            input_params={
+                "type": "object",
+                "properties": {"file_path": {"type": "string", "description": "Path to the file to format"}},
+                "required": ["file_path"],
+            },
+        )(run_ruff_format)
+
+        ruff_fix_tool = tool(
+            name="run_ruff_check_fix",
+            description="Auto-fix issues in a Python file using ruff check --fix.",
+            input_params={
+                "type": "object",
+                "properties": {"file_path": {"type": "string", "description": "Path to the file to fix"}},
+                "required": ["file_path"],
+            },
+        )(run_ruff_check_fix)
+
+        # Store tool instances for local execution
+        self._local_tools["read_file"] = read_tool
+        self._local_tools["write_file"] = write_tool
+        self._local_tools["run_pylint"] = pylint_tool
+        self._local_tools["run_ruff_format"] = ruff_format_tool
+        self._local_tools["run_ruff_check_fix"] = ruff_fix_tool
+
+        # Register tool cards
+        self.add_ability(read_tool.card)
+        self.add_ability(write_tool.card)
+        self.add_ability(pylint_tool.card)
+        self.add_ability(ruff_format_tool.card)
+        self.add_ability(ruff_fix_tool.card)
+
+    async def _execute_ability(self, tool_calls: Any, session: Session) -> list[tuple[Any, ToolMessage]]:
+        """Override to handle local tool execution."""
+        import json
+
+        # Convert single tool_call to list
+        if not isinstance(tool_calls, list):
+            tool_calls = [tool_calls]
+
+        results = []
+        for tool_call in tool_calls:
+            tool_name = tool_call.name if isinstance(tool_call, ToolCall) else tool_call.get("name", "")
+
+            # Check if it's a local tool
+            if tool_name in self._local_tools:
+                local_tool = self._local_tools[tool_name]
+                # Parse arguments
+                if isinstance(tool_call, ToolCall):
+                    tool_args = (
+                        json.loads(tool_call.arguments) if isinstance(tool_call.arguments, str) else tool_call.arguments
+                    )
+                    tool_call_id = tool_call.id
+                else:
+                    tool_args = tool_call.get("arguments", {})
+                    tool_call_id = tool_call.get("id", "")
+
+                try:
+                    result = await local_tool.invoke(tool_args)
+                    tool_message = ToolMessage(content=str(result), tool_call_id=tool_call_id)
+                    results.append((result, tool_message))
+                except Exception as e:
+                    error_msg = f"Local tool execution error: {str(e)}"
+                    tool_message = ToolMessage(content=error_msg, tool_call_id=tool_call_id)
+                    results.append((None, tool_message))
+            else:
+                # Fall back to parent implementation
+                parent_results = await super()._execute_ability(tool_calls, session)
+                results.extend(parent_results if isinstance(parent_results, list) else [parent_results])
+
+        return results
+
+    async def run_pylint_tool(self, file_path: str) -> Dict[str, Any]:
+        """Public method for running pylint (used by tools)."""
+        return await self._run_pylint(file_path)
+
+    async def run_ruff_format_tool(self, file_path: str) -> Dict[str, Any]:
+        """Public method for running ruff format (used by tools)."""
+        return await self._run_ruff_format(file_path)
+
+    async def run_ruff_check_fix_tool(self, file_path: str) -> Dict[str, Any]:
+        """Public method for running ruff check --fix (used by tools)."""
+        return await self._run_ruff_check_fix(file_path)
 
     def _apply_naming_fix(self, line: str, error_code: str, message: str) -> str:
         """Apply naming convention fixes.
@@ -491,6 +734,7 @@ class FixerAgent(ReActAgent):
             file_path = inputs.get("file_path")
             review_results = inputs.get("review_results", {})
             proposed_changes = inputs.get("proposed_changes") or review_results.get("proposed_changes", [])
+            file_logger = inputs.get("file_logger")
         else:
             raise ValueError("Input must be dict with 'file_path' and 'review_results' or 'proposed_changes'")
 
@@ -521,13 +765,13 @@ class FixerAgent(ReActAgent):
 
             # Format the file with ruff (in place)
             ruff_format_result = await self._run_ruff_format(file_path)
-            if not ruff_format_result.get("success"):
-                logging.warning("ruff format failed: %s", ruff_format_result.get("stderr", ""))
+            if file_logger and not ruff_format_result.get("success"):
+                file_logger.warning("ruff format failed: %s", ruff_format_result.get("stderr", ""))
 
             # Auto-fix with ruff (in place)
             ruff_fix_result = await self._run_ruff_check_fix(file_path)
-            if ruff_fix_result.get("fixed_count", 0) > 0:
-                logging.info("ruff fixed %d issue(s) in %s", ruff_fix_result["fixed_count"], file_path)
+            if file_logger and ruff_fix_result.get("fixed_count", 0) > 0:
+                file_logger.info("ruff fixed %d issue(s) in %s", ruff_fix_result["fixed_count"], file_path)
 
             return {
                 "success": True,

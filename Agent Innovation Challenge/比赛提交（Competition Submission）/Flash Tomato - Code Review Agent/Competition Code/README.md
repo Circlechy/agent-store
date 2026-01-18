@@ -5,11 +5,7 @@ Python code review agent using pylint and PEP knowledge base.
 ## Installation
 
 ```bash
-# Install from the project directory
-pip install -e .
-
-# Or install using setup.py
-pip install -e . -f setup_tomato.py
+pip install .
 ```
 
 ## Usage
@@ -30,23 +26,25 @@ tomato-review *.py --env-file /path/to/.env.agent
 
 ## Configuration
 
-Create a `.env.agent` file in your project root with the following variables:
-
-```env
-API_BASE=...
-API_KEY=...
-MODEL_NAME=...
-MODEL_PROVIDER=...
-PEP_KB_ID=...
-MILVUS_URI=...
-MILVUS_TOKEN=...
-MILVUS_DATABASE=...
-EMBEDDING_MODEL=...
-EMBEDDING_API_KEY=...
-EMBEDDING_BASE_URL=...
-PEP_CHUNK_SIZE=...
-PEP_CHUNK_OVERLAP=...
-PEP_INDEX_TYPE=...
+Create a `.tomato.yaml` or `tomato.yaml` file in your project root with the following variables:
+```yaml
+tomato-review:
+  kb_id: "edinburgh"
+  milvus_uri: "http://localhost:19530"
+  milvus_token: ""
+  database_name: "pep_kb"
+  embedding_model_name: "qwen3-embedding-8b"
+  embedding_api_key: "sk-********************"
+  embedding_base_url: "http://localhost:11450/v1/embeddings"
+  chunk_size: 512
+  chunk_overlap: 128
+  index_type: "hybrid"
+  api_base: "http://localhost:11451/v1/"
+  api_key: "sk-********************"
+  model_name: "qwen3-8b"
+  model_provider: "OpenAI"
+  verify_ssl: false
+  ssl_cert: null
 ```
 
 ## Output

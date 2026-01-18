@@ -129,6 +129,10 @@ def get_llm_config(config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     llm_config["api_key"] = config.get("api_key") or os.getenv("API_KEY")
     llm_config["model_name"] = config.get("model_name") or os.getenv("MODEL_NAME")
     llm_config["model_provider"] = config.get("model_provider") or os.getenv("MODEL_PROVIDER")
-    llm_config["verify_ssl"] = config.get("verify_ssl") or os.getenv("VERIFY_SSL")
+    llm_config["verify_ssl"] = config.get("verify_ssl") or (os.getenv("VERIFY_SSL") == "true")
+    if "ssl_cert" in config:
+        llm_config["ssl_cert"] = config.get("ssl_cert")
+    else:
+        llm_config["ssl_cert"] = os.getenv("SSL_CERT")
 
     return llm_config

@@ -239,12 +239,9 @@ class PEPKnowledgeBase:
         retrieval_logger.info("Indexing documents in knowledge base...")
 
         # Try to add documents (will handle duplicates if update_documents is used internally)
-        try:
-            doc_ids = await self.knowledge_base.add_documents(documents)
-            stats["added"] = doc_ids
-            retrieval_logger.info("✓ Successfully indexed %d PEP documents", len(doc_ids))
-        except Exception as e:
-            retrieval_logger.warning("Batch add failed: %r", e)
+        doc_ids = await self.knowledge_base.add_documents(documents)
+        stats["added"] = doc_ids
+        retrieval_logger.info("✓ Successfully indexed %d PEP documents", len(doc_ids))
 
         return stats
 
@@ -473,6 +470,11 @@ async def create_pep_knowledge_base(
     Returns:
         PEPKnowledgeBase instance
     """
+    config_str = (
+        f"{kb_id=},{milvus_uri=},\n  - {milvus_token=},\n  - {database_name=},\n  - {embedding_model_name=},\n  - "
+        + f"{embedding_api_key=},\n  - {embedding_base_url=},\n  - {kwargs=}"
+    )
+    print("Creating PEP Knowledge Base with settings:\n\t" + config_str)
     return PEPKnowledgeBase(
         kb_id=kb_id,
         milvus_uri=milvus_uri,

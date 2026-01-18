@@ -83,7 +83,7 @@ def get_remote_last_updated(url: str = PEPS_DEFAULT_URL) -> tuple[dict[str, date
 
 
 class CacheManager:
-    """Manages caching for web requests to reduce server load."""
+    """Manages caching for PEP documents"""
 
     _t_lock: threading.Lock = threading.Lock()
 
@@ -256,7 +256,7 @@ class CacheManager:
         # Download and cache entries that need updating
         updated_entries = {}
         successfully_updated_keys = []
-        for key, entry_info in tqdm(entries_to_update.items(), desc="Updating PEP entries"):
+        for key, entry_info in tqdm(entries_to_update.items(), desc="Updating PEP Docs"):
             url = entry_info.get("url")
             if not url:
                 continue

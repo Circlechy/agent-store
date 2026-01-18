@@ -1,6 +1,6 @@
 """Knowledge base validation and setup utilities."""
 
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 from pymilvus import MilvusClient
 
@@ -8,7 +8,9 @@ from tomato_review.config import get_kb_config
 from tomato_review.pep_kb.pep_knowledge_base import PEPKnowledgeBase, create_pep_knowledge_base
 
 
-def check_knowledge_base(kb_config: Optional[Dict[str, str]] = None) -> Tuple[bool, Optional[str], bool]:
+def check_knowledge_base(
+    kb_config: Optional[dict[str, str]] = None, is_create: bool = False
+) -> tuple[bool, Optional[str], bool]:
     """Check if knowledge base exists and is accessible.
 
     Steps:
@@ -20,6 +22,7 @@ def check_knowledge_base(kb_config: Optional[Dict[str, str]] = None) -> Tuple[bo
 
     Args:
         kb_config: Knowledge base configuration dict (if None, loads from config)
+        is_create: Allows knowledge base to be created (set to True if creating KB)
 
     Returns:
         Tuple of (is_valid, error_message, should_continue)
@@ -56,8 +59,11 @@ def check_knowledge_base(kb_config: Optional[Dict[str, str]] = None) -> Tuple[bo
         try:
             databases = client.list_databases()
             if database_name not in databases:
-                # Database doesn't exist - cannot continue
-                return False, f"Database '{database_name}' does not exist in Milvus", False
+                if is_create:
+                    client.create_database(database_name)
+                else:
+                    # Database doesn't exist - cannot continue
+                    return False, f"Database '{database_name}' does not exist in Milvus", False
         except Exception as e:
             # Cannot list databases - cannot continue
             return False, f"Cannot list databases: {e}", False
@@ -74,13 +80,18 @@ def check_knowledge_base(kb_config: Optional[Dict[str, str]] = None) -> Tuple[bo
         try:
             collections = client.list_collections()
             if collection_name not in collections:
-                # Collection doesn't exist, but infrastructure is OK - can continue (create KB)
-                return False, f"Collection '{collection_name}' does not exist (KB not created)", True
+                if is_create:
+                    client.create_collection(collection_name)
+                else:
+                    # Collection doesn't exist, but infrastructure is OK - can continue (create KB)
+                    return False, f"Collection '{collection_name}' does not exist (KB not created)", True
         except Exception as e:
             # Cannot list collections - cannot continue
             return False, f"Cannot list collections: {e}", False
 
         # All checks passed
+        if is_create:
+            return False, database_name, True
         return True, None, True
 
     finally:
@@ -92,7 +103,7 @@ def check_knowledge_base(kb_config: Optional[Dict[str, str]] = None) -> Tuple[bo
                 pass
 
 
-async def setup_knowledge_base_if_needed(kb_config: Optional[Dict[str, str]] = None) -> PEPKnowledgeBase:
+async def setup_knowledge_base_if_needed(kb_config: Optional[dict[str, str]] = None) -> PEPKnowledgeBase:
     """Check if knowledge base exists, create it if needed, and update changed PEPs.
 
     Args:
@@ -105,7 +116,7 @@ async def setup_knowledge_base_if_needed(kb_config: Optional[Dict[str, str]] = N
         kb_config = get_kb_config()
 
     # Check if KB exists
-    is_valid, error, should_continue = check_knowledge_base(kb_config)
+    is_valid, error, should_continue = check_knowledge_base(kb_config, is_create=True)
 
     if not is_valid:
         if not should_continue:
