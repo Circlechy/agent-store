@@ -43,6 +43,7 @@ from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
 from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
 from openjiuwen.core.component.common.configs.model_config import ModelConfig
 from openjiuwen.core.utils.llm.base import BaseModelInfo
+from openjiuwen.core.memory.manage.data_id_manager import DataIdManager
 from openjiuwen.core.utils.prompt.template.template import Template
 from openjiuwen.agent.react_agent.react_agent import ReActAgent
 from openjiuwen.agent.react_agent import create_react_agent_config
@@ -68,6 +69,7 @@ embed_model = APIEmbedModel(
 
 # 使用之前定义的项目根目录
 # 将 resources 目录放在 memory_agent 目录下
+data_id_generator = DataIdManager()
 resource_dir = os.path.join(script_dir, 'resources')
 
 # 创建 KV Store
@@ -88,23 +90,74 @@ MemoryEngine.register_store(kv_store=kv_store, semantic_store=semantic_store, db
 memory_engine = None
 workflow_agent = None
 global_loop = None
-data_id_generator = DataIdManager()
 sys_config = SysMemConfig()
 
 # 用于同步初始化的锁
 init_lock = threading.Lock()
 is_initialized = False
 
+def start_background_loop():
+    """启动后台事件循环线程"""
+    global global_loop
+    global_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(global_loop)
+    global_loop.run_forever()
+
+def run_coroutine_in_global_loop(coro):
+    """在全局事件循环中运行协程"""
+    global global_loop, loop_thread
+    if global_loop is None or global_loop.is_closed():
+        # 重新启动事件循环
+        global_loop = asyncio.new_event_loop()
+        loop_thread = threading.Thread(target=start_background_loop, daemon=True)
+        loop_thread.start()
+        time.sleep(0.1)  # 给一点时间让循环启动
+    
+    future = asyncio.run_coroutine_threadsafe(coro, global_loop)
+    return future.result(timeout=30)  # 设置超时防止永久等待
 # 初始化函数 - 使用线程安全的方式
 def init_memory_engine_sync():
-    global memory_engine, workflow_agent, is_initialized
+    global memory_engine, workflow_agent, embed_model, is_initialized
     
     with init_lock:
         if is_initialized:
             return
-            
+        
+        # 启动后台事件循环
+        global global_loop, loop_thread
+        if global_loop is None:
+            global_loop = asyncio.new_event_loop()
+            loop_thread = threading.Thread(target=start_background_loop, daemon=True)
+            loop_thread.start()
+            time.sleep(0.1)  # 等待循环启动
+        
         async def _init():
-            global memory_engine, workflow_agent
+            global memory_engine, workflow_agent, embed_model
+            embed_model = APIEmbedModel(
+                base_url=os.getenv("EMBED_API_BASE"),
+                model_name=os.getenv("EMBED_MODEL_NAME"),
+                api_key=os.getenv("EMBED_API_KEY"),
+                timeout=int(os.getenv("EMBED_TIMEOUT")),
+                max_retries=int(os.getenv("EMBED_MAX_RETRIES")),
+            )
+            
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            resource_dir = os.path.join(project_root, 'resources')
+
+            # 创建 KV Store
+            kv_db_path = os.path.join(resource_dir, 'dbmstore.db')
+            kv_store = DbmKVStore(kv_db_path)
+
+            # 创建语义存储
+            semantic_store = ChromaSemanticStore(resource_dir, embed_model)
+
+            # 创建数据库存储
+            path = Path(f"{resource_dir}/news_sql_db.db").resolve()
+            db_store = DefaultDbStore(create_async_engine(f"sqlite+aiosqlite:///{path}"))
+
+            # 注册存储
+            MemoryEngine.register_store(kv_store=kv_store, semantic_store=semantic_store, db_store=db_store)
+
             memory_engine = await MemoryEngine.create_mem_engine_instance(sys_config)
             memory_engine.set_group_llm_config(
                 "news", 
@@ -118,42 +171,39 @@ def init_memory_engine_sync():
                 )
             )
             workflow_agent = create_memory_workflow_agent()
-            
-        # 创建新的事件循环来执行异步初始化
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(_init())
-        finally:
-            loop.close()
-        
+
+        # 在全局事件循环中运行初始化
+        run_coroutine_in_global_loop(_init())
         is_initialized = True
 
-# 辅助函数：在新线程中运行异步任务
-def run_async_in_thread(coro):
-    """
-    在新线程中运行异步任务
-    """
-    def run():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            return loop.run_until_complete(coro)
-        finally:
-            loop.close()
-    
-    thread = threading.Thread(target=run)
-    thread.start()
-    thread.join()
-    
-    # 重新运行coro以获取结果（这里简化处理，实际应使用队列等方式传递结果）
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+@app.route('/add_conversation', methods=['POST'])
+def add_conversation():
+    """添加对话记忆"""
+    # 确保已初始化
+    if not is_initialized:
+        init_memory_engine_sync()
+
+    data = request.json
+    user_id = data.get('user_id')
+    message = data.get('message')
+    # message += "。我可以有多个兴趣爱好"
+    global memory_engine
+    if not user_id or not message:
+        return jsonify({'error': 'Missing required parameters'}), 400
+
+    async def _add_conversation_async():
+        messages = BaseMessage(role="user", content=message)
+        timestamp = datetime.now()
+        # 添加用户画像
+        msg_id = await memory_engine.add_conversation_messages(user_id=user_id, group_id="news", messages=[messages], timestamp=timestamp)
+        return {'status': 'success', 'user_id': user_id, 'msg_id': msg_id}
+
     try:
-        result = loop.run_until_complete(coro)
-        return result
-    finally:
-        loop.close()
+        result = run_coroutine_in_global_loop(_add_conversation_async())
+        return jsonify(result)
+    except Exception as e:
+        logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/add_profile', methods=['POST'])
 def add_profile():
@@ -170,7 +220,6 @@ def add_profile():
     if not user_id or not message:
         return jsonify({'error': 'Missing required parameters'}), 400
     global data_id_generator
-
     async def _add_profile_async():
         msg_id = await data_id_generator.generate_next_id(user_id)
         memory = UserProfileUnit(MemoryType.USER_PROFILE, user_id, "news", "兴趣爱好", message, mem_id=msg_id)
@@ -185,6 +234,60 @@ def add_profile():
     except Exception as e:
         logger.error(str(e))
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/delete_mem', methods=['POST'])
+def delete_mem():
+    """删除记忆"""
+    # 确保已初始化
+    if not is_initialized:
+        init_memory_engine_sync()
+
+    data = request.json
+    user_id = data.get('user_id')
+    msg_id = data.get('msg_id')
+    # message += "。我可以有多个兴趣爱好"
+    global memory_engine
+    if not user_id or not msg_id:
+        return jsonify({'error': 'Missing required parameters'}), 400
+
+    async def _delete_mem_async():
+        # 删除记忆
+        await memory_engine.delete_mem_by_id(user_id=user_id, group_id="news", mem_id=msg_id)
+        return {'status': 'success', 'user_id': user_id}
+
+    try:
+        result = run_coroutine_in_global_loop(_delete_mem_async())
+        return jsonify(result)
+    except Exception as e:
+        logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/delete_profile', methods=['POST'])
+def delete_profile():
+    """删除用户画像"""
+    # 确保已初始化
+    if not is_initialized:
+        init_memory_engine_sync()
+
+    data = request.json
+    user_id = data.get('user_id')
+    msg_id = data.get('msg_id')
+    # message += "。我可以有多个兴趣爱好"
+    global memory_engine
+    if not user_id or not msg_id:
+        return jsonify({'error': 'Missing required parameters'}), 400
+    
+    async def _delete_profile_async():
+        # 删除记忆
+        await memory_engine.user_profile_manager.delete(user_id=user_id, group_id="news", mem_id=msg_id)
+        return {'status': 'success', 'user_id': user_id}
+    
+    try:
+        result = run_coroutine_in_global_loop(_delete_profile_async())
+        return jsonify(result)
+    except Exception as e:
+        logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/update_profile', methods=['POST'])
 def update_profile():
@@ -192,28 +295,23 @@ def update_profile():
     # 确保已初始化
     if not is_initialized:
         init_memory_engine_sync()
-    
+
     data = request.json
     user_id = data.get('user_id')
-    name = data.get('name')
+    msg_id = data.get('msg_id')
     value = data.get('value')
     global memory_engine
-    if not user_id or not name or not value:
+    if not user_id or not msg_id or not value:
         return jsonify({'error': 'Missing required parameters'}), 400
-    
+
     async def _update_profile_async():
         # 更新用户画像
-        await memory_engine.update_user_variable(user_id=user_id, group_id="news", name=name, value=value)
+        await memory_engine.user_profile_manager.update(user_id=user_id, group_id="news", mem_id=msg_id, new_memory=value)
         return {'status': 'success', 'user_id': user_id}
-    
+
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(_update_profile_async())
-            return jsonify(result)
-        finally:
-            loop.close()
+        result = run_coroutine_in_global_loop(_update_profile_async())
+        return jsonify(result)
     except Exception as e:
         logger.error(str(e))
         return jsonify({"error": str(e)}), 500
@@ -224,34 +322,31 @@ def get_profile(user_id):
     # 确保已初始化
     if not is_initialized:
         init_memory_engine_sync()
-    
+
     global memory_engine
-    
+
     async def _get_profile_async():
         user_profiles = await memory_engine.list_user_mem(user_id=user_id, group_id="news", num=20, page=1)
-        profiles = []        # 确保user_profiles不是None，避免NoneType object is not iterable错误
-        if user_profiles:
-            for result in user_profiles:
-                profiles.append(result['mem'])
+        if not user_profiles:
+            user_profiles = []
+        profiles = []
+        for result in user_profiles:
+            profiles.append(result['mem'])
         return {
             'user_id': user_id,
             'profile': profiles
         }
-    
+
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(_get_profile_async())
-            return jsonify(result)
-        finally:
-            loop.close()
+        result = run_coroutine_in_global_loop(_get_profile_async())
+        return jsonify(result)
     except Exception as e:
         logger.error(str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/get_recent_news/<user_id>', methods=['POST'])
 def get_recent_news(user_id):
+    """获取新闻列表"""
     data = request.get_json()
     api_key = data.get('api_key')
     key_words = data.get('key_words', '')
@@ -260,7 +355,7 @@ def get_recent_news(user_id):
 
     if not is_initialized:
         init_memory_engine_sync()
-    
+
     async def _get_news_async():
         try:
             # 确保key_words是字符串格式
@@ -289,27 +384,22 @@ def get_recent_news(user_id):
                 ]
             }
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            output_result = loop.run_until_complete(_get_news_async())
-            final_response = {
-                "user_id": output_result["user_id"],
-                "raw_data": output_result["result"]  # 或者保持为字符串，看前端需求
-            }
-            return jsonify(final_response)
-        finally:
-            loop.close()
+        result = run_coroutine_in_global_loop(_get_news_async())
+        final_response = { 
+                 "user_id": result["user_id"], 
+                 "raw_data": result["result"]  # 或者保持为字符串，看前端需求 
+             } 
+        return jsonify(final_response)
     except Exception as e:
         logger.error(f"处理get_recent_news请求时出错: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/generate_news/<user_id>', methods=['POST'])
 def generate_news(user_id):
     data = request.get_json()
     raw_data = data.get('raw_data', [])
     logger.debug(f"raw_data: {raw_data}")
+
     """生成新闻简报"""
     # 确保已初始化
     if not is_initialized:
@@ -338,14 +428,6 @@ def generate_news(user_id):
             'user_id': user_id,
             'profile': profiles
         }
-
-        # 这里需要定义QUERY_PROMPT，假设它是一个字符串模板
-        # QUERY_PROMPT = "根据用户画像 {0} 查询今天的晨间新闻数据，按照json格式输出"
-        # query_raw_data_prompt = QUERY_PROMPT.format(json.dumps(user_profile))
-
-        # message = BaseMessage(role="user", content=query_raw_data_prompt)
-        # response = await llm_service.ainvoke(MODEL_NAME, [message])
-        # 确保local_raw_data是可迭代对象，默认为空列表
         if not isinstance(filter_data, (list, tuple)):
             filter_data = []
 
@@ -354,7 +436,7 @@ def generate_news(user_id):
         result = await workflow_agent.invoke({
             "user_id": user_id,
             "user_profile": json.dumps(user_profile),  # 使用JSON格式化而不是直接str()
-            "raw_data": json.dumps(filter_data),     # 使用JSON格式化而不是直接str()
+            "raw_data": json.dumps(filter_data),
             "query": "生成今天的晨间简报"
         })
 
@@ -364,11 +446,7 @@ def generate_news(user_id):
         }
 
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            output_result = loop.run_until_complete(_generate_news_async())
-            
+            output_result = run_coroutine_in_global_loop(_generate_news_async())
             # 安全地访问嵌套字典键
             result = None
             if output_result and isinstance(output_result, dict):
@@ -404,35 +482,13 @@ def generate_news(user_id):
                 "news_list": actual_data  # 或者保持为字符串，看前端需求
             }
             return jsonify(final_response)
-        finally:
-            loop.close()
     except Exception as e:
         logger.error(str(e))
         return jsonify({"error": str(e)}), 500
 
-def run_coroutine_in_global_loop(coro):
-    """在全局事件循环中运行协程"""
-    global global_loop, loop_thread
-    if global_loop is None or global_loop.is_closed():
-        # 重新启动事件循环
-        global_loop = asyncio.new_event_loop()
-        loop_thread = threading.Thread(target=start_background_loop, daemon=True)
-        loop_thread.start()
-        time.sleep(0.1)  # 给一点时间让循环启动
-
-    future = asyncio.run_coroutine_threadsafe(coro, global_loop)
-    return future.result(timeout=30)  # 设置超时防止永久等待
-
-def start_background_loop():
-    """启动后台事件循环线程"""
-    global global_loop
-    global_loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(global_loop)
-    global_loop.run_forever()
-
 if __name__ == '__main__':
     # 启动时初始化
     init_memory_engine_sync()
-    
+
     # 运行Flask应用
     app.run(host='127.0.0.1', port=9000, debug=True, use_reloader=False)

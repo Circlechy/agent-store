@@ -31,7 +31,7 @@ st.set_page_config(
 
 try:
     model = ModelFactory().get_model(
-            model_provider="openai",
+            model_provider=MODEL_PROVIDER,
             api_base=API_BASE,
             api_key=API_KEY,
         )
@@ -156,7 +156,7 @@ AI,机器学习,深度学习,特朗普
                 
                 try:
                     result = model.invoke(
-                        model_name="qwen-plus-latest",
+                        model_name=MODEL_NAME,
                         messages=[BaseMessage(role="user", content=prompt)]
                     )
                     logger.info(result)
@@ -192,7 +192,7 @@ AI,机器学习,深度学习,特朗普
         
         if response.status_code == 200:
             data = response.json()
-            return data.get('raw_data', [])
+            return data.get('result', [])
         else:
             st.error(f"获取新闻失败: {response.status_code} - {response.text}")
             return []

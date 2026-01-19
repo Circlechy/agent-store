@@ -35,7 +35,7 @@ from openjiuwen.core.component.set_variable_comp import SetVariableComponent
 from openjiuwen.core.utils.llm.base import BaseModelInfo
 from openjiuwen.core.component.common.configs.model_config import ModelConfig
 from openjiuwen.core.memory.engine import MemoryEngine
-from openjiuwen.core.memory.config import MemoryConfig, SysMemConfig
+from openjiuwen.core.memory.config.config import MemoryConfig, SysMemConfig
 from openjiuwen.core.utils.llm.messages import BaseMessage
 from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
 
