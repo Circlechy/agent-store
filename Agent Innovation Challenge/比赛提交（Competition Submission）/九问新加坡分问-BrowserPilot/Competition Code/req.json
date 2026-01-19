@@ -1,0 +1,8 @@
+{
+  "session_id": "t1",
+  "message": {
+    "role": "user",
+    "content": "what is the first step to start assistant-ui?"
+  },
+  "language": "zh"
+}
