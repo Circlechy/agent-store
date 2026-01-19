@@ -1,0 +1,128 @@
+[project]
+name = "browser-pilot"
+version = "0.1.0"
+description = "Browser AI Copilot - Powered by OpenJiuwen Agent Framework"
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    # =========================================================
+    # NOTE:
+    # - openjiuwen and browser-use are intentionally NOT included here
+    #   due to an unsatisfiable portalocker version conflict.
+    # - Install them later via pip (see below).
+    # =========================================================
+
+    # === LLM Providers ===
+    "openai>=1.108.0",
+    "anthropic>=0.75.0",
+    "google-genai>=1.57.0",
+    "groq>=1.0.0",
+    "ollama>=0.6.1",
+
+    # === Agent & Workflow ===
+    "langgraph>=0.6.3",
+    "langchain-core>=0.3.72",
+    "langchain-google-genai>=4.2.0",
+    "langchain-openai>=1.1.7",
+    "langsmith>=0.4.4",
+    "mcp>=1.12.2",
+    "fastmcp>=2.14.2",
+
+    # === Web Framework ===
+    "fastapi>=0.128.0",
+    "uvicorn>=0.35.0",
+    "starlette>=0.47.1",
+    "sse-starlette>=2.3.6",
+
+    # === Data Processing ===
+    "pydantic>=2.11.5",
+    "pydantic-settings>=2.10.1",
+    "pandas>=2.3.3",
+    "numpy>=2.4.0",
+
+    # === Document Processing ===
+    "pypdf>=6.5.0",
+    "pdfplumber>=0.11.9",
+    "python-docx>=1.2.0",
+    "beautifulsoup4>=4.14.3",
+    "markdownify>=1.2.2",
+    "markitdown>=0.1.4",
+
+    # === Knowledge & Search ===
+    "wikipedia>=1.4.0",
+
+    # === Image & Vision ===
+    "pillow>=12.1.0",
+
+    # === Tokenizer ===
+    "tiktoken>=0.12.0",
+    "transformers>=4.57.3",
+
+    # === Vector DB ===
+    "chromadb>=1.4.0",
+
+    # === HTTP & Async ===
+    "aiohttp>=3.11.12",
+    "httpx>=0.28.1",
+    "requests>=2.32.4",
+
+    # === Database ===
+    "sqlalchemy>=2.0.41",
+    "redis>=7.1.0",
+
+    # === Utils ===
+    "python-dateutil>=2.9.0.post0",
+    "python-dotenv>=1.1.1",
+    "pyyaml>=6.0.2",
+    "cacheout>=0.16.0",
+    "tenacity>=9.1.2",
+    "rich>=14.2.0",
+    "typer>=0.21.0",
+    "mermaid-py>=0.8.0",
+]
+
+[project.optional-dependencies]
+# Keep your pulsar extra
+pulsar = ["pulsar-client==3.5.0"]
+
+# ---------------------------------------------------------
+# Optional: Keep these as documentation-only extras
+# (DO NOT use uv sync --extra ... to install them in one venv,
+#  because openjiuwen + browser-use conflict via portalocker.)
+# ---------------------------------------------------------
+# jiuwen = ["openjiuwen==0.1.2"]
+# browser = ["browser-use>=0.11.2", "browser-use-sdk>=2.0.12", "cdp-use>=1.4.4"]
+
+[dependency-groups]
+dev = [
+    "autodoc-pydantic==2.2.0",
+    "coverage==7.7.1",
+    "pytest==8.3.5",
+    "pytest-asyncio>=1.0.0",
+    "pytest-html>=4.1.1",
+    "pytest-mock==3.14.0",
+    "ruff==0.11.2",
+    "sphinx==8.2.3",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+# Prefer PyPI first; use Aliyun as fallback
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+
+[tool.coverage.run]
+omit = ["tests/*"]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["jiuwen"]
+addopts = ["-v", "--html=report/index.html", "--self-contained-html"]

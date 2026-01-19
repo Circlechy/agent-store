@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>YouTube Player</title>
+  <style>body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#111}</style>
+</head>
+<body>
+  <div id="player"></div>
+  <script>
+    const videoId = new URLSearchParams(location.search).get("v") || "sftTHmINZ4Y";
+    window.playerReady = false;
+    window.player = null;
+
+    function onYouTubeIframeAPIReady() {
+      window.player = new YT.Player("player", {
+        height: "590",
+        width: "960",
+        videoId,
+        host: "https://www.youtube-nocookie.com",   // ✅ 减少 Cookie/同意弹窗
+        playerVars: {
+          autoplay: 0, controls: 1, rel: 0, modestbranding: 1, playsinline: 1
+        },
+        events: {
+          onReady: () => {
+            try { window.player.mute(); } catch(e){}
+            window.playerReady = true;
+            console.log("✅ Player ready");
+          }
+        }
+      });
+    }
+
+    window.ytCtl = {
+      play(){ if (playerReady) player.playVideo(); },
+      pause(){ if (playerReady) player.pauseVideo(); },
+      seek(s){ if (playerReady) player.seekTo(s, true); },
+      now(){ return playerReady ? player.getCurrentTime() : -1; }
+    };
+
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.body.appendChild(tag);
+  </script>
+</body>
+</html>
