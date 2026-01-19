@@ -7,6 +7,8 @@ from openjiuwen.core.utils.llm.messages import BaseMessage
 from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
 import requests
 from openjiuwen.core.common.logging import logger
+from dotenv import load_dotenv
+load_dotenv('.env')
 
 BASE_URL = "http://127.0.0.1:9000"
 USER_ID = "user_001"
@@ -15,7 +17,7 @@ USER_ID = "user_001"
 API_BASE = os.getenv("API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 # 为了满足BaseModelInfo的验证要求，提供一个非空的默认API密钥（实际使用时需要替换为真实密钥）
 API_KEY = os.getenv("API_KEY", "sk-3b15e251510747c28b569bdf214bf7c2")
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen-plus-latest")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen-flash")
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "openai")  # 使用小写的openai以匹配model_library中的实现
 os.environ["LLM_SSL_VERIFY"] = "False"
 
@@ -31,10 +33,10 @@ st.set_page_config(
 
 try:
     model = ModelFactory().get_model(
-            model_provider=MODEL_PROVIDER,
-            api_base=API_BASE,
-            api_key=API_KEY,
-        )
+        model_provider=MODEL_PROVIDER,
+        api_base=API_BASE,
+        api_key=API_KEY,
+    )
 except Exception as e:
     st.error(f"初始化 AI 客户端失败。请检查配置。错误信息: {e}")
     model = None
@@ -90,6 +92,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 # ---------------------------------------------------------# 状态管理# ---------------------------------------------------------# 1. 用户画像 / 长期记忆
 
 # 从profile_service获取用户画像
@@ -113,16 +116,18 @@ def get_user_profile(user_id):
         st.info(f"尝试访问的URL: {url}", icon="ℹ️")
         return []
 
+
 # 确保在应用启动时始终获取最新的用户画像
 # 不使用initialized标志，每次页面加载都检查是否有后端数据
 # 这样可以确保刷新后能获取到最新保存的用户画像
 if 'memories' not in st.session_state or not st.session_state.memories:
     st.session_state.memories = get_user_profile(USER_ID)
-    
+
 # 添加一个刷新按钮
 if st.button("🔄 刷新用户画像", use_container_width=False):
     st.session_state.memories = get_user_profile(USER_ID)
     st.rerun()
+
 
 # 从profile_service获取新闻
 def get_news_from_service(user_id, api_key, key_words, country="cn", language="zh"):
@@ -133,7 +138,7 @@ def get_news_from_service(user_id, api_key, key_words, country="cn", language="z
             user_profile = "\n".join(key_words)
         else:
             user_profile = key_words
-        
+
         # 使用大模型生成3-5个中英文关键词
         if model:
             with st.spinner("正在生成新闻检索关键词..."):
@@ -153,7 +158,7 @@ def get_news_from_service(user_id, api_key, key_words, country="cn", language="z
 例如：
 AI,机器学习,深度学习,特朗普
 """
-                
+
                 try:
                     result = model.invoke(
                         model_name=MODEL_NAME,
@@ -163,7 +168,7 @@ AI,机器学习,深度学习,特朗普
                     # 解析大模型输出，提取关键词
                     generated_keywords = result.content
                     st.success(f"生成的关键词: {generated_keywords}", icon="🔍")
-                    
+
                     # 使用生成的关键词
                     key_words_str = str(generated_keywords).replace(",", " OR ")
                     logger.info(f"生成的关键字:{key_words_str}")
@@ -181,7 +186,7 @@ AI,机器学习,深度学习,特朗普
                 key_words_str = " OR ".join(key_words)
             else:
                 key_words_str = key_words
-        
+
         # 调用profile service获取新闻
         response = requests.post(url, json={
             "api_key": api_key,
@@ -189,16 +194,17 @@ AI,机器学习,深度学习,特朗普
             "country": country,
             "language": language
         })
-        
+
         if response.status_code == 200:
             data = response.json()
-            return data.get('result', [])
+            return data.get('raw_data', [])
         else:
             st.error(f"获取新闻失败: {response.status_code} - {response.text}")
             return []
     except Exception as e:
         st.error(f"请求新闻接口异常: {e}")
         return []
+
 
 # 通过profile_service生成新闻简报
 def generate_news_brief(user_id, raw_data):
@@ -214,6 +220,7 @@ def generate_news_brief(user_id, raw_data):
     except Exception as e:
         st.error(f"请求生成简报接口异常: {e}")
         return "生成简报失败"
+
 
 # 2. 聊天记录
 if 'chat_history' not in st.session_state:
@@ -231,10 +238,14 @@ if 'news' not in st.session_state:
 
 # 模拟新闻数据
 SAMPLE_NEWS = [
-    {"title": "OpenAI 发布 GPT-5 预览版", "source": "TechCrunch", "summary": "推理能力和多模态处理有显著性能提升。", "time": "10:30"},
-    {"title": "Python 3.14 JIT 编译器更新", "source": "Python.org", "summary": "新的 JIT 编译器优化显示数据密集型工作负载速度提升 20%。", "time": "09:15"},
-    {"title": "React Server Components 最佳实践", "source": "Frontend Mastery", "summary": "深入探讨最新 React 架构下的状态管理和数据获取。", "time": "昨天"}
+    {"title": "OpenAI 发布 GPT-5 预览版", "source": "TechCrunch", "summary": "推理能力和多模态处理有显著性能提升。",
+     "time": "10:30"},
+    {"title": "Python 3.14 JIT 编译器更新", "source": "Python.org",
+     "summary": "新的 JIT 编译器优化显示数据密集型工作负载速度提升 20%。", "time": "09:15"},
+    {"title": "React Server Components 最佳实践", "source": "Frontend Mastery",
+     "summary": "深入探讨最新 React 架构下的状态管理和数据获取。", "time": "昨天"}
 ]
+
 
 # ---------------------------------------------------------
 # AI 服务
@@ -273,6 +284,7 @@ def generate_brief():
         return completion.choices[0].message.content
     except Exception as e:
         return f"生成简报时出错: {str(e)}"
+
 
 # ---------------------------------------------------------
 # 侧边栏导航与控制
@@ -318,7 +330,7 @@ with st.sidebar:
             key_words = st.session_state.memories
             country = "cn"
             language = "zh"
-            
+
             # 从profile_service获取新闻
             with st.spinner("正在获取最新新闻..."):
                 st.session_state.raw_data = get_news_from_service(USER_ID, api_key, key_words, country, language)
@@ -354,14 +366,14 @@ if view == "控制台":
         else:
             # 保存新的画像
             session = requests.Session()
-            
+
             # 先清空原有画像 - 目前没有清空接口，所以只添加新的
             st.info("正在保存用户画像...", icon="⏳")
-            
+
             # 保存所有画像条目
             success_count = 0
             error_count = 0
-            
+
             for profile_text in st.session_state.memories:
                 payload = {
                     "user_id": USER_ID,  # 用户唯一 ID
@@ -378,7 +390,7 @@ if view == "控制台":
                 except Exception as e:
                     error_count += 1
                     st.error(f"保存用户画像失败: {e}")
-            
+
             if error_count == 0:
                 st.toast(f"成功保存 {success_count} 条用户画像！", icon="✅")
                 # 保存成功后，重新获取最新的用户画像，确保本地状态与后端同步
@@ -390,23 +402,23 @@ if view == "控制台":
     st.markdown("---")
 
     # --------------------------
-# 用户画像编辑区
-# --------------------------
+    # 用户画像编辑区
+    # --------------------------
     with st.expander("🧠 用户画像 (长期记忆)", expanded=True):
         st.info("管理用户画像与长期偏好。", icon="ℹ️")
         st.caption("提示：选中左侧行号并按 'Delete' 键删除条目。")
-        
+
         # 预定义用户画像选项（当用户画像为空时使用）
         predefined_profiles = [
             "关注科技行业最新发展",
             "对人工智能领域感兴趣",
             "关注OpenAI产品动态",
         ]
-        
+
         # 当用户画像为空时，使用预定义画像
         if not st.session_state.memories:
             st.session_state.memories = predefined_profiles.copy()
-        
+
         df_memories = pd.DataFrame(st.session_state.memories, columns=["content"])
 
         edited_memories = st.data_editor(
@@ -432,13 +444,13 @@ if view == "控制台":
     # 1. 每日简报
     with st.container(border=True):
         st.subheader("✨ 每日简报")
-        
+
         # 添加Agent运行按钮
         if st.button("▶ 运行Agent生成简报", use_container_width=False):
             with st.spinner("正在运行Agent生成简报..."):
                 if not st.session_state.raw_data and st.session_state.news:
                     st.session_state.raw_data = st.session_state.news
-                    
+
                 if st.session_state.raw_data:
                     # 通过profile_service生成新闻简报
                     st.session_state.generated_brief = generate_news_brief(USER_ID, st.session_state.raw_data)
@@ -446,25 +458,25 @@ if view == "控制台":
                 else:
                     st.error("没有可用的新闻数据，请先获取新闻")
             st.rerun()
-        
+
         if st.session_state.generated_brief:
             try:
                 # 尝试将生成的简报解析为JSON
                 brief_data = json.loads(st.session_state.generated_brief)
-                
+
                 # 将JSON格式的简报转换为Markdown格式
                 markdown_content = ""
-                
+
                 # 检查brief_data是否为列表
                 if isinstance(brief_data, list):
-                    for item in brief_data:
+                    for idx, item in enumerate(brief_data):
                         if isinstance(item, dict):
                             category = item.get('category', '未分类')
                             content = item.get('content', '')
                             url = item.get('url', '')
-                            
+
                             # 使用卡片组件美化展示
-                            with st.container(border=True, key=f"brief_card_{category}"):
+                            with st.container(border=True, key=f"brief_card_{category}_{idx}"):
                                 # 分类标题
                                 st.markdown(f"**{category}**")
                                 # 内容
@@ -472,13 +484,22 @@ if view == "控制台":
                                 # 如果有URL，添加链接
                                 if url:
                                     st.markdown(f"📎 [阅读全文]({url})")
+
+                                # 添加感兴趣/不感兴趣按钮
+                                col1, col2, _ = st.columns([1, 1, 5])
+                                with col1:
+                                    if st.button("👍 感兴趣", key=f"brief_like_{idx}"):
+                                        st.toast("感谢您的反馈！")
+                                with col2:
+                                    if st.button("👎 不感兴趣", key=f"brief_dislike_{idx}"):
+                                        st.toast("感谢您的反馈！")
                 else:
                     # 如果不是列表，直接显示
                     markdown_content = st.session_state.generated_brief
             except json.JSONDecodeError:
                 # 如果解析失败，直接显示原始内容
                 markdown_content = st.session_state.generated_brief
-            
+
             # 显示Markdown内容
             if markdown_content:
                 st.markdown(markdown_content)
@@ -489,7 +510,7 @@ if view == "控制台":
     # 2. 每日资讯
     with st.container(border=True):
         st.subheader("📰 每日资讯")
-        
+
         # 添加获取最新新闻的按钮在每日资讯框内
         if st.button("🔄 获取最新新闻", use_container_width=True):
             with st.spinner("正在获取最新新闻..."):
@@ -499,58 +520,45 @@ if view == "控制台":
                 api_key = "pub_2fb5680cc9634869a0bafce3e7906806"
                 country = "cn"
                 language = "zh"
-                
+
                 # 从profile_service获取新闻
                 st.session_state.news = get_news_from_service(USER_ID, api_key, key_words, country, language)
                 if not st.session_state.news:
                     st.error("获取新闻失败")
                 else:
                     st.success(f"成功获取 {len(st.session_state.news)} 条新闻")
-                    
+
                     # 只更新原始数据，不自动生成简报
                     st.session_state.raw_data = st.session_state.news
                 st.rerun()
-        
+
         # 每日资讯内容展示
         if st.session_state.news:
             for idx, news in enumerate(st.session_state.news):
                 # 确保新闻数据结构符合预期，适配memory_workflow_agent.py返回的格式
                 title = news.get('title', '无标题')
-                source = news.get('source_name', '未知来源')
-                time = news.get('pub_date', '未知时间')
-                description = news.get('description', '无摘要')
+                source = news.get('source', {}).get('name', '未知来源')
+                summary = news.get('description', '无摘要')
                 url = news.get('url', '#')
-                
-                # 使用卡片组件美化新闻展示
-                with st.container(border=True, key=f"news_card_{idx}"):
-                    # 标题行
-                    col_title, col_source = st.columns([4, 2])
-                    with col_title:
-                        st.markdown(f"<h4 style='margin-bottom: 5px;'>{title}</h4>", unsafe_allow_html=True)
-                    with col_source:
-                        st.markdown(f"<div style='text-align: right; color: #666; font-size: 0.85em;'>{source} • {time}</div>", unsafe_allow_html=True)
-                    
-                    # 摘要行
-                    st.markdown(f"<p style='color: #333; margin: 10px 0;'>{description}</p>", unsafe_allow_html=True)
-                    
-                    # 元数据和链接行
-                    col_meta, col_link = st.columns([3, 1])
-                    with col_meta:
-                        st.markdown(f"<span style='color: #999; font-size: 0.8em;'>国家: {news.get('country', '未知')} • 语言: {news.get('language', '未知')}</span>", unsafe_allow_html=True)
-                    with col_link:
-                        st.markdown(f"<div style='text-align: right;'><a href='{url}' target='_blank' style='color: #1a73e8; text-decoration: none;'>阅读全文 →</a></div>", unsafe_allow_html=True)
-        else:
-            st.info("暂无新闻。请点击'获取最新新闻'按钮。", icon="👆")
-        
-        # 查看所有来源按钮
-        if st.button("查看所有来源", use_container_width=True) and st.session_state.news:
-            with st.expander("所有新闻来源", expanded=True):
-                sources = set(news.get('source_name', '未知来源') for news in st.session_state.news)
-                for source in sorted(sources):
-                    st.markdown(f"📰 {source}")
+                published_at = news.get('publishedAt', '未知时间')
 
-elif view == "对话":
-    st.title("智能对话助手")
+                with st.expander(f"**{title}** - *{source}*", expanded=False):
+                    st.markdown(summary)
+                    st.markdown(f"🔗 [阅读原文]({url})")
+                    st.caption(f"发布于: {published_at}")
+
+                    # 添加感兴趣/不感兴趣按钮
+                    col1, col2, _ = st.columns([1, 1, 5])
+                    with col1:
+                        if st.button("👍 感兴趣", key=f"news_like_{idx}"):
+                            st.toast("感谢您的反馈！")
+                    with col2:
+                        if st.button("👎 不感兴趣", key=f"news_dislike_{idx}"):
+                            st.toast("感谢您的反馈！")
+
+    # --------------------------
+    # 对话界面
+    # --------------------------
 
     # 显示聊天记录
     for msg in st.session_state.chat_history:
@@ -580,7 +588,6 @@ elif view == "对话":
                 for m in st.session_state.chat_history:
                     role = "user" if m["role"] == "user" else "assistant"
                     messages.append(BaseMessage(content=m["content"], role=role))
-
 
                 completion = model.invoke(
                     model_name="qwen-plus-latest",
