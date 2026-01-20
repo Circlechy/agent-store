@@ -1,6 +1,6 @@
-# OpenJiuwen Desktop App
+# openJiuwen Desktop App
 
-A macOS desktop application for OpenJiuwen AI File Assistant.
+A macOS desktop application for openJiuwen AI File Assistant.
 
 ## Features
 
@@ -58,7 +58,7 @@ python3 api_server.py
 You should see:
 ```
 ============================================================
-OpenJiuwen API Server
+openJiuwen API Server
 ============================================================
 
 Configuration validated successfully!

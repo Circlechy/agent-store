@@ -18,7 +18,7 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false
     },
-    title: 'OpenJiuwen - AI File Assistant',
+    title: 'openJiuwen - AI File Assistant',
     titleBarStyle: 'hiddenInset',
     frame: true
   });
