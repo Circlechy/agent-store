@@ -17,5 +17,5 @@ pyttsx3>=2.90
 edge-tts>=6.1.0  # 推荐：更自然的TTS效果（神经网络语音）
 
 # 视觉/视频分析 (可选)
-# opencv-python>=4.8.0  # 视频分析需要
+opencv-python>=4.8.0  # 视频分析需要
 # pillow>=10.0.0  # 图像处理
