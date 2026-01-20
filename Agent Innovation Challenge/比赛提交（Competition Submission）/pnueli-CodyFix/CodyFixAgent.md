@@ -113,6 +113,8 @@ The complete automated cycle:
 2. Configure repository access tokens
 3. Deploy the four workflows to your Jiuwen instance
 4. Connect CodyFix to the workflow endpoints
+5. under backend/proxy run `npm start`
+6. under backend/file_services run `uvicorn fileservice:app --reload --host [host ip] --port 1080`
 
 ### Usage
 
