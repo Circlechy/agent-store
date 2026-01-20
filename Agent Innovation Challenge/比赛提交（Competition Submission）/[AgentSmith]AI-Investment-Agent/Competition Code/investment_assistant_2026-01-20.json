@@ -1,0 +1,1441 @@
+{
+  "nodes": [
+    {
+      "id": "start_w03W0",
+      "type": "1",
+      "meta": {
+        "position": {
+          "x": 180,
+          "y": 489.2
+        }
+      },
+      "data": {
+        "title": "开始",
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "default": "你好，请帮我分析一下这个问题。"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "input_z4mcf",
+      "type": "8",
+      "meta": {
+        "position": {
+          "x": 640,
+          "y": 488.4
+        }
+      },
+      "data": {
+        "title": "输入",
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "ticker": {
+              "type": "string",
+              "extra": {
+                "index": 1
+              },
+              "description": "股票代码（例如：AAPL）",
+              "default": "AAPL"
+            },
+            "end_date": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              },
+              "description": "结束日期（YYYY-MM-DD）",
+              "default": "2026-01-15"
+            },
+            "start_date": {
+              "type": "string",
+              "extra": {
+                "index": 3
+              },
+              "description": "开始日期（YYYY-MM-DD）",
+              "default": "2025-10-01"
+            },
+            "cash": {
+              "type": "number",
+              "extra": {
+                "index": 4
+              }
+            }
+          },
+          "required": [
+            "ticker",
+            "end_date",
+            "start_date",
+            "cash"
+          ]
+        }
+      }
+    },
+    {
+      "id": "llm_KIiOR",
+      "type": "3",
+      "meta": {
+        "position": {
+          "x": 2480,
+          "y": 710.8000000000001
+        }
+      },
+      "data": {
+        "title": "信号数据分析-大模型3",
+        "output_format": "text",
+        "inputs": {
+          "llmParam": {
+            "systemPrompt": {
+              "type": "template",
+              "content": ""
+            },
+            "prompt": {
+              "type": "template",
+              "content": "{{input}}"
+            },
+            "model": {
+              "id": "193",
+              "name": "1127-2",
+              "type": "Qwen/Qwen3-32B"
+            }
+          },
+          "inputParameters": {
+            "input": {
+              "type": "ref",
+              "content": [
+                "plugin_ufT0L",
+                "data"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string",
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_ufT0L",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 2020,
+          "y": 720.8000000000001
+        }
+      },
+      "data": {
+        "title": "价值投资类-数据分析师",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "f98eaf78-557a-4f68-894c-46f8c8a81337",
+            "toolName": "价值投资类-数据分析师",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_LkTbX",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 2020,
+          "y": 467.2
+        }
+      },
+      "data": {
+        "title": "增长创新类-数据分析师",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "4defbc91-f779-43b0-bcef-88c53716fed0",
+            "toolName": "增长创新类-数据分析师",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "llm_sAAZH",
+      "type": "3",
+      "meta": {
+        "position": {
+          "x": 2480,
+          "y": 457.2
+        }
+      },
+      "data": {
+        "title": "信号数据分析-大模型2",
+        "output_format": "text",
+        "inputs": {
+          "llmParam": {
+            "systemPrompt": {
+              "type": "template",
+              "content": ""
+            },
+            "prompt": {
+              "type": "template",
+              "content": "{{input}}"
+            },
+            "model": {
+              "id": "193",
+              "name": "1127-2",
+              "type": "Qwen/Qwen3-32B"
+            }
+          },
+          "inputParameters": {
+            "input": {
+              "type": "ref",
+              "content": [
+                "plugin_LkTbX",
+                "data"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string",
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_HHhUB",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 2020,
+          "y": 213.60000000000002
+        }
+      },
+      "data": {
+        "title": "市场情绪-数据分析师",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "start_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "start_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 2
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "a6f00c09-0fff-473b-bbc1-57315163d55e",
+            "toolName": "市场情绪-数据分析师",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "llm_mBqca",
+      "type": "3",
+      "meta": {
+        "position": {
+          "x": 2480,
+          "y": 203.60000000000002
+        }
+      },
+      "data": {
+        "title": "信号数据分析-大模型1",
+        "output_format": "text",
+        "inputs": {
+          "llmParam": {
+            "systemPrompt": {
+              "type": "template",
+              "content": ""
+            },
+            "prompt": {
+              "type": "template",
+              "content": "{{input}}"
+            },
+            "model": {
+              "id": "193",
+              "name": "1127-2",
+              "type": "Qwen/Qwen3-32B"
+            }
+          },
+          "inputParameters": {
+            "input": {
+              "type": "ref",
+              "content": [
+                "plugin_HHhUB",
+                "data"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string",
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "text_editor_xA5bK",
+      "type": "11",
+      "meta": {
+        "position": {
+          "x": 2940,
+          "y": 472.2
+        }
+      },
+      "data": {
+        "title": "signal汇总",
+        "inputs": {
+          "textEditorParam": {
+            "editType": "StringConcatenation",
+            "delimiters": [],
+            "concatenateFormat": {
+              "type": "template",
+              "content": "{{signal1}}|{{signal2}}|{{signal3}}"
+            },
+            "customDelimiters": []
+          },
+          "inputParameters": {
+            "signal1": {
+              "type": "ref",
+              "content": [
+                "llm_mBqca",
+                "output"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "signal2": {
+              "type": "ref",
+              "content": [
+                "llm_sAAZH",
+                "output"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "signal3": {
+              "type": "ref",
+              "content": [
+                "llm_mBqca",
+                "output"
+              ],
+              "extra": {
+                "index": 2
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string",
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_eFJng",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 3860,
+          "y": 466.4
+        }
+      },
+      "data": {
+        "title": "交易决策-数据分析师",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "cash": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "cash"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "current_price": {
+              "type": "ref",
+              "content": [
+                "plugin_B4agp",
+                "data",
+                "current_price"
+              ],
+              "extra": {
+                "index": 2
+              }
+            },
+            "position_limit": {
+              "type": "ref",
+              "content": [
+                "plugin_B4agp",
+                "data",
+                "remaining_position_limit"
+              ],
+              "extra": {
+                "index": 3
+              }
+            },
+            "signals": {
+              "type": "ref",
+              "content": [
+                "text_editor_xA5bK",
+                "output"
+              ],
+              "extra": {
+                "index": 4
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "26870929-e1e8-4a7f-8836-52b0085726a9",
+            "toolName": "交易决策-数据分析师",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_B4agp",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 3400,
+          "y": 466.4
+        }
+      },
+      "data": {
+        "title": "风险管理-数据分析师",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "start_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "start_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 2
+              }
+            },
+            "cash": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "cash"
+              ],
+              "extra": {
+                "index": 3
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "778a5006-3488-4c90-979d-c32357ebd6f4",
+            "toolName": "风险管理-数据分析师",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {
+                "current_price": {
+                  "type": "number",
+                  "extra": {
+                    "index": 1
+                  }
+                },
+                "remaining_position_limit": {
+                  "type": "number",
+                  "extra": {
+                    "index": 2
+                  }
+                },
+                "volatility_metrics": {
+                  "type": "object",
+                  "extra": {
+                    "index": 3
+                  }
+                },
+                "adjustments": {
+                  "type": "object",
+                  "extra": {
+                    "index": 4
+                  }
+                }
+              }
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "llm_hEY2M",
+      "type": "3",
+      "meta": {
+        "position": {
+          "x": 4320,
+          "y": 457.2
+        }
+      },
+      "data": {
+        "title": "交易决策-大模型",
+        "output_format": "text",
+        "inputs": {
+          "llmParam": {
+            "systemPrompt": {
+              "type": "template",
+              "content": ""
+            },
+            "prompt": {
+              "type": "template",
+              "content": "{{input}}"
+            },
+            "model": {
+              "id": "193",
+              "name": "1127-2",
+              "type": "Qwen/Qwen3-32B"
+            }
+          },
+          "inputParameters": {
+            "input": {
+              "type": "ref",
+              "content": [
+                "plugin_eFJng",
+                "data"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string",
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_g_hkq",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 1100,
+          "y": 700.8000000000001
+        }
+      },
+      "data": {
+        "title": "股票历史价格",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "start_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "start_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 2
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "32b9bcea-ef08-45b0-a746-5069b7940ff6",
+            "toolName": "股票历史价格",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_aAnPf",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 1100,
+          "y": 934.4000000000001
+        }
+      },
+      "data": {
+        "title": "财务指标",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "79d2cd35-b15b-49c5-9e51-b81500dbb71a",
+            "toolName": "财务指标",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_gv8Ne",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 1100,
+          "y": 0
+        }
+      },
+      "data": {
+        "title": "内部交易",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "start_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "start_date"
+              ],
+              "extra": {
+                "index": 2
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "20996188-026c-4519-af47-49e35ef3f865",
+            "toolName": "内部交易",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_Tm89K",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 1100,
+          "y": 233.60000000000002
+        }
+      },
+      "data": {
+        "title": "公司新闻",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "start_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "start_date"
+              ],
+              "extra": {
+                "index": 2
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "28d338c6-c26c-49ba-8159-6c10c28d27d5",
+            "toolName": "公司新闻",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_aO8MI",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 1100,
+          "y": 467.2
+        }
+      },
+      "data": {
+        "title": "股票市值",
+        "inputs": {
+          "inputParameters": {
+            "ticker": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "ticker"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "end_date": {
+              "type": "ref",
+              "content": [
+                "input_z4mcf",
+                "end_date"
+              ],
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "fe5fa6f3-b622-4c22-b813-456491463670",
+            "toolName": "股票市值",
+            "pluginID": "78545269-2c60-433d-9dbb-0ba7f32b31a8",
+            "pluginName": "AI投资助手",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "text_editor_Zhu4N",
+      "type": "11",
+      "meta": {
+        "position": {
+          "x": 1560,
+          "y": 471.4
+        }
+      },
+      "data": {
+        "title": "数据汇总",
+        "inputs": {
+          "textEditorParam": {
+            "editType": "StringConcatenation",
+            "delimiters": [],
+            "concatenateFormat": {
+              "type": "template",
+              "content": "price:{{prices}}\nfinancial-metrics:{{financial-metrics}}\ninsider-trades:{{insider-trades}}\nnews:{{news}}\nmarket-cap:{{market-cap}}"
+            },
+            "customDelimiters": []
+          },
+          "inputParameters": {
+            "prices": {
+              "type": "ref",
+              "content": [
+                "plugin_g_hkq",
+                "data"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "financial-metrics": {
+              "type": "ref",
+              "content": [
+                "plugin_aAnPf",
+                "data"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "insider-trades": {
+              "type": "ref",
+              "content": [
+                "plugin_gv8Ne",
+                "data"
+              ],
+              "extra": {
+                "index": 2
+              }
+            },
+            "news": {
+              "type": "ref",
+              "content": [
+                "plugin_Tm89K",
+                "data"
+              ],
+              "extra": {
+                "index": 3
+              }
+            },
+            "market-cap": {
+              "type": "ref",
+              "content": [
+                "plugin_aO8MI",
+                "data"
+              ],
+              "extra": {
+                "index": 4
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string",
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "end_w03W0",
+      "type": "2",
+      "meta": {
+        "position": {
+          "x": 4780,
+          "y": 489.2
+        }
+      },
+      "data": {
+        "title": "结束",
+        "inputs": {
+          "inputParameters": {
+            "decision": {
+              "type": "ref",
+              "content": [
+                "llm_hEY2M",
+                "output"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          }
+        },
+        "streaming": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "sourceNodeID": "start_w03W0",
+      "targetNodeID": "input_z4mcf"
+    },
+    {
+      "sourceNodeID": "input_z4mcf",
+      "targetNodeID": "plugin_gv8Ne"
+    },
+    {
+      "sourceNodeID": "input_z4mcf",
+      "targetNodeID": "plugin_Tm89K"
+    },
+    {
+      "sourceNodeID": "input_z4mcf",
+      "targetNodeID": "plugin_aO8MI"
+    },
+    {
+      "sourceNodeID": "input_z4mcf",
+      "targetNodeID": "plugin_g_hkq"
+    },
+    {
+      "sourceNodeID": "input_z4mcf",
+      "targetNodeID": "plugin_aAnPf"
+    },
+    {
+      "sourceNodeID": "plugin_ufT0L",
+      "targetNodeID": "llm_KIiOR"
+    },
+    {
+      "sourceNodeID": "llm_KIiOR",
+      "targetNodeID": "text_editor_xA5bK"
+    },
+    {
+      "sourceNodeID": "text_editor_Zhu4N",
+      "targetNodeID": "plugin_ufT0L"
+    },
+    {
+      "sourceNodeID": "text_editor_Zhu4N",
+      "targetNodeID": "plugin_LkTbX"
+    },
+    {
+      "sourceNodeID": "plugin_LkTbX",
+      "targetNodeID": "llm_sAAZH"
+    },
+    {
+      "sourceNodeID": "llm_sAAZH",
+      "targetNodeID": "text_editor_xA5bK"
+    },
+    {
+      "sourceNodeID": "text_editor_Zhu4N",
+      "targetNodeID": "plugin_HHhUB"
+    },
+    {
+      "sourceNodeID": "plugin_HHhUB",
+      "targetNodeID": "llm_mBqca"
+    },
+    {
+      "sourceNodeID": "llm_mBqca",
+      "targetNodeID": "text_editor_xA5bK"
+    },
+    {
+      "sourceNodeID": "text_editor_xA5bK",
+      "targetNodeID": "plugin_B4agp"
+    },
+    {
+      "sourceNodeID": "plugin_B4agp",
+      "targetNodeID": "plugin_eFJng"
+    },
+    {
+      "sourceNodeID": "plugin_eFJng",
+      "targetNodeID": "llm_hEY2M"
+    },
+    {
+      "sourceNodeID": "llm_hEY2M",
+      "targetNodeID": "end_w03W0"
+    },
+    {
+      "sourceNodeID": "plugin_g_hkq",
+      "targetNodeID": "text_editor_Zhu4N"
+    },
+    {
+      "sourceNodeID": "plugin_aAnPf",
+      "targetNodeID": "text_editor_Zhu4N"
+    },
+    {
+      "sourceNodeID": "plugin_gv8Ne",
+      "targetNodeID": "text_editor_Zhu4N"
+    },
+    {
+      "sourceNodeID": "plugin_Tm89K",
+      "targetNodeID": "text_editor_Zhu4N"
+    },
+    {
+      "sourceNodeID": "plugin_aO8MI",
+      "targetNodeID": "text_editor_Zhu4N"
+    }
+  ]
+}
