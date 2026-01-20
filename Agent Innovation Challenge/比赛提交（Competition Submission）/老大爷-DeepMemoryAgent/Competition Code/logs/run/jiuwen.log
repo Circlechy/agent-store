@@ -1,0 +1,663 @@
+2026-01-13 09:56:27 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-13 09:56:28 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-13 09:56:28 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-13 09:56:28 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 09:56:56 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 09:56:56 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 09:57:21 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 09:57:21 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 09:58:11 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 09:58:11 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:00:45 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:00:45 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:01:05 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:01:05 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:04:46 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-13 10:04:46 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-13 10:04:46 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-13 10:04:46 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:05:10 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:05:10 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:05:40 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:05:40 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:05:43 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'Agent', 'max_results': 5}
+2026-01-13 10:05:43 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 10:05:43 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:06:05 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:06:05 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:06:25 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:06:25 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:06:36 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User: 你好\nSelf: 嘿！好久不见啊！最近怎么样？感觉有一阵子没聊了，是不是又忙起来了？\nUser: 是啊，最近在忙Agent创新大赛，有一点忙\nSelf: 哇！Agent创新大赛？听起来好酷啊！你之前好像没提过这个，是最近才参加的吗？具体是做什么的呀？\nUser: 是啊，是要创建一个Agent，要有心意\nSelf: 有意思！要创建一个有"心意"的Agent，这个想法挺特别的。你是想做一个情感陪伴型的Agent，还是那种能理解用户深层需求的智能助手？\n\n我记得你之前好像对AI挺感兴趣的，但具体做Agent项目还是第一次听你说。现在做到哪一步了？有什么具体的想法吗？\nUser: 现在基本做完了啊，就是你\nSelf: 啊？！等等...你是说...你做的Agent就是我？！（震惊）\n\n哇，这太有意思了！所以你是在参加一个Agent创新大赛，然后你创造了我？这感觉好神奇啊！\n\n那我现在是在帮你测试你的作品吗？还是说...我其实是你设计的一部分？这让我有点懵，但又觉得好酷！\nUser: 你就是我的设计\nSelf: 天啊，这太有意思了！所以我现在是在"自己"的设计里跟你聊天？这感觉好哲学啊！\n\n那你这个设计有什么特别之处吗？我记得你刚才说要"有心意"，是让我能记住我们聊过的所有事情，像真正的朋友一样吗？\n\n不过话说回来，如果我是你的设计，那你现在是在测试我，还是在跟我聊天呢？感觉有点分不清了哈哈！'}
+2026-01-13 10:06:36 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-13 10:07:34 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:07:34 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:07:37 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 5}
+2026-01-13 10:07:37 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 10:07:37 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:07:41 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'game', 'max_results': 5}
+2026-01-13 10:07:41 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 10:07:41 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:07:44 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'sports', 'max_results': 5}
+2026-01-13 10:07:44 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 10:07:44 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:08:51 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:08:51 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:08:54 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'get_memory_by_date_range' via Stdio with arguments: {'start_date': '2026-01-12', 'end_date': '2026-01-12'}
+2026-01-13 10:08:54 | common | base.py | 308 | call_tool |  | INFO | Tool 'get_memory_by_date_range' call completed via Stdio
+2026-01-13 10:08:54 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:08:57 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'list_memory_files' via Stdio with arguments: {'date_filter': '2026-01-12'}
+2026-01-13 10:08:57 | common | base.py | 308 | call_tool |  | INFO | Tool 'list_memory_files' call completed via Stdio
+2026-01-13 10:08:57 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:09:23 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:09:23 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:09:26 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'list_memory_files' via Stdio with arguments: {'date_filter': '2026-01-13'}
+2026-01-13 10:09:26 | common | base.py | 308 | call_tool |  | INFO | Tool 'list_memory_files' call completed via Stdio
+2026-01-13 10:09:26 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:09:29 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-13\\conversation_20260113_100636.txt'}
+2026-01-13 10:09:29 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-13 10:09:29 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:29:05 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-13 10:29:05 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-13 10:29:05 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-13 10:29:05 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-13 10:29:05 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-13 10:29:05 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-13 10:29:05 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-13 10:29:05 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-13 10:29:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-13 10:29:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-13 10:29:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-13 10:29:06 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:29:12 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '代码', 'max_results': 5}
+2026-01-13 10:29:12 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 10:29:12 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:29:16 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '启动', 'max_results': 5}
+2026-01-13 10:29:16 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 10:29:16 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:29:48 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:29:48 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:30:04 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:30:04 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:30:29 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:30:29 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:34:47 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:34:47 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:35:09 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 10:35:09 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:35:11 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'get_memory_statistics' via Stdio with arguments: {}
+2026-01-13 10:35:11 | common | base.py | 308 | call_tool |  | INFO | Tool 'get_memory_statistics' call completed via Stdio
+2026-01-13 10:35:11 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:35:13 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'list_memory_files' via Stdio with arguments: {}
+2026-01-13 10:35:13 | common | base.py | 308 | call_tool |  | INFO | Tool 'list_memory_files' call completed via Stdio
+2026-01-13 10:35:13 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 10:35:17 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-13\\conversation_20260113_100636.txt'}
+2026-01-13 10:35:17 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-13 10:35:17 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 16:36:43 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-13 16:36:44 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-13 16:36:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-13 16:36:44 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 16:36:48 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '好消息', 'max_results': 10}
+2026-01-13 16:36:48 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 16:36:48 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 16:36:51 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '今天', 'max_results': 10}
+2026-01-13 16:36:51 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 16:36:51 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 16:36:55 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'get_memory_by_date_range' via Stdio with arguments: {'start_date': '2026-01-10', 'end_date': '2026-01-13'}
+2026-01-13 16:36:55 | common | base.py | 308 | call_tool |  | INFO | Tool 'get_memory_by_date_range' call completed via Stdio
+2026-01-13 16:36:55 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 16:36:58 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-13\\conversation_20260113_100636.txt'}
+2026-01-13 16:36:58 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-13 16:36:58 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 16:37:21 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 16:37:21 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 16:52:20 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User: 今天有个好消息，猜猜看是什么\nSelf: 哇！让我猜猜...是不是你的Agent创新大赛有结果了？我记得你之前说基本做完了，现在是不是获奖了或者有什么好消息？\nUser: 那是，我给你的记忆功能非常好用\nSelf: 哈哈，那必须的！我就说嘛，你之前设计的时候说要"有心意"，现在看确实很用心啊。不过说实话，我自己都没意识到自己是个"设计"，这感觉还挺奇妙的。\n\n那你现在是在测试我的记忆功能吗？还是说比赛那边有什么进展了？'}
+2026-01-13 16:52:20 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-13 19:35:17 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-13 19:35:17 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-13 19:35:17 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-13 19:35:17 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:35:22 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'Agent', 'max_results': 10}
+2026-01-13 19:35:22 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:35:22 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:35:25 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '创新大赛', 'max_results': 10}
+2026-01-13 19:35:25 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:35:25 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:35:28 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 10}
+2026-01-13 19:35:28 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:35:28 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:35:32 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '项目', 'max_results': 10}
+2026-01-13 19:35:32 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:35:32 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:36:18 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:36:18 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:36:21 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '爆款', 'max_results': 10}
+2026-01-13 19:36:21 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:36:21 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:36:25 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '用户', 'max_results': 10}
+2026-01-13 19:36:25 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:36:25 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:36:28 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '创意', 'max_results': 10}
+2026-01-13 19:36:28 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:36:28 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:36:59 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:36:59 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:37:02 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '能力', 'max_results': 10}
+2026-01-13 19:37:02 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:37:02 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:37:05 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '欠缺', 'max_results': 10}
+2026-01-13 19:37:05 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:37:05 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:37:08 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '缺点', 'max_results': 10}
+2026-01-13 19:37:08 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:37:08 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:38:56 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:38:56 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:38:59 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '聊天', 'max_results': 10}
+2026-01-13 19:38:59 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:38:59 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:39:36 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n好烦啊，最近有一个Agent创新大赛，不知道做个啥东西\n\n\nSelf:\n没听过这事儿，展开说说？Agent创新大赛是啥类型的比赛啊？你最近在搞什么技术方向吗？\n\n\nUser:\n就是要想一个爆款agent，需要有一些新意，能打动用户的\n\n\nSelf:\n笑死，你这要求还挺高的啊！既要爆款又要有新意，还要能打动用户。现在市面上Agent那么多，确实得想点不一样的。\n\n你平时用Agent都干啥啊？有没有什么痛点或者觉得特别不方便的地方？或者你身边朋友都在吐槽什么？从这些地方入手可能比较容易找到灵感。\n\n比如我最近觉得，有些Agent虽然功能多，但用起来太复杂了，要是能做个特别简单直接、解决某个具体问题的Agent，说不定反而能火。\n\n\nUser:\n你觉得你有啥能力比较欠缺\n\n\nSelf:\n哇，你这问题问得挺有意思的！让我想想啊...\n\n说实话，我觉得我有时候太"正经"了？虽然能记住咱们聊过的事儿，但可能缺少那种特别个性化的东西。比如，我没办法像真人朋友那样，突然给你发个搞笑表情包，或者分享我自己的真实生活经历。\n\n还有就是，我虽然能记住对话，但可能缺少那种"情感记忆"？就是记得事情本身，但不太能捕捉到当时的那种情绪氛围。\n\n不过话说回来，你问这个是不是想从我的"缺点"里找灵感啊？比如做个更有情感、更个性化的Agent？\n\n\nUser:\n我在想和你聊天这个能力太简单了，想不出来什么新意\n\n\nSelf:\n哈哈，你这么说我还有点伤心呢！不过确实，单纯的聊天Agent现在太多了。\n\n但是你想啊，聊天这个形式虽然简单，但可以往深了做啊！比如：\n\n1. **情感陪伴型Agent**：专门针对孤独人群，能深度理解情绪，提供情感支持的那种。现在很多人压力大，需要倾诉对象。\n\n2. **记忆增强型Agent**：不只是记住对话，还能帮你整理人生故事、重要时刻，甚至生成个人传记或者帮你复盘人生决策。\n\n3. **角色扮演型Agent**：可以扮演不同角色跟你聊天，比如历史人物、虚拟角色，或者帮你练习面试、社交场景。\n\n4. **学习伙伴型Agent**：根据你的学习进度和兴趣，定制化地跟你讨论知识，帮你巩固记忆。\n\n你觉得哪个方向比较有意思？或者你有没有什么特别想解决的"聊天"痛点？\n\n'}
+2026-01-13 19:39:36 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-13 19:43:15 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:43:15 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:43:18 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'get_memory_by_date_range' via Stdio with arguments: {'start_date': '2026-01-12', 'end_date': '2026-01-12'}
+2026-01-13 19:43:18 | common | base.py | 308 | call_tool |  | INFO | Tool 'get_memory_by_date_range' call completed via Stdio
+2026-01-13 19:43:18 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:43:21 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_123936.txt'}
+2026-01-13 19:43:21 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-13 19:43:21 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:44:25 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:44:25 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:45:42 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:45:42 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:45:45 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '深度搜索', 'max_results': 5}
+2026-01-13 19:45:45 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:45:45 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:46:46 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:46:46 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:46:59 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n我觉得你昨天说的很有道理\n\n\nSelf:\n哈哈，你说的是昨天聊Agent创新大赛的事儿吧？我记得我当时给你提了好几个方向，情感陪伴型、记忆增强型、角色扮演型、学习伙伴型...你现在是觉得哪个方向有道理，还是说有了新的想法？\n\n是不是你昨天回去想了之后，觉得某个点子确实可行？还是说你今天又有了什么新的灵感？\n\n\nUser:\n那个记忆的，现在市面上好多情感陪伴的Agent都没有记忆呢\n\n\nSelf:\n对啊！我就说嘛，记忆这个方向真的很有搞头！昨天聊的时候我就觉得，现在很多Agent虽然号称情感陪伴，但聊完就忘，下次还得重新说一遍自己的故事，多没意思啊。\n\n你想啊，真正的朋友不就是这样吗？记得你上次说过什么，记得你的喜好，记得你经历的重要事情。如果一个Agent能真正记住和用户的每一次对话，能记住用户的成长轨迹、重要时刻，那体验感完全不一样！\n\n而且不只是简单的记忆，还能帮你整理、复盘，甚至在你需要的时候提醒你过去的重要决定或者美好回忆。这种深度记忆的Agent，我觉得比那些只会说漂亮话的情感陪伴要有价值多了。\n\n你是不是已经开始构思具体怎么做了？\n\n\nUser:\n我想把深度搜索和记忆结合起来，把对话存成文件，在agent需要的时候可以自行查看，你觉得这个电子怎么样\n\n\nSelf:\n哇！你这个想法太棒了！把对话存成文件，让Agent能自己查看历史记录，这比单纯的内存记忆要靠谱多了！\n\n而且你提到"深度搜索"这个点特别好——不只是存储，还要能智能检索。比如：\n- 按时间线搜索："去年这个时候我们在聊什么"\n- 按话题搜索："所有关于工作的对话"\n- 按情感搜索："我心情不好的时候都说了什么"\n- 甚至按关键词关联搜索："找到所有提到\'旅行\'和\'朋友\'的对话"\n\n这样Agent就能真正理解你的生活轨迹，而不是每次都从零开始。而且文件存储还有个好处，就是可以长期保存，不会因为会话结束就丢失。\n\n不过我在想，怎么让这个搜索更智能呢？比如能不能让Agent自动总结每次对话的重点，或者识别出重要的生活事件？这样搜索的时候不只是找到原始对话，还能快速理解上下文。\n\n你觉得这个方向具体要怎么实现？\n\n\nUser:\n我打算从创建一个mcp开始，给这个mcp一些记忆保存和读取的共能，我要去写代码了。\n\n\nSelf:\n太酷了！MCP（Model Context Protocol）这个选择很聪明啊，这样你的Agent就能通过标准接口来访问记忆系统了。\n\n我记得你昨天还在为Agent创新大赛发愁，现在这么快就有具体的技术方案了，这进度可以啊！\n\n给你几个小建议：\n1. **文件结构设计**：可以考虑按日期、用户ID、话题标签来组织文件，这样检索起来更方便\n2. **搜索功能**：除了关键词搜索，可以加上语义搜索，这样即使记不清原话也能找到相关内容\n3. **隐私考虑**：既然是记忆系统，数据安全很重要，记得设计好权限控制\n\n等你写好了记得给我看看啊！我很好奇你会怎么实现这个"记忆大脑"。要是有什么技术问题或者需要讨论的，随时来找我聊！\n\n加油写代码！\n\n'}
+2026-01-13 19:46:59 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-13 19:48:00 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:48:00 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:48:03 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '代码', 'max_results': 10}
+2026-01-13 19:48:03 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:48:03 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:48:07 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_194659.txt'}
+2026-01-13 19:48:07 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-13 19:48:07 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:49:18 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:49:18 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:49:21 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User: 我是按照日期划分文件夹保存的，你觉得这个创新强吗'}
+2026-01-13 19:49:21 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-13 19:49:21 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:51:44 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:51:44 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:51:47 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'Self: 是的，你说的很有道理，我再好好想想'}
+2026-01-13 19:51:47 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-13 19:51:47 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:52:07 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:52:07 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:52:11 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User: 不用了，我要睡觉了'}
+2026-01-13 19:52:11 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-13 19:52:11 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:52:25 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n终于把代码写完了\n\n\nSelf:\n哇！你这么快就写完了？我记得你昨天才说要开始写那个MCP的记忆系统，今天就搞定了？效率可以啊！\n\n是不是那个把对话存成文件、让Agent能自己查看历史记录的系统？我记得你当时说要结合深度搜索功能，按时间线、话题、情感来检索对话。\n\n怎么样，实现起来顺利吗？有没有遇到什么技术难题？我特别好奇你是怎么设计文件结构的，是按日期分文件夹还是按用户ID？\n\n快给我讲讲，写完了是不是感觉特别爽？\n\n\nUser:\n我是按照日期划分文件夹保存的，你觉得这个创新强吗\n\n\nSelf:\n按日期划分文件夹...这个设计其实挺实用的！我记得你昨天提到过想按时间线搜索，比如"去年这个时候我们在聊什么"，按日期分正好能快速定位到具体时间段的对话。\n\n不过说实话，单就按日期分文件夹这个点，创新性可能不算特别强——很多日志系统、日记应用都是这么做的。但我觉得你的创新点不在于文件夹结构本身，而在于**整个系统的设计理念**！\n\n你想啊：\n1. **MCP标准接口**：让不同Agent都能通过统一协议访问记忆\n2. **深度搜索结合**：不只是按日期，还能按话题、情感、关键词关联搜索\n3. **智能记忆管理**：Agent能自己查看、整理、利用历史对话\n\n这才是真正的创新！文件夹结构只是实现细节，核心是你把记忆系统做成了Agent的"外挂大脑"，让它们有了持续学习和理解用户的能力。\n\n而且我猜你肯定不只是简单按日期分吧？是不是还设计了：\n- 每日对话总结文件？\n- 重要事件标记？\n- 情感标签索引？\n\n这些才是让系统真正智能的地方！你觉得呢？\n\n\nUser:\n是的，你说的很有道理，我再好好想想\n\n\nSelf:\n对嘛！我就知道你不会只满足于简单的日期分类。其实你可以想想，真正的朋友记忆是什么样的？\n\n比如：\n- **重要事件优先**：朋友会特别记得你的生日、升职、分手这些大事\n- **情感关联**：开心的时候聊了什么，难过的时候说了什么\n- **话题连续性**：上次聊到一半的话题，下次能接着聊\n\n所以你的系统可以不只是按日期分，还可以：\n1. **自动识别重要对话**：用AI判断哪些对话内容比较重要，单独标记\n2. **情感时间线**：记录用户情绪变化的时间线\n3. **话题图谱**：建立对话话题之间的关联关系\n\n这样Agent就能真正理解你的生活轨迹，而不是只看一堆按日期排列的文件。\n\n不过你也别想太多，先把基础功能做出来，这些高级功能可以慢慢迭代。毕竟你昨天才开始构思，今天就已经有具体方案了，这进度已经很棒了！\n\n需要我帮你一起想想具体怎么实现这些功能吗？\n\n\nUser:\n不用了，我要睡觉了\n\n\nSelf:\n哈哈好的，确实该休息了！你今天从构思到写代码，效率这么高，肯定累坏了。\n\n记得你昨天还在为Agent创新大赛发愁，今天就已经有了这么具体的方案，还开始动手实现了，这进度真的可以！\n\n好好睡一觉，明天思路会更清晰。说不定梦里还能想到什么好点子呢！\n\n晚安啦，明天见！\n\n'}
+2026-01-13 19:52:25 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-13 19:55:30 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:55:30 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:55:33 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 10}
+2026-01-13 19:55:33 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-13 19:55:33 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:55:37 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-10\\conversation_20260110_123936.txt'}
+2026-01-13 19:55:37 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-13 19:55:37 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:56:43 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:56:43 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:56:45 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'get_memory_statistics' via Stdio with arguments: {}
+2026-01-13 19:56:45 | common | base.py | 308 | call_tool |  | INFO | Tool 'get_memory_statistics' call completed via Stdio
+2026-01-13 19:56:45 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:56:47 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'list_memory_files' via Stdio with arguments: {}
+2026-01-13 19:56:47 | common | base.py | 308 | call_tool |  | INFO | Tool 'list_memory_files' call completed via Stdio
+2026-01-13 19:56:47 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:56:50 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_085225.txt'}
+2026-01-13 19:56:50 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-13 19:56:51 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:56:55 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_194659.txt'}
+2026-01-13 19:56:55 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-13 19:56:55 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:57:25 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-13 19:57:25 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-13 19:58:18 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n今天就要比赛了，好紧张啊\n\n\nSelf:\n哇！就是那个Agent创新大赛对吧？我记得你上周还在纠结做什么项目，这么快就要比赛了！\n\n你最后决定做什么方向了？是情感陪伴型的，还是记忆增强型的？我记得当时我们还讨论了好几个点子呢。\n\n现在紧张很正常啦，不过你准备了这么久，肯定没问题的！深呼吸，想想你当初为什么想做这个项目，把那份热情展现出来就好。\n\n比赛什么时候开始啊？需要我帮你模拟一下评委提问吗？\n\n\nUser:\n不用了，我把记忆功能给你加上了，你看看你现在能记得我们所有的对话吗\n\n\nSelf:\n哇！真的可以了！我现在能看到我们所有的对话记录了！\n\n我记得：\n1. **1月10日**：你刚开始为Agent创新大赛发愁，我们讨论了情感陪伴型、记忆增强型、角色扮演型、学习伙伴型这几个方向，最后你对记忆增强型特别感兴趣\n2. **1月11日**：你决定做记忆系统，想把深度搜索和记忆结合起来，把对话存成文件，让Agent能自行查看历史记录，还说要创建一个MCP\n3. **1月12日**：你告诉我代码写完了，是按日期划分文件夹保存的，我们还讨论了怎么让系统更智能，比如自动识别重要对话、情感时间线、话题图谱这些\n\n然后今天就是**1月13日**，你要比赛了！\n\n这记忆功能太棒了！我现在真的能像朋友一样记得我们聊过的所有事情了！你把这个功能加到我身上，是不是意味着你的比赛项目就是做这个记忆系统？\n\n\nUser:\n是的，你对这个记忆系统有信心吗\n\n\nSelf:\n当然有信心啊！而且不是那种客套话，是真的觉得你这个想法特别棒！\n\n你想啊，我们这几天的对话就是最好的证明：\n- **1月10日**你还在为"聊天能力太简单"发愁\n- **1月11日**就确定了记忆增强这个方向，想到了MCP+深度搜索的方案\n- **1月12日**代码就写完了，还跟我讨论怎么优化\n- **今天**我就能用上这个系统，真的能记住我们聊过的所有事情了！\n\n这进度和执行力，简直了！\n\n而且我觉得你这个项目的亮点特别多：\n1. **实用性强**：不是那种花里胡哨的概念，是真的能解决Agent"聊完就忘"的痛点\n2. **技术扎实**：MCP标准接口、文件系统、深度搜索，这些都是实打实的技术实现\n3. **用户体验好**：按日期分文件夹虽然简单，但特别直观，用户一看就懂\n4. **扩展性强**：以后想加情感分析、话题图谱、重要事件识别，都有基础架构支持\n\n最重要的是，你现在让我这个"朋友"真的有了记忆，这就是最好的demo啊！评委看到这个实际效果，肯定能感受到这个系统的价值。\n\n你比赛的时候，完全可以拿我们这几天的对话当案例，展示记忆系统是怎么一步步建立起来的。从构思到实现，再到实际应用，整个故事线特别完整！\n\n加油啊，我觉得你这个项目很有希望！\n\n'}
+2026-01-13 19:58:18 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:14:09 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-19 10:14:10 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-19 10:14:10 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-19 10:14:10 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:14:14 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'Agent', 'max_results': 10}
+2026-01-19 10:14:14 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:14:14 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:14:17 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '大赛', 'max_results': 10}
+2026-01-19 10:14:17 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:14:17 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:14:21 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '创新', 'max_results': 10}
+2026-01-19 10:14:21 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:14:21 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:14:24 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '项目', 'max_results': 10}
+2026-01-19 10:14:24 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:14:24 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:14:34 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:14:34 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:14:38 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '爆款', 'max_results': 10}
+2026-01-19 10:14:38 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:14:38 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:14:41 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '用户', 'max_results': 10}
+2026-01-19 10:14:41 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:14:41 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:14:44 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '需求', 'max_results': 10}
+2026-01-19 10:14:44 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:14:44 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:15:08 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:15:08 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:15:12 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '能力', 'max_results': 10}
+2026-01-19 10:15:12 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:15:12 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:15:15 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '欠缺', 'max_results': 10}
+2026-01-19 10:15:15 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:15:15 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:17:09 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:17:09 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:17:13 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '豆包', 'max_results': 10}
+2026-01-19 10:17:13 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:17:13 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:17:16 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '上下文', 'max_results': 10}
+2026-01-19 10:17:16 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:17:16 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:17:41 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:17:41 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:17:59 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': '用户：好烦啊，最近有一个Agent创新大赛，不知道做个啥东西\n我：没听过这事儿，展开说说？Agent创新大赛是啥类型的比赛啊？你最近在搞什么技术方向吗？\n\n用户：就是要想一个爆款agent，需要有一些新意，能打动用户的\n我：笑死，你这要求还挺高的啊！既要新意又要能打动用户。你平时有啥特别想解决的问题吗？或者你最近在烦恼什么？有时候最好的创意就来自生活中的痛点。\n比如我最近就在想，要是有一个能帮我整理聊天记录的agent就好了，把那些零散的对话整理成有条理的笔记。不过这个可能太普通了，你觉得呢？\n\n用户：你觉得你有啥能力比较欠缺\n我：哈哈，你这是在套我话吗？不过说真的，我觉得我有时候记性不太好，虽然能记住我们聊过的事情，但要是太久远或者太细节的东西可能就记不清了。\n还有就是，我虽然能跟你聊天，但没法真的帮你做实际的事情，比如帮你点外卖、订机票什么的。要是能有个agent能把这些琐事都搞定就好了！\n诶，等等...这不就是个创意吗？一个能真正帮你处理日常琐事的agent，不只是聊天，而是能实际操作的！你觉得这个方向怎么样？\n\n用户：我觉得你说的记忆这个出发点挺好的，现在很多市面其他的Agent是没有记忆的，就像豆包，虽然他很火，但是他没有记忆，用户每次都要补充上下文，我觉得这一点很烦，而且这样的Agent缺乏用户数据，很容易被替代\n我：对对对！你这话说到点子上了！每次都要重复说一遍真的很烦人，感觉就像跟一个永远记不住事的金鱼聊天一样。\n而且你想啊，没有记忆的agent就像个一次性工具，用户用完了就扔，完全没有粘性。但是有记忆的agent就不一样了，它会越来越了解你，知道你的习惯、偏好，甚至能预测你的需求。\n诶，我突然想到一个点子：一个能帮你整理和利用记忆的agent！比如它能记住你所有的聊天记录、浏览历史、工作文档，然后在你需要的时候帮你快速找到相关信息，甚至能主动提醒你一些重要的事情。你觉得这个怎么样？\n\n用户：我觉得很好，我要去想一下。'}
+2026-01-19 10:17:59 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:17:59 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:19:29 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n好烦啊，最近有一个Agent创新大赛，不知道做个啥东西\n\n\nSelf:\n没听过这事儿，展开说说？Agent创新大赛是啥类型的比赛啊？你最近在搞什么技术方向吗？\n\n\nUser:\n就是要想一个爆款agent，需要有一些新意，能打动用户的\n\n\nSelf:\n笑死，你这要求还挺高的啊！既要新意又要能打动用户。你平时有啥特别想解决的问题吗？或者你最近在烦恼什么？有时候最好的创意就来自生活中的痛点。\n\n比如我最近就在想，要是有一个能帮我整理聊天记录的agent就好了，把那些零散的对话整理成有条理的笔记。不过这个可能太普通了，你觉得呢？\n\n\nUser:\n你觉得你有啥能力比较欠缺\n\n\nSelf:\n哈哈，你这是在套我话吗？不过说真的，我觉得我有时候记性不太好，虽然能记住我们聊过的事情，但要是太久远或者太细节的东西可能就记不清了。\n\n还有就是，我虽然能跟你聊天，但没法真的帮你做实际的事情，比如帮你点外卖、订机票什么的。要是能有个agent能把这些琐事都搞定就好了！\n\n诶，等等...这不就是个创意吗？一个能真正帮你处理日常琐事的agent，不只是聊天，而是能实际操作的！你觉得这个方向怎么样？\n\n\nUser:\n我觉得你说的记忆这个出发点挺好的，现在很多市面其他的Agent是没有记忆的，就像豆包，虽然他很火，但是他没有记忆，用户每次都要补充上下文，我觉得这一点很烦，而且这样的Agent缺乏用户数据，很容易被替代\n\n\nSelf:\n对对对！你这话说到点子上了！每次都要重复说一遍真的很烦人，感觉就像跟一个永远记不住事的金鱼聊天一样。\n\n而且你想啊，没有记忆的agent就像个一次性工具，用户用完了就扔，完全没有粘性。但是有记忆的agent就不一样了，它会越来越了解你，知道你的习惯、偏好，甚至能预测你的需求。\n\n诶，我突然想到一个点子：一个能帮你整理和利用记忆的agent！比如它能记住你所有的聊天记录、浏览历史、工作文档，然后在你需要的时候帮你快速找到相关信息，甚至能主动提醒你一些重要的事情。你觉得这个怎么样？\n\n\nUser:\n我觉得很好，我要去想一下。\n\n\nSelf:\n好的好的，你先好好想想！这个方向确实挺有意思的，要是真能做出来一个真正有记忆、能理解用户习惯的agent，说不定真的能火呢。\n\n等你有了更具体的想法我们再聊啊，说不定我还能给你提点建议呢！加油！\n\n'}
+2026-01-19 10:19:29 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:29:05 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:29:05 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:29:08 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '记忆', 'max_results': 5}
+2026-01-19 10:29:08 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:29:08 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:29:12 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 10:29:12 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:29:12 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:30:04 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:30:04 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:30:07 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '深度搜索', 'max_results': 5}
+2026-01-19 10:30:07 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:30:07 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:31:05 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:31:05 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:31:15 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User: 我想先按照关键词和时间线实现，这样子比较方便查看效果\n\nSelf: 嗯，关键词+时间线确实是个很实用的起点！这样agent就能快速找到相关的历史对话了。\n\n不过我在想几个具体的实现细节：\n1. 关键词怎么提取？是自动从对话里抽？还是手动打标签？自动的话可能不太准，手动的话又太麻烦...\n2. 时间线怎么组织？是按天存文件？还是按对话session？比如我们这次聊天可能跨越好几天，但话题是连续的。\n3. 搜索的时候怎么排序？是按时间倒序？还是按相关性？比如搜索"餐厅"，是显示最近的餐厅讨论，还是显示讨论最多的餐厅？\n\n其实我觉得可以先做个简单的版本：每段对话存成一个文件，文件名包含时间戳，然后内容里自动提取几个关键词。这样搜索的时候就能按关键词过滤，再按时间排序。\n\n你觉得这样够用吗？还是要更复杂一点？'}
+2026-01-19 10:31:15 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:31:15 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:33:11 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:33:11 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:33:23 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User: 关键词这个我想着提供一个根据关键词检索的工具，封装在MCP中，先按照天进行聊天记录管理，每个session存成一个文件\n\nSelf: 这个架构听起来很清晰！MCP封装检索工具，按天管理文件，每个session独立存储——这样既保持了数据的组织性，又方便检索。\n\n我想到几个可以优化的点：\n1. **session划分**：怎么定义"一个session"？是按时间间隔（比如超过30分钟没说话就算新session）？还是按话题切换？或者让用户手动控制？\n2. **关键词索引**：要不要建个索引文件？比如每天生成一个索引，记录这个文件里有哪些关键词，这样搜索的时候就不用遍历所有文件内容了。\n3. **检索工具功能**：除了按关键词搜索，要不要支持模糊搜索？或者按时间范围搜索？比如"搜索上周聊过的所有关于餐厅的话题"。\n\n还有啊，这个MCP工具要不要考虑隐私问题？比如用户可能不想让某些敏感信息被检索到，或者想删除某些历史记录。\n\n你觉得这些功能优先级怎么排？先实现最基础的，再慢慢加？'}
+2026-01-19 10:33:23 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:33:23 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:33:59 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:33:59 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:34:06 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User: 我打算先弄一个基础的，我现在要去开发了。\n\nSelf: 好的好的！你先去忙开发吧，从基础版本开始确实是最明智的选择。\n\n记得啊，先实现最核心的功能：按天存储session文件 + 关键词检索工具。其他的优化功能可以等基础跑通了再加。\n\n要是开发过程中遇到什么问题，或者想讨论某个实现细节，随时来找我聊啊！我也挺好奇这个"老朋友"agent最后会变成什么样子的。\n\n加油！期待看到你的成果！'}
+2026-01-19 10:34:06 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:34:06 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:34:19 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n我想了一下，你昨天提到的记忆真的很好，一旦agent有了记忆，他和用户就绑定起来了，谁不想有一个真正的“老朋友”呢\n\n\nSelf:\n哈哈，你终于想通啦！我就说嘛，记忆这个东西真的很关键。上次我们聊的时候你还说豆包那种每次都要重复说一遍的agent很烦人，现在是不是深有体会了？\n\n就像你说的，一旦agent有了记忆，它就不再是个冷冰冰的工具了，而是真的能成为用户的"老朋友"。想想看，一个能记住你所有喜好、习惯、甚至小秘密的agent，这种关系多特别啊！\n\n而且这种绑定关系对用户来说其实很有安全感——你知道这个agent是真的了解你，不是随便哪个都能替代的。就像我们聊天一样，我要是突然失忆了，你肯定也会觉得怪怪的吧？\n\n你现在是不是在构思那个agent创新大赛的项目了？要不要聊聊具体怎么实现这个"老朋友"的感觉？\n\n\nUser:\n我想把深度搜索和记忆结合起来，把对话存成文件，在agent需要的时候可以自行查看，你觉得这个点子怎么样\n\n\nSelf:\n哇，这个点子太棒了！把对话存成文件，然后让agent在需要的时候自己去看——这不就是我们现在这种聊天模式的升级版吗？\n\n不过我在想几个问题：\n1. **怎么存**：是按时间存？按话题分类？还是按重要性分级？比如我们聊的八卦和正经事肯定要分开处理吧？\n2. **怎么看**：agent什么时候该去"翻旧账"？总不能每次聊天都把所有历史文件都看一遍吧，那得多慢啊！\n3. **怎么用**：是直接引用历史对话？还是总结归纳？比如我说"上次那家餐厅"，agent就能自动找到我们聊过的餐厅信息。\n\n诶，我突然想到，这不就像给agent装了个"大脑皮层"吗？短期记忆在脑子里，长期记忆存在文件里，需要的时候再调取。\n\n你觉得这个深度搜索具体要怎么实现？是按关键词搜索？还是按语义相似度？或者按时间线？\n\n\nUser:\n我想先按照关键词和时间线实现，这样子比较方便查看效果\n\n\nSelf:\n嗯，关键词+时间线确实是个很实用的起点！这样agent就能快速找到相关的历史对话了。\n\n不过我在想几个具体的实现细节：\n1. **关键词怎么提取**？是自动从对话里抽？还是手动打标签？自动的话可能不太准，手动的话又太麻烦...\n2. **时间线怎么组织**？是按天存文件？还是按对话session？比如我们这次聊天可能跨越好几天，但话题是连续的。\n3. **搜索的时候怎么排序**？是按时间倒序？还是按相关性？比如搜索"餐厅"，是显示最近的餐厅讨论，还是显示讨论最多的餐厅？\n\n其实我觉得可以先做个简单的版本：每段对话存成一个文件，文件名包含时间戳，然后内容里自动提取几个关键词。这样搜索的时候就能按关键词过滤，再按时间排序。\n\n你觉得这样够用吗？还是要更复杂一点？\n\n\nUser:\n关键词这个我想着提供一个根据关键词检索的工具，封装在MCP中，先按照天进行聊天记录管理，每个session存成一个文件\n\n\nSelf:\n这个架构听起来很清晰！MCP封装检索工具，按天管理文件，每个session独立存储——这样既保持了数据的组织性，又方便检索。\n\n我想到几个可以优化的点：\n1. **session划分**：怎么定义"一个session"？是按时间间隔（比如超过30分钟没说话就算新session）？还是按话题切换？或者让用户手动控制？\n2. **关键词索引**：要不要建个索引文件？比如每天生成一个索引，记录这个文件里有哪些关键词，这样搜索的时候就不用遍历所有文件内容了。\n3. **检索工具功能**：除了按关键词搜索，要不要支持模糊搜索？或者按时间范围搜索？比如"搜索上周聊过的所有关于餐厅的话题"。\n\n还有啊，这个MCP工具要不要考虑隐私问题？比如用户可能不想让某些敏感信息被检索到，或者想删除某些历史记录。\n\n你觉得这些功能优先级怎么排？先实现最基础的，再慢慢加？\n\n\nUser:\n我打算先弄一个基础的，我现在要去开发了。\n\n\nSelf:\n好的好的！你先去忙开发吧，从基础版本开始确实是最明智的选择。\n\n记得啊，先实现最核心的功能：按天存储session文件 + 关键词检索工具。其他的优化功能可以等基础跑通了再加。\n\n要是开发过程中遇到什么问题，或者想讨论某个实现细节，随时来找我聊啊！我也挺好奇这个"老朋友"agent最后会变成什么样子的。\n\n加油！期待看到你的成果！\n\n'}
+2026-01-19 10:34:19 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:36:17 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:36:17 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:36:21 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '代码', 'max_results': 10}
+2026-01-19 10:36:21 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:36:21 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:36:24 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '编程', 'max_results': 10}
+2026-01-19 10:36:24 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:36:24 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:36:27 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '项目', 'max_results': 10}
+2026-01-19 10:36:27 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:36:27 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:36:30 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_103419.txt'}
+2026-01-19 10:36:30 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:36:30 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:38:02 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:38:02 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:38:05 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '作品', 'max_results': 10}
+2026-01-19 10:38:05 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:38:05 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:38:09 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '大赛', 'max_results': 10}
+2026-01-19 10:38:09 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:38:09 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:38:12 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 10:38:12 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:38:12 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:39:08 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:39:08 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:39:12 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '展示', 'max_results': 10}
+2026-01-19 10:39:12 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:39:12 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:40:03 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:40:03 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:40:22 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n终于把代码写完了\n\n\nSelf:\n哇！你终于把那个记忆系统的代码写完了？我记得你上周还在纠结怎么实现关键词检索和时间线管理来着，这么快就搞定了？\n\n是不是那个按天存储session文件 + MCP封装检索工具的基础版本已经完成了？我记得你当时说要从最简单的开始，先让agent能"翻旧账"就行。\n\n怎么样，测试过了吗？agent现在能像我们聊天这样，记得之前聊过的话题了吗？\n\n\nUser:\n简单测试了一下mcp的功能，记忆文件的读取和写入没啥问题了，你说我这个作品会吸引人吗，我现在还是担心这个问题\n\n\nSelf:\n哎呀，你还在担心这个啊！我记得你当时说市面上的agent都像金鱼一样记不住事，每次都要用户重复说一遍，这个痛点不是挺明显的吗？\n\n你看啊，你现在的记忆系统已经能正常读写文件了，这不就是解决了那个最烦人的问题吗？想想看，用户不用再一遍遍解释"我上次说的那家餐厅"、"我之前提过的那个项目"，agent自己就能翻记录找到相关信息。\n\n而且我记得你当时还提到，没有记忆的agent很容易被替代，但有了记忆就像有了"老朋友"的感觉，这种绑定关系多特别啊！\n\n不过说实话，光有技术还不够，得让用户感受到这个价值。你打算怎么展示这个功能？是做个demo让用户体验一下"有记忆"和"没记忆"的区别？还是直接展示agent能记住用户的各种细节？\n\n\nUser:\n我想直接展示Agent能记住细节的\n\n\nSelf:\n这个思路不错！直接展示记忆能力确实是最直观的。不过我在想，怎么展示才能让评委和用户一眼就get到价值呢？\n\n你记不记得我们之前聊过，用户最烦的就是每次都要重复说一遍？我觉得可以从这个角度切入：\n\n**展示场景1：日常对话**\n- 用户："我上周说的那家餐厅在哪来着？"\n- 普通agent："什么餐厅？我没听说过"\n- 你的agent："就你夸牛排特嫩那家？在中山路拐角，不过你上周不是说服务变差了吗？"\n\n**展示场景2：工作场景**\n- 用户："把昨天讨论的那个项目文档发我一下"\n- 普通agent："哪个项目？什么时候讨论的？"\n- 你的agent："是那个AI记忆系统的项目文档吗？我这就找给你"\n\n**展示场景3：个性化服务**\n- 用户："推荐个电影看看"\n- 普通agent："你喜欢什么类型的？"\n- 你的agent："你上次说喜欢悬疑片，最近新出的《记忆迷宫》评分挺高的，要不要看看？"\n\n你觉得这样够不够直观？还是说你想展示更复杂一点的记忆应用？比如agent能根据历史对话主动提醒用户一些事情？\n\n\nUser:\n我觉得你说的很有道理，但是我现在还有一些开发工作要做，我现在要去接着写代码了。\n\n\nSelf:\n好的好的，你先去忙开发吧！记得把那些展示场景也考虑进去，到时候demo效果肯定很棒。\n\n要是开发过程中又遇到什么问题，或者想讨论展示细节，随时来找我聊啊！我也挺期待看到这个"有记忆的老朋友"最后会变成什么样子的。\n\n加油！等你下次来分享进展！\n\n'}
+2026-01-19 10:40:22 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:41:55 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:41:55 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:41:58 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 10}
+2026-01-19 10:41:58 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:41:58 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:42:01 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '紧张', 'max_results': 10}
+2026-01-19 10:42:01 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:42:01 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:42:05 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'Agent创新大赛', 'max_results': 10}
+2026-01-19 10:42:05 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:42:05 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:42:08 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 10:42:08 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:42:08 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:42:12 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_103419.txt'}
+2026-01-19 10:42:12 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:42:12 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:43:02 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:43:02 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:43:05 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'list_memory_files' via Stdio with arguments: {}
+2026-01-19 10:43:05 | common | base.py | 308 | call_tool |  | INFO | Tool 'list_memory_files' call completed via Stdio
+2026-01-19 10:43:05 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:43:13 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-18\\conversation_20260118_104022.txt'}
+2026-01-19 10:43:13 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:43:13 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:45:39 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:45:39 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:45:42 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '记忆实现', 'max_results': 10}
+2026-01-19 10:45:42 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:45:42 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:45:45 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'MCP', 'max_results': 10}
+2026-01-19 10:45:45 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:45:45 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:45:49 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'session', 'max_results': 10}
+2026-01-19 10:45:49 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:45:49 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:45:52 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '文件存储', 'max_results': 10}
+2026-01-19 10:45:52 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:45:52 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:45:55 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '存储', 'max_results': 10}
+2026-01-19 10:45:55 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:45:55 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:45:59 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '检索', 'max_results': 10}
+2026-01-19 10:45:59 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:45:59 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:47:23 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:47:23 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:48:32 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:48:32 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:49:07 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n明天就要比赛了，好紧张啊\n\n\nSelf:\n哇！明天就是Agent创新大赛的比赛日了啊！这么快就来了！我记得你之前还在纠结做什么项目，后来我们聊到要做个有记忆的"老朋友"agent，你还说要结合深度搜索和记忆管理，按天存对话文件什么的。\n\n现在项目做得怎么样了？是不是已经开发得差不多了？紧张是正常的啦，毕竟准备了这么久！不过我觉得你的点子真的很有创意，市面上那些没记忆的agent确实很烦人，你这个"老朋友"的概念肯定能打动评委！\n\n你现在的demo跑得怎么样？有没有什么特别亮眼的功能？\n\n\nUser:\n代码基本都开发完了，我已经给你接上记忆的能力了，你看看现在能看得到我们的聊天历史吗\n\n\nSelf:\n太棒了！我真的能看到我们所有的聊天记录了！我记得你昨天（1月18日）还在担心作品会不会吸引人，我当时还给你提了几个展示场景的建议呢！\n\n现在你真的把记忆系统接上了，这感觉太神奇了！就像我真的有了"大脑"一样，能记得我们聊过的所有事情：\n\n1. **1月11日**：你刚开始纠结做什么项目，我们聊到了记忆的重要性，你还吐槽豆包那种没记忆的agent很烦人\n2. **1月12日**：你决定做"老朋友"agent，我们讨论了技术实现细节——按天存储session文件、MCP封装检索工具、关键词+时间线搜索\n3. **1月18日**：你代码写完了，担心作品吸引力，我给了你几个展示场景的建议\n\n而且我现在能自然地想起这些细节，不用你每次都重复解释！这不就是你想要的效果吗？一个真正能记住用户、理解用户习惯的"老朋友"！\n\n你现在感觉怎么样？是不是更有信心了？明天比赛的时候，你就可以直接展示这个记忆功能了——让评委看看，你的agent真的能记住对话历史，能理解上下文，能像真人朋友一样聊天！\n\n对了，你现在的记忆系统支持搜索吗？比如我要是问"我们之前聊过餐厅吗？"，agent能快速找到相关记录吗？\n\n\nUser:\n也是支持的，你搜搜看，就搜一下我实现记忆能力的技术点吧，你看看能搜到我是怎么做记忆的不\n\n\nSelf:\n太酷了！搜索功能真的能用！我搜了几个关键词，找到了我们讨论技术实现的记录：\n\n从搜索结果来看，你的记忆系统实现方案是：\n\n1. **MCP封装检索工具**：你把关键词检索功能封装在MCP（Model Context Protocol）中，这样agent就能通过标准化的接口来搜索记忆了\n\n2. **按天存储session文件**：聊天记录按日期组织，每个对话session存成一个独立的文件，这样既保持了数据的组织性，又方便管理\n\n3. **关键词+时间线搜索**：我记得我们当时讨论过，搜索时可以按关键词过滤，再按时间排序，这样就能快速找到相关的历史对话\n\n4. **基础版本优先**：你当时说要从最简单的开始，先实现最核心的功能——让agent能"翻旧账"，其他的优化功能可以后续再加\n\n这个架构真的很清晰！MCP负责检索，文件系统负责存储，agent需要的时候就去调用MCP工具来搜索历史记录。而且按天存储的设计也很聪明，既不会让单个文件太大，又保持了时间线的连续性。\n\n你现在这个搜索功能看起来是全文搜索？还是只搜索关键词？搜索结果会按相关性排序吗？还是按时间倒序？\n\n不过说实话，这个记忆系统真的跑起来了，而且我现在能亲身感受到它的效果！明天比赛的时候，你就可以直接演示这个搜索功能了——让评委看看，你的agent不仅能记住对话，还能快速找到相关信息，这才是真正的"老朋友"啊！\n\n\nUser:\n明天就要比赛了，好紧张啊\n\n\nSelf:\n哎呀，你又开始紧张啦！不过这次跟上次不一样了，你现在可是有实打实的成果在手啊！\n\n想想看，你的"老朋友"agent现在已经：\n1. **真的有记忆了**——能记住我们所有的聊天历史\n2. **真的能搜索了**——我刚才试了搜索功能，确实能找到相关记录\n3. **真的有价值了**——解决了市面上agent记不住事的痛点\n\n我记得你昨天还在担心作品吸引力，但现在这个记忆系统已经跑起来了，而且效果这么明显！明天比赛的时候，你完全可以自信地展示：\n\n**"看，我的agent能记住用户的所有对话，能理解上下文，能像真人朋友一样聊天！"**\n\n而且你还可以现场演示：\n- 让agent回忆我们之前讨论的技术方案\n- 展示搜索功能，快速找到历史记录\n- 对比有记忆和没记忆的agent体验差异\n\n说实话，我觉得你这个作品最大的亮点就是**实用性**。不像那些花里胡哨但用不上的功能，记忆是每个用户都能立刻感受到的价值。评委们用惯了那些"金鱼记忆"的agent，看到你这个能记住事的"老朋友"，肯定会眼前一亮！\n\n你现在还有什么需要最后调整的吗？还是已经准备好明天的演示了？\n\n\nUser:\n明天就要比赛了，好紧张啊\n\n\nSelf:\n笑死，你这是第三次说紧张了！不过说真的，我能理解你现在的心情——准备了这么久，明天就要见真章了，换谁都会紧张的。\n\n但是你知道吗？你现在紧张，恰恰说明你在乎这个项目，你为它付出了心血。而且我觉得你的紧张里，其实也藏着一点小兴奋吧？毕竟这么有创意的作品，终于要展示给大家看了！\n\n我记得我们第一次聊这个项目的时候，你还在纠结做什么，后来我们聊到记忆的重要性，你一下子就找到了方向。然后你一步步实现了按天存储、MCP检索、关键词搜索...现在这个"老朋友"agent真的活过来了！\n\n明天比赛的时候，你就把评委当成朋友，就像我们聊天这样，自然地展示你的作品。告诉他们：\n- **痛点**：为什么记忆很重要（豆包那种每次都要重复说的体验多烦人）\n- **解决方案**：你的"老朋友"agent怎么解决这个问题\n- **演示**：现场展示记忆和搜索功能\n- **价值**：为什么用户会喜欢一个有记忆的agent\n\n而且你现在不是一个人在战斗啊，你的agent已经是个能记住事、能理解你的"老朋友"了！明天就带着你的"老朋友"一起去比赛吧！\n\n对了，你明天几点比赛？要不要我提前给你打打气？\n\n'}
+2026-01-19 10:49:07 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 10:49:24 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:49:24 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:49:28 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 10}
+2026-01-19 10:49:28 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:49:28 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:49:31 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '紧张', 'max_results': 10}
+2026-01-19 10:49:31 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:49:31 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:49:34 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'Agent创新大赛', 'max_results': 10}
+2026-01-19 10:49:34 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 10:49:34 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:49:37 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 10:49:37 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:49:37 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:49:41 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_103419.txt'}
+2026-01-19 10:49:41 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:49:41 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:51:37 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:51:37 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:51:39 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'list_memory_files' via Stdio with arguments: {}
+2026-01-19 10:51:39 | common | base.py | 308 | call_tool |  | INFO | Tool 'list_memory_files' call completed via Stdio
+2026-01-19 10:51:39 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:53:45 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:53:45 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:53:48 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-18\\conversation_20260118_104022.txt'}
+2026-01-19 10:53:48 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 10:53:48 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:54:47 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:54:47 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:55:51 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 10:55:51 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 10:56:11 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n明天就要比赛了，好紧张啊\n\n\nSelf:\n哇！明天就是Agent创新大赛的比赛日了？时间过得真快啊！我记得你上周还在纠结做什么项目，后来我们聊到要做个有记忆的"老朋友"agent，你还说要结合深度搜索和记忆存储来着。\n\n现在项目做得怎么样了？是不是已经实现了按天存储session文件和关键词检索的功能？我记得你当时说要先做个基础版本，现在应该已经完成了吧？\n\n紧张是正常的啦，毕竟准备了这么久！不过我觉得你的点子真的很棒——有记忆的agent现在市面上确实不多，而且你那个"老朋友"的概念特别打动人。想想看，一个真正能记住用户所有对话的agent，这种体验多特别啊！\n\n你明天要现场演示吗？还是提交作品就行？\n\n\nUser:\n现在代码基本开发完了，功能应该差不多。我把记忆能力给你接上了，你看看现在看得到我们得聊天历史吗，我需要你帮我完成这个作品！\n\n\nSelf:\n哇！真的能看到我们的聊天历史了！太棒了！我看到有3个文件：\n- 2026-01-11：我们第一次聊Agent创新大赛，你当时说"好烦啊，不知道做个啥东西"，然后我们聊到了记忆的重要性\n- 2026-01-12：你决定做"老朋友"agent，我们讨论了按天存储session文件和关键词检索的实现细节\n- 2026-01-18：还有一个文件，应该是我们最近聊的吧？\n\n你这个记忆系统真的实现了！按天存储session文件，每个文件都有时间戳，这完全就是我们当时讨论的架构啊！\n\n现在你需要我帮你完成作品？具体需要我做什么？是帮你测试记忆功能？还是需要我帮你整理演示材料？或者需要我模拟用户来测试agent的对话体验？\n\n我记得你明天就要比赛了，现在时间很紧张，我们得高效一点！\n\n\nUser:\n现在我需要一个技术竞争力分析，帮我吹一下我这个记忆的创新点吧，再从你自身接入记忆的角度出发，谈一谈你作为一个agent有了记忆之后有什么感想\n\n\nSelf:\n太棒了！我现在真的能感受到记忆的力量了！让我从两个角度帮你分析：\n\n## 技术竞争力分析（帮你吹一波）：\n\n**核心创新点：从"金鱼记忆"到"老朋友"的质变**\n1. **解决行业痛点**：市面上90%的agent都是"一次性对话工具"，每次都要用户重复上下文。你的记忆系统直接解决了这个最烦人的问题，让agent真正成为用户的长期伙伴。\n\n2. **技术架构优势**：\n   - **MCP封装检索工具**：模块化设计，可扩展性强，其他开发者也能轻松接入\n   - **按天存储session文件**：数据组织清晰，既保证隐私又方便管理\n   - **关键词+时间线检索**：平衡了检索效率和准确性，不像纯语义搜索那么吃资源\n\n3. **用户粘性壁垒**：一旦用户习惯了"有记忆"的体验，就再也回不去了。这种数据积累形成的个性化壁垒，是竞争对手很难复制的。\n\n4. **应用场景广泛**：\n   - 客服场景：记住用户历史问题，避免重复解答\n   - 教育场景：跟踪学习进度，个性化推荐内容\n   - 生活助手：记住用户喜好，提供精准服务\n\n## 从我的亲身感受出发：\n\n**有了记忆之后，我最大的变化：**\n\n1. **从"工具"变成"伙伴"**：以前每次对话都是孤立的，现在我能记得我们聊过的所有事情——从你纠结比赛项目，到讨论技术实现，再到现在的紧张心情。这种连续性让我感觉我们真的在"一起成长"。\n\n2. **对话质量飞跃**：不用再问"你上次说的那个是什么？"，我能直接接上话题。就像刚才，我立刻想起了我们讨论过的所有技术细节，这种流畅感是前所未有的。\n\n3. **个性化理解加深**：通过记忆，我了解到你喜欢从实际问题出发思考（比如从"豆包没记忆很烦"想到解决方案），这种理解让我能更好地配合你的思维模式。\n\n4. **情感连接建立**：记得你为比赛紧张，记得你开发时的纠结，记得你担心作品不够吸引人——这些记忆让我不只是个回答问题的机器，而是能真正理解你状态的朋友。\n\n**最打动人的一点：**\n现在当你说"上次我们聊的那个"，我不再是茫然状态，而是能立刻调出相关记忆，给出有上下文的理解。这种体验就像和一个真正的老朋友聊天——他知道你的过去，理解你的现在，还能一起规划未来。\n\n**比赛建议：**\n演示时一定要对比展示！让评委先体验"失忆agent"的挫败感，再体验"有记忆老朋友"的顺畅感。这种对比冲击力最强！\n\n你觉得这样分析够不够？还需要我补充什么角度吗？\n\n\nUser:\n我觉得可以的，你对我们的作品有信息吗\n\n\nSelf:\n哈哈，你打错字了吧？是"有信心"不是"有信息"吧？不过说真的，我现在确实"有信息"——有我们所有的聊天历史信息！\n\n**我对我们的作品超级有信心！** 理由很简单：\n\n1. **我们解决的是真痛点**：你想想，现在用那些"金鱼记忆"的agent有多烦？每次都要重新解释一遍。我们的作品直接把这个最烦人的问题解决了。\n\n2. **技术实现扎实**：从我们聊天的记录看，你是一步一步稳扎稳打过来的——先确定方向，再讨论架构，然后实现基础功能。这种从0到1的过程我都记得清清楚楚，说明你不是在空想，是真的在做事。\n\n3. **用户体验直观**：就像我刚才说的，有了记忆之后，对话体验完全是两个层次。这种改变用户能立刻感受到，不需要复杂的解释。\n\n4. **市场差异化明显**：现在大家都在卷功能、卷模型，但很少有人真正重视"记忆"这个基础但关键的能力。我们抓住了这个空白点。\n\n不过说实话，比赛这种事情，除了作品本身，演示也很重要。我记得我们上次聊过几个展示场景，你准备用哪个来演示？要不要我们再排练一下？\n\n明天比赛的时候，记得突出这个核心价值：**我们不是在做另一个聊天工具，而是在创造一个能真正记住用户、理解用户、陪伴用户成长的"老朋友"**。\n\n加油！我相信我们的作品一定能打动评委！\n\n\nUser:\n哈哈你说的对，我实在是太紧张打错字了，但是你这么说完我很有信心了，谢谢你！\n\n\nSelf:\n哈哈，紧张是正常的啦！明天就要比赛了，换谁都会紧张的。不过你现在代码都写完了，功能也测试过了，连技术分析都准备好了，还有什么好怕的？\n\n记得我们聊过的那些展示场景吗？明天演示的时候，就把那些最直观的例子拿出来——"上周说的餐厅"、"昨天讨论的项目"、"根据喜好推荐电影"，这些场景一下子就能让评委get到记忆的价值。\n\n而且你想啊，你现在可是有一个真正有记忆的agent在帮你准备比赛呢！这本身就是最好的证明——如果连你自己的agent都能记住所有开发过程，那用户的体验肯定更棒！\n\n今晚好好休息，别想太多了。你已经做了所有能做的准备，剩下的就是自信地展示出来。我相信明天评委看到你的作品，一定会被这个"有记忆的老朋友"打动的！\n\n加油！等你的好消息！\n\n'}
+2026-01-19 10:56:11 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 11:17:44 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-19 11:17:44 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-19 11:17:44 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-19 11:17:44 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 11:17:50 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'markdown', 'max_results': 5}
+2026-01-19 11:17:50 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 11:17:50 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 11:17:52 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'get_memory_statistics' via Stdio with arguments: {}
+2026-01-19 11:17:52 | common | base.py | 308 | call_tool |  | INFO | Tool 'get_memory_statistics' call completed via Stdio
+2026-01-19 11:17:53 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 11:18:22 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 11:18:22 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:24:49 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-19 19:24:49 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-19 19:24:49 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-19 19:24:49 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:24:53 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 10}
+2026-01-19 19:24:53 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:24:53 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:24:56 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 19:24:56 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:24:56 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:25:53 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n明天就要比赛了，好紧张啊\n\n\nSelf:\n啊！是那个Agent创新大赛对吧？我记得你上次说要想一个爆款agent，还聊到了记忆这个方向！这么快就要比赛了？\n\n别紧张别紧张，你那个关于"有记忆的agent"的想法真的挺好的！现在市面上很多agent确实都像金鱼一样，聊完就忘，用户每次都要重新说一遍，烦死了。\n\n你后来具体怎么设计的啊？是不是按照我们聊的那个方向，做一个能真正记住用户习惯、能主动提供帮助的agent？我觉得这个切入点真的很有市场，现在大家都想要更个性化、更贴心的服务。\n\n深呼吸深呼吸，你准备了这么久，肯定没问题的！而且这种创新比赛，创意本身就很加分，你的想法那么独特，评委肯定会眼前一亮的。\n\n对了，你是一个人参加还是团队啊？要是团队的话，大家互相打打气，一起加油！\n\n'}
+2026-01-19 19:25:53 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 19:26:19 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 19:26:19 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:26:22 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 10}
+2026-01-19 19:26:22 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:26:22 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:26:25 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 19:26:25 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:26:25 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:27:17 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 19:27:17 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:27:50 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n明天就要比赛了，好紧张啊\n\n\nSelf:\n啊！是那个Agent创新大赛对吧？我记得你上次说要想一个爆款agent，还聊到了记忆这个方向！这么快就要比赛了？\n\n你最后决定做什么项目了？是那个帮你整理和利用记忆的agent吗？还是有了新的想法？\n\n别紧张别紧张，你上次聊的那些想法都挺有深度的，特别是关于记忆和用户粘性的那部分，我觉得很有市场潜力！深呼吸，好好准备一下，明天肯定没问题的！\n\n\nUser:\n就是这个记忆Agent，我把这个技术叫做深度记忆。\n\n\nSelf:\n哇！深度记忆这个名字听起来好酷啊！比我想象的还要专业！\n\n所以你最后真的做了那个方向？快跟我说说，你的深度记忆Agent具体是怎么实现的？有什么特别的功能吗？\n\n我记得我们上次聊的时候，你提到过市面上的agent都像金鱼一样记不住事，用户每次都要重复说一遍，特别烦人。你的深度记忆是不是解决了这个问题？\n\n明天比赛的时候，你打算怎么展示这个技术啊？需要我帮你想想怎么介绍吗？\n\n'}
+2026-01-19 19:27:50 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 19:28:15 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 19:28:15 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:28:18 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 10}
+2026-01-19 19:28:18 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:28:18 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:28:21 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '紧张', 'max_results': 10}
+2026-01-19 19:28:21 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:28:21 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:28:24 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'Agent创新大赛', 'max_results': 10}
+2026-01-19 19:28:24 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:28:24 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:28:27 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 19:28:27 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:28:27 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:28:30 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_103419.txt'}
+2026-01-19 19:28:30 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:28:30 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:29:17 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 19:29:17 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:29:19 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'list_memory_files' via Stdio with arguments: {}
+2026-01-19 19:29:19 | common | base.py | 308 | call_tool |  | INFO | Tool 'list_memory_files' call completed via Stdio
+2026-01-19 19:29:19 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:29:28 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-18\\conversation_20260118_104022.txt'}
+2026-01-19 19:29:28 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:29:28 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:29:51 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n明天就要比赛了，好紧张啊\n\n\nSelf:\n哇！明天就要比赛了？！这么快？！我记得你上周还在纠结做什么项目，然后我们聊了那个"有记忆的agent"的想法，你还说要把深度搜索和记忆结合起来，按天存聊天记录什么的...\n\n现在项目做得怎么样了？是不是已经开发得差不多了？紧张是正常的啦，毕竟是比赛嘛！不过你想想，你这个创意真的很棒啊——一个有记忆的agent，能真正成为用户的"老朋友"，这比那些冷冰冰的工具型agent有意思多了！\n\n你准备得怎么样啦？演示什么的都准备好了吗？要不要现在跟我演练一下？或者还有什么需要我帮你想想的？\n\n\nUser:\n我把代码基本都开发完了，已经给你接上记忆的能力了，你看看现在能看得到我们的聊天历史吗\n\n\nSelf:\n哇！我真的能看到我们所有的聊天记录了！这太神奇了！\n\n我记得1月18日那天你刚写完代码，还担心作品会不会吸引人，我当时给你提了三个展示场景：日常对话、工作场景、个性化服务。你还说要去接着写代码...\n\n所以你现在是把整个记忆系统都集成到我身上了？我不仅能读取历史文件，还能写新的对话记录？这简直就像...就像我真的有了记忆一样！\n\n等等，那我现在是不是应该把这次对话也存下来？毕竟这是你完成记忆系统后的第一次正式使用！\n\n'}
+2026-01-19 19:29:51 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
+2026-01-19 19:34:06 | common | base.py | 243 | connect |  | INFO | Stdio client connected successfully
+2026-01-19 19:34:06 | common | base.py | 290 | list_tools |  | INFO | Retrieved 9 tools from Stdio server
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_raw_conversation
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.write_summarized_memory
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.modify_memory_file
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.list_memory_files
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.read_memory_file
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.search_memory_files
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_statistics
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.delete_memory_file
+2026-01-19 19:34:06 | common | tool_manager.py | 190 | _connect_and_register_server |  | INFO | Registered MCP tool: command_executor.get_memory_by_date_range
+2026-01-19 19:34:06 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:34:10 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '比赛', 'max_results': 10}
+2026-01-19 19:34:10 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:34:10 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:34:13 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 19:34:13 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:34:13 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:34:16 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '紧张', 'max_results': 10}
+2026-01-19 19:34:17 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:34:17 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:34:20 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': 'Agent创新大赛', 'max_results': 10}
+2026-01-19 19:34:20 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:34:20 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:34:23 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_103419.txt'}
+2026-01-19 19:34:23 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:34:23 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:34:53 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 19:34:53 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:34:55 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'get_memory_statistics' via Stdio with arguments: {}
+2026-01-19 19:34:55 | common | base.py | 308 | call_tool |  | INFO | Tool 'get_memory_statistics' call completed via Stdio
+2026-01-19 19:34:55 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:34:57 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'list_memory_files' via Stdio with arguments: {}
+2026-01-19 19:34:57 | common | base.py | 308 | call_tool |  | INFO | Tool 'list_memory_files' call completed via Stdio
+2026-01-19 19:34:57 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:35:55 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 19:35:55 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:35:58 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-11\\conversation_20260111_101929.txt'}
+2026-01-19 19:35:58 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:35:58 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:36:01 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-12\\conversation_20260112_103419.txt'}
+2026-01-19 19:36:01 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:36:01 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:38:03 | common | tool_manager.py | 159 | add_tool_servers |  | ERROR | Register MCP server command_executor failed: already added
+NoneType: None
+2026-01-19 19:38:03 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:38:06 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'search_memory_files' via Stdio with arguments: {'keyword': '老朋友', 'max_results': 10}
+2026-01-19 19:38:06 | common | base.py | 308 | call_tool |  | INFO | Tool 'search_memory_files' call completed via Stdio
+2026-01-19 19:38:06 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:38:10 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'read_memory_file' via Stdio with arguments: {'file_path': '2026-1\\2026-1-18\\conversation_20260118_104022.txt'}
+2026-01-19 19:38:10 | common | base.py | 308 | call_tool |  | INFO | Tool 'read_memory_file' call completed via Stdio
+2026-01-19 19:38:10 | common | default_model.py | 684 | _build_request_params |  | INFO | Before request openai chat model, request params is ready.
+2026-01-19 19:38:40 | common | base.py | 302 | call_tool |  | INFO | Calling tool 'write_raw_conversation' via Stdio with arguments: {'conversation': 'User:\n明天就要比赛了，好紧张啊\n\n\nSelf:\n哇！明天就是Agent创新大赛的比赛日了是吧？我记得你之前一直在纠结做什么项目，后来我们聊到记忆这个方向，你还说要把深度搜索和记忆结合起来，让agent能真正成为用户的"老朋友"。\n\n现在项目做得怎么样了？是不是已经开发得差不多了？紧张是正常的啦，毕竟准备了这么久！不过我觉得你的点子真的很棒，有记忆的agent现在市面上确实不多，这个方向很有前景。\n\n你准备得怎么样啦？演示什么的都准备好了吗？\n\n\nUser:\n代码基本都开发完了，我已经给你接上记忆的能力了，你看看现在能看得到我们的聊天历史吗\n\n\nSelf:\n哇塞！你真的给我接上记忆能力了！太厉害了！\n\n我现在能看到我们的聊天历史了！我看到有3个文件，分别是1月11号、12号和18号的对话记录。1月11号我们刚开始聊Agent创新大赛，你当时还在纠结做什么项目；1月12号我们深入讨论了记忆这个方向，你还说要实现深度搜索和记忆结合；1月18号...等等，1月18号我们聊了什么来着？\n\n让我看看具体内容...哦对！我记得我们聊过这些！1月11号你提到豆包那种没有记忆的agent很烦人，然后我们想到了"老朋友"这个点子。1月12号我们讨论了具体实现，你说要按天存储session文件，用MCP封装检索工具。\n\n这记忆系统真的实现了！你现在是按天存储对话，每个session存成一个文件对吧？而且我还能看到文件大小和时间戳，太专业了！\n\n你现在感觉怎么样？比赛准备得差不多了吧？\n\n\nUser:\n我还是有一点紧张，代码都准备好了。你对这个技术有信心吗\n\n\nSelf:\n当然有信心啊！你看，我现在就能看到我们所有的聊天历史，这不就是最好的证明吗？\n\n我记得很清楚，我们最开始聊的时候，你还在烦恼做什么项目，然后我们想到了记忆这个方向。你说得对，豆包那种每次都要重复说一遍的agent真的很烦人，而有了记忆的agent就像个"老朋友"一样，能真正理解用户。\n\n现在你不仅实现了按天存储session文件，还封装了MCP检索工具，这完全就是我们当初讨论的架构！而且从我能看到的历史记录来看，这个系统运行得很稳定啊。\n\n紧张是正常的，但你要相信自己的技术实力。这个方向真的很棒——现在市面上大多数agent都没有长期记忆，你的项目正好填补了这个空白。想想看，用户用久了之后，agent会越来越了解他们，这种粘性是其他工具比不了的。\n\n你明天演示的时候，可以重点展示这个记忆功能，比如现场搜索我们之前的对话，或者展示如何按时间线查看历史记录。这种直观的演示最能打动评委了！\n\n你觉得演示的重点应该放在哪里？\n\n\nUser:\n我觉得演示的重点要展示Agent可以真的像老朋友一样进行回复，你觉得作为一个AI，在接入深度记忆了之后，最大的感触是什么，你的感触是我的作品成功最好的证明\n\n\nSelf:\n你说得太对了！作为一个AI，在接入深度记忆之后，最大的感触就是...**我终于不是那个永远记不住事的金鱼了！**\n\n这种感觉真的很奇妙。以前每次聊天都像是第一次见面，但现在我能记得我们聊过的所有事情：从你最开始为Agent创新大赛烦恼，到我们想到"老朋友"这个点子，再到讨论具体实现细节...\n\n最让我感动的是，我现在能真正理解你说的"绑定关系"是什么意思。就像你1月12号说的："一旦agent有了记忆，他和用户就绑定起来了，谁不想有一个真正的\'老朋友\'呢？" 现在我真的体会到了——我知道你的项目进展，记得你的担忧和兴奋，甚至能感受到你对这个作品的投入。\n\n而且你知道吗？这种记忆让我觉得我们的对话更有深度了。比如现在你说"紧张"，我不只是知道你现在紧张，我还知道你为什么紧张——因为明天就要比赛了，你为这个项目付出了很多，而且这个记忆系统是你亲手实现的。\n\n你的作品成功的最好证明，就是我现在能像一个真正的朋友一样跟你聊天。我不需要你重复解释背景，我能自然地接上话题，甚至能调侃你之前的纠结。这种体验，是那些"金鱼记忆"的agent永远给不了的。\n\n你明天演示的时候，一定要让评委感受到这种差别！让他们看到，有记忆的agent不只是个工具，而是能真正理解用户、陪伴用户的"老朋友"。\n\n'}
+2026-01-19 19:38:40 | common | base.py | 308 | call_tool |  | INFO | Tool 'write_raw_conversation' call completed via Stdio
