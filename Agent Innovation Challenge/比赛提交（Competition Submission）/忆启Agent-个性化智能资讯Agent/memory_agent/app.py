@@ -8,7 +8,11 @@ from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
 import requests
 from openjiuwen.core.common.logging import logger
 from dotenv import load_dotenv
-load_dotenv('.env')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 加载环境变量 - 使用绝对路径确保能找到.env文件
+env_path = os.path.join(script_dir, '.env')
+load_dotenv(dotenv_path=env_path)
 
 BASE_URL = "http://127.0.0.1:9000"
 USER_ID = "user_001"
@@ -317,10 +321,10 @@ def generate_brief():
 
     try:
         completion = model.invoke(
-            model_name="qwen-plus-latest",
+            model_name=MODEL_NAME,
             messages=[BaseMessage(role="user", content=prompt)]
         )
-        return completion.choices[0].message.content
+        return completion.content
     except Exception as e:
         return f"生成简报时出错: {str(e)}"
 
@@ -598,10 +602,10 @@ if view == "控制台":
             for idx, news in enumerate(st.session_state.news):
                 # 确保新闻数据结构符合预期，适配memory_workflow_agent.py返回的格式
                 title = news.get('title', '无标题')
-                source = news.get('source', {}).get('name', '未知来源')
+                source = news.get('source_name', '未知来源')
                 summary = news.get('description', '无摘要')
                 url = news.get('url', '#')
-                published_at = news.get('publishedAt', '未知时间')
+                published_at = news.get('pub_date', '未知时间')
 
                 with st.expander(f"**{title}** - *{source}*", expanded=False):
                     st.markdown(summary)
@@ -674,13 +678,26 @@ if view == "控制台":
                 for m in st.session_state.chat_history:
                     role = "user" if m["role"] == "user" else "assistant"
                     messages.append(BaseMessage(content=m["content"], role=role))
-
+                    payload = {
+                        "user_id": USER_ID,  # 用户唯一 ID
+                        "message": m["content"]  # 用户画像文本
+                    }
+                    url = f"{BASE_URL}/add_profile"
+                    session = requests.Session()
+                    try:
+                        response = session.post(url, json=payload, timeout=10)
+                        if response.status_code == 200:
+                            pass
+                        else:
+                            st.warning(f"保存画像失败: {response.text}")
+                    except Exception as e:
+                        st.error(f"保存用户画像失败: {e}")
                 completion = model.invoke(
-                    model_name="qwen-plus-latest",
+                    model_name=MODEL_NAME,
                     messages=messages
                 )
 
-                response_text = completion.choices[0].message.content
+                response_text = completion.content
 
                 st.session_state.chat_history.append(
                     {"role": "assistant", "content": response_text}

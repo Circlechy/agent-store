@@ -1,11 +1,14 @@
 import os
 import asyncio
-import json
-
+from dotenv import load_dotenv
 import requests
 
 from openjiuwen.core.common.logging import logger
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
+# 加载环境变量 - 使用绝对路径确保能找到.env文件
+env_path = os.path.join(script_dir, '.env')
+load_dotenv(dotenv_path=env_path)
 # 设置环境变量
 API_BASE = os.getenv("API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 # 为了满足BaseModelInfo的验证要求，提供一个非空的默认API密钥（实际使用时需要替换为真实密钥）
