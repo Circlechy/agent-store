@@ -16,7 +16,7 @@ load_dotenv()
 # Ensure both repo root and `examples/` are importable
 CURRENT_DIR = os.path.dirname(__file__)
 REPO_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", ".."))
-EXAMPLES_DIR = os.path.abspath(os.path.join(REPO_ROOT, "examples"))
+EXAMPLES_DIR = os.path.abspath(os.path.join(REPO_ROOT, "src"))
 
 for path in [REPO_ROOT, EXAMPLES_DIR]:
     if path not in sys.path:

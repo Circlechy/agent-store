@@ -12,7 +12,7 @@ import wikipedia
 import asyncio
 import httpx 
 from .utils.smart_request import smart_request, api_request_json
-from examples.super_agent.tool.logger import bootstrap_logger
+from src.super_agent.tool.logger import bootstrap_logger
 from typing import List, Optional, Dict, Any
 from .utils.perplexity import PerplexitySearch
 from .utils.query_enhancer import enhance_query_for_perplexity
