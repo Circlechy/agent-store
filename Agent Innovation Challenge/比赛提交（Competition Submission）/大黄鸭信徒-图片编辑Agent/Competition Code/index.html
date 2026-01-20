@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 AI智能图片工作室 - Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #6366f1; --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* 棋盘格背景，用于展示透明图片 */
+        .checkered-bg {
+            background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%),
+                              linear-gradient(-45deg, #1e293b 25%, transparent 25%),
+                              linear-gradient(45deg, transparent 75%, #1e293b 75%),
+                              linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: #0f172a;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        /* 交互动画 */
+        .btn-hover { transition: all 0.2s; }
+        .btn-hover:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="text-slate-200">
+
+    <!-- 顶部导航 -->
+    <header class="h-14 border-b border-slate-700/50 bg-slate-900/50 backdrop-blur flex items-center px-6 justify-between flex-none z-10">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white">AI</div>
+            <h1 class="font-bold text-sm tracking-wide text-white">IMAGE STUDIO</h1>
+        </div>
+        <div class="text-xs font-mono text-slate-500 flex gap-4">
+            <span id="statusIndicator" class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> System Ready</span>
+        </div>
+    </header>
+
+    <!-- 主布局 -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 h-full min-h-0">
+
+        <!-- 左侧：可视化工作区 (8/12) -->
+        <div class="lg:col-span-8 flex flex-col border-r border-slate-700/50 p-4 min-h-0 relative">
+
+            <!-- 上传后顶部信息栏 -->
+            <div id="uploadBar" class="hidden mb-2 rounded-lg bg-slate-800/50 border border-slate-700 p-2 flex items-center justify-between flex-none">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <span class="text-lg">🖼️</span>
+                    <div class="flex flex-col min-w-0">
+                        <span id="fileName" class="text-sm font-medium truncate text-white">filename.jpg</span>
+                        <span id="fileInfo" class="text-xs text-slate-400">--</span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                     <button onclick="resetImage()" class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded text-slate-300 transition-colors">重置原图</button>
+                     <button onclick="document.getElementById('fileInput').click()" class="px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 rounded text-white transition-colors">更换图片</button>
+                </div>
+            </div>
+
+            <!-- 图片展示容器 -->
+            <div class="flex-1 bg-slate-800/20 rounded-xl border border-slate-700/50 relative overflow-hidden flex flex-col min-h-0 group">
+
+                <!-- 初始上传引导 -->
+                <div id="uploadGuide" class="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-800/30 transition-colors z-20" onclick="document.getElementById('fileInput').click()">
+                    <div class="p-8 border-2 border-dashed border-slate-600 rounded-2xl text-center group-hover:border-indigo-500 transition-colors">
+                        <div class="text-5xl mb-3 opacity-80">📤</div>
+                        <p class="text-base text-slate-300 font-medium">点击上传图片</p>
+                        <p class="text-xs text-slate-500 mt-2">支持 JPG, PNG, WebP</p>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" class="hidden" accept="image/*">
+
+                <!-- 图片显示区域 -->
+                <div id="imageContainer" class="hidden w-full h-full checkered-bg relative flex items-center justify-center">
+
+                    <!-- 加载遮罩 -->
+                    <div id="loadingOverlay" class="hidden absolute inset-0 bg-black/60 z-30 flex flex-col items-center justify-center backdrop-blur-sm">
+                        <div class="w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                        <span class="text-sm text-indigo-300 font-medium animate-pulse">AI 正在思考与处理...</span>
+                    </div>
+
+                    <!-- 结果图片 -->
+                    <img id="imgDisplay" class="max-w-full max-h-full object-contain shadow-2xl transition-all duration-300" />
+
+                    <!-- 提示标 -->
+                    <div id="imageBadge" class="absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1 rounded-full text-xs text-white border border-white/10">
+                        原始图片
+                    </div>
+                    
+                    <!-- 原图切换按钮 -->
+                    <button id="toggleOriginalBtn" class="absolute top-4 right-4 px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 backdrop-blur rounded-lg text-xs text-white border border-slate-600/50 transition-all hover:shadow-lg hidden" onclick="toggleOriginalImage()">
+                        显示原图
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：控制台 (4/12) -->
+        <div class="lg:col-span-4 flex flex-col bg-slate-900/50 min-h-0 border-l border-slate-800">
+
+            <!-- 核心功能区 -->
+            <div class="p-5 border-b border-slate-800 flex-none overflow-y-auto max-h-[60vh]">
+                <div class="space-y-6">
+
+                    <!-- 快捷操作 -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+                            <span class="w-1 h-3 bg-emerald-500 rounded-full"></span> 核心功能
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 p-3 rounded-xl flex items-center gap-3 border border-slate-700/50 group" onclick="quickAction('beautify')">
+                                <span class="text-xl group-hover:rotate-12 transition-transform">🎨</span>
+                                <div class="text-left">
+                                    <div class="text-sm font-medium text-slate-200">智能美化</div>
+                                    <div class="text-[10px] text-slate-500">一键美化图片</div>
+                                </div>
+                            </button>
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 p-3 rounded-xl flex items-center gap-3 border border-slate-700/50 group" onclick="quickAction('brighten')">
+                                <span class="text-xl group-hover:rotate-12 transition-transform">☀️</span>
+                                <div class="text-left">
+                                    <div class="text-sm font-medium text-slate-200">提高亮度</div>
+                                    <div class="text-[10px] text-slate-500">+30% 亮度</div>
+                                </div>
+                            </button>
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 p-3 rounded-xl flex items-center gap-3 border border-slate-700/50 group" onclick="quickAction('dark_mode')">
+                                <span class="text-xl group-hover:rotate-12 transition-transform">🌙</span>
+                                <div class="text-left">
+                                    <div class="text-sm font-medium text-slate-200">深色模式</div>
+                                    <div class="text-[10px] text-slate-500">降低亮度，增强对比度</div>
+                                </div>
+                            </button>
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 p-3 rounded-xl flex items-center gap-3 border border-slate-700/50 group" onclick="quickAction('festive_mode')">
+                                <span class="text-xl group-hover:scale-110 transition-transform">🎊</span>
+                                <div class="text-left">
+                                    <div class="text-sm font-medium text-slate-200">喜庆模式</div>
+                                    <div class="text-[10px] text-slate-500">提高饱和度，增强暖色调</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 建议提示词 -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+                            <span class="w-1 h-3 bg-blue-500 rounded-full"></span> 建议提示词
+                        </h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs rounded-full text-slate-300 border border-slate-700/50" onclick="document.getElementById('chatInput').value='将图片向右旋转90度';">旋转90°</button>
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs rounded-full text-slate-300 border border-slate-700/50" onclick="document.getElementById('chatInput').value='裁剪图片为中心正方形';">中心裁剪</button>
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs rounded-full text-slate-300 border border-slate-700/50" onclick="document.getElementById('chatInput').value='为图片应用模糊效果';">应用模糊</button>
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs rounded-full text-slate-300 border border-slate-700/50" onclick="document.getElementById('chatInput').value='将图片宽度调整为500像素';">调整尺寸</button>
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs rounded-full text-slate-300 border border-slate-700/50" onclick="document.getElementById('chatInput').value='将图片转换为PNG格式';">转换格式</button>
+                            <button class="btn-hover bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs rounded-full text-slate-300 border border-slate-700/50" onclick="document.getElementById('chatInput').value='获取图片详细信息';">图片信息</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 对话流 (自适应高度) -->
+            <div class="flex-1 flex flex-col min-h-0 bg-slate-900 relative">
+                <div class="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-slate-900 to-transparent z-10 pointer-events-none"></div>
+
+                <div id="chatHistory" class="flex-1 overflow-y-auto p-4 space-y-3 pb-4">
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white flex-none shadow-lg">AI</div>
+                        <div class="bg-slate-800 p-3 rounded-2xl rounded-tl-none text-sm text-slate-300 shadow-sm border border-slate-700/50">
+                            已准备就绪。上传图片后，使用上方按钮可快速编辑，或直接输入您的需求。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 输入区 -->
+                <div class="p-4 bg-slate-800/80 backdrop-blur border-t border-slate-700">
+                    <div class="relative">
+                        <input id="chatInput" type="text"
+                            class="w-full bg-slate-900 border border-slate-700 text-sm rounded-xl pl-4 pr-12 py-3.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-500 text-white"
+                            placeholder="输入指令，例如：把图片调亮一点..."
+                            onkeydown="if(event.key==='Enter') sendChat()">
+                        <button onclick="sendChat()" class="absolute right-2 top-2 p-1.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API = 'http://localhost:5000/api';
+        const state = {
+            currentPath: null,    // 核心：当前图片在服务器的物理路径
+            originalPath: null,   // 初始上传的路径
+            processing: false,
+            originalUrl: null,    // 原图的URL
+            currentUrl: null,     // 当前修改后图片的URL
+            showingOriginal: false // 当前是否显示原图
+        };
+
+        const els = {
+            input: document.getElementById('fileInput'),
+            uploadGuide: document.getElementById('uploadGuide'),
+            uploadBar: document.getElementById('uploadBar'),
+            imageContainer: document.getElementById('imageContainer'),
+            imgDisplay: document.getElementById('imgDisplay'),
+            loading: document.getElementById('loadingOverlay'),
+            chat: document.getElementById('chatHistory'),
+            fileName: document.getElementById('fileName'),
+            fileInfo: document.getElementById('fileInfo'),
+            imageBadge: document.getElementById('imageBadge'),
+            toggleBtn: document.getElementById('toggleOriginalBtn')
+        };
+
+        // 事件监听
+        els.input.addEventListener('change', async (e) => {
+            if(e.target.files[0]) await upload(e.target.files[0]);
+        });
+
+        async function upload(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // UI 更新
+            els.uploadGuide.classList.add('hidden');
+            els.uploadBar.classList.remove('hidden');
+            els.imageContainer.classList.remove('hidden');
+            els.fileName.textContent = file.name;
+            els.fileInfo.textContent = `${(file.size/1024/1024).toFixed(2)} MB`;
+
+            // 本地预览
+            const localUrl = URL.createObjectURL(file);
+            state.originalUrl = localUrl;
+            state.currentUrl = localUrl;
+            updateDisplay(localUrl, '原始图片');
+
+            try {
+                const res = await fetch(`${API}/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if(data.success) {
+                    // 核心：初始化服务器路径
+                    state.originalPath = data.data.path;
+                    state.currentPath = data.data.path;
+                    els.fileInfo.textContent += ` • ${data.data.width}x${data.data.height}`;
+                    addMsg('system', '✅ 图片上传成功');
+                }
+            } catch(e) {
+                alert('上传失败，请确保后端服务已启动');
+            }
+        }
+
+        async function quickAction(type) {
+            if(!state.currentPath) return alert('请先上传图片');
+            if(state.processing) return;
+
+            addMsg('user', `执行操作: ${getActionName(type)}`);
+            setLoading(true);
+
+            try {
+                const res = await fetch(`${API}/quick-action`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action_type: type,
+                        image_path: state.currentPath // 重点：发送当前最新的图片路径
+                    })
+                });
+                const data = await res.json();
+                handleResponse(data);
+            } catch(e) {
+                addMsg('system', '❌ 请求失败');
+                setLoading(false);
+            }
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if(!text || !state.currentPath || state.processing) return;
+
+            addMsg('user', text);
+            input.value = '';
+            setLoading(true);
+
+            try {
+                const res = await fetch(`${API}/chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        message: text,
+                        image_path: state.currentPath,
+                        conversation_id: 'session_' + Date.now()
+                    })
+                });
+                const data = await res.json();
+                handleResponse(data);
+            } catch(e) {
+                addMsg('system', '❌ 请求失败');
+                setLoading(false);
+            }
+        }
+
+        function handleResponse(data) {
+            setLoading(false);
+            if(data.success) {
+                addMsg('ai', data.response);
+                if(data.output_files && data.output_files.length > 0) {
+                    const file = data.output_files[0];
+
+                    // 核心修复：更新当前图片路径，实现连续编辑
+                    // 后端必须返回 'path' 字段
+                    if (file.path) {
+                        state.currentPath = file.path;
+                    }
+
+                    // 更新图片信息显示
+                    const fileName = file.filename || 'edited_image';
+                    const fileSize = file.size || 0;
+                    const fileSizeMB = (fileSize / 1024 / 1024).toFixed(2);
+                    
+                    // 更新文件名
+                    els.fileName.textContent = fileName;
+                    
+                    // 更新文件信息（大小 + 尺寸）
+                    // 我们需要等待图片加载完成才能获取尺寸
+                    const img = new Image();
+                    img.onload = function() {
+                        els.fileInfo.textContent = `${fileSizeMB} MB • ${this.width}x${this.height}`;
+                    };
+                    img.src = file.url + '?t=' + Date.now();
+
+                    // 更新视图
+                    updateDisplay(file.url + '?t=' + Date.now(), '优化后');
+                }
+            } else {
+                addMsg('system', `❌ 错误: ${data.error}`);
+            }
+        }
+
+        function updateDisplay(url, badgeText) {
+            // 保存当前URL状态
+            if (badgeText === '原始图片') {
+                state.originalUrl = url;
+            } else {
+                state.currentUrl = url;
+                // 显示切换按钮
+                els.toggleBtn.classList.remove('hidden');
+            }
+            
+            // 更新显示
+            els.imgDisplay.src = url;
+            els.imageBadge.textContent = badgeText;
+            els.imageBadge.className = badgeText === '原始图片'
+                ? "absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1 rounded-full text-xs text-white border border-white/10"
+                : "absolute top-4 left-4 bg-indigo-600/90 backdrop-blur px-3 py-1 rounded-full text-xs text-white border border-white/10 shadow-lg";
+        }
+        
+        // 切换显示原图/修改后的图片
+        function toggleOriginalImage() {
+            if (state.showingOriginal) {
+                // 显示修改后的图片
+                updateDisplay(state.currentUrl, '优化后');
+                els.toggleBtn.textContent = '显示原图';
+                els.toggleBtn.classList.remove('active');
+            } else {
+                // 显示原图
+                updateDisplay(state.originalUrl, '原始图片');
+                els.toggleBtn.textContent = '显示优化图';
+                els.toggleBtn.classList.add('active');
+            }
+            // 切换状态
+            state.showingOriginal = !state.showingOriginal;
+        }
+
+        function resetImage() {
+            if(!state.originalPath) return;
+            state.currentPath = state.originalPath;
+            state.showingOriginal = false;
+            // 隐藏切换按钮
+            els.toggleBtn.classList.add('hidden');
+            // 更新显示
+            updateDisplay(state.originalUrl, '原始图片');
+            addMsg('system', '↺ 已重置为原始图片');
+        }
+
+        // 工具函数
+        function setLoading(bool) {
+            state.processing = bool;
+            bool ? els.loading.classList.remove('hidden') : els.loading.classList.add('hidden');
+        }
+
+        function addMsg(role, text) {
+            const div = document.createElement('div');
+            div.className = 'flex gap-3 animate-fade-in';
+            const isAI = role !== 'user';
+
+            div.innerHTML = `
+                ${isAI ? '<div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white flex-none shadow-lg">AI</div>' : ''}
+                <div class="${role === 'user' ? 'bg-slate-700 ml-auto border-slate-600' : 'bg-slate-800 border-slate-700/50'} p-3 border rounded-2xl ${role==='user'?'rounded-tr-none':'rounded-tl-none'} text-sm leading-relaxed max-w-[85%] text-slate-200 shadow-sm">
+                    ${text}
+                </div>
+                ${!isAI ? '<div class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-xs font-bold text-white flex-none shadow-lg">Me</div>' : ''}
+            `;
+            els.chat.appendChild(div);
+            els.chat.scrollTop = els.chat.scrollHeight;
+        }
+
+        function getActionName(type) {
+            const map = {
+                'rotate_90': '旋转 90°', 'flip_horizontal': '水平翻转',
+                'brighten': '提高亮度', 'contrast': '增强对比度', 'saturate': '增强色彩',
+                'resize_social': '调整为方形', 'resize_hd': '调整为高清'
+            };
+            return map[type] || type;
+        }
+    </script>
+</body>
+</html>
