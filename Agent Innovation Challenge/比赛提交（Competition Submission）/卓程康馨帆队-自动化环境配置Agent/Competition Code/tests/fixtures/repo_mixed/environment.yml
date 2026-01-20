@@ -1,0 +1,4 @@
+name: mixed_env
+dependencies:
+  - python=3.10
+  - matplotlib
