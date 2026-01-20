@@ -1,0 +1,4 @@
+[submodule "agent-core"]
+	path = agent-core
+	url = https://gitcode.com/SnapeK/agent-core.git
+	branch = openjiuwen-code
