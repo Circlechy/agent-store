@@ -152,8 +152,8 @@ workflow.run("")  # 股票代码字符串，如：workflow.run("000001")
 
 ## 回测验证
 
-以2025年的数据为基础，基于JiuwenFintech生成的报告，构造给出买入评级股票的投资组合，2026年1月1日至2026年1约19日投资收益为14.13%，高于上证综指涨幅12.19%（$\alpha$收益）。
-具体的报告与投资组合构建标的可参考`output`文件夹
+以2025年的数据为基础，基于JiuwenFintech生成的报告，构造给出买入评级股票的投资组合，投资组合在2026年1月1日至2026年1月19日投资总收益为14.13%，
+高于上证综指同期1.94%的涨幅，取的12.19%的$\alpha$收益。 具体的报告与投资组合构建标的可参考`output`文件夹。
 <div align="center">
   <img src="./assets/ReturnCompare.png" width="80%" alt="JiuwenFintech Slogan" />
 </div>
