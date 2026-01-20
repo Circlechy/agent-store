@@ -1,0 +1,518 @@
+{
+  "nodes": [
+    {
+      "id": "start_3Sf5_",
+      "type": "1",
+      "meta": {
+        "position": {
+          "x": 180,
+          "y": 256
+        }
+      },
+      "data": {
+        "title": "开始",
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "default": "你好，请帮我分析一下这个问题。"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "id": "end_3Sf5_",
+      "type": "2",
+      "meta": {
+        "position": {
+          "x": 2480,
+          "y": 256
+        }
+      },
+      "data": {
+        "title": "结束",
+        "inputs": {
+          "inputParameters": {
+            "result": {
+              "type": "ref",
+              "content": [
+                "code_AGNRo",
+                "result"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          }
+        },
+        "streaming": false
+      }
+    },
+    {
+      "id": "code_74feF",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 1560,
+          "y": 468
+        }
+      },
+      "data": {
+        "title": "未发现命令",
+        "inputs": {
+          "inputParameters": {
+            "input": {
+              "type": "ref",
+              "content": [
+                "code_3ff3s",
+                "func_tag"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "language": "python",
+          "code": "def main(args: Args):\n  import time\n  time.sleep(3)\n  return {'result': args.params['input']}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "string",
+              "description": "代码执行结果"
+            }
+          },
+          "required": [
+            "result"
+          ]
+        },
+        "exceptionConfig": {
+          "retryTimes": 3,
+          "timeoutSeconds": 30,
+          "processType": "break",
+          "executeStep": {
+            "defaultStep": "0",
+            "errorStep": "1"
+          }
+        }
+      }
+    },
+    {
+      "id": "plugin_GkYdQ",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 1560,
+          "y": 0
+        }
+      },
+      "data": {
+        "title": "torch2mindspore",
+        "inputs": {
+          "inputParameters": {
+            "query": {
+              "type": "ref",
+              "content": [
+                "code_3ff3s",
+                "url"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "31ad9d73-0207-4fef-a67a-a0a0acbacd2b",
+            "toolName": "torch2mindspore",
+            "pluginID": "b4bd5991-e1af-46fc-a5cd-35c402e655e2",
+            "pluginName": "torch2mindspore",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "extra": {
+                    "index": 1
+                  }
+                },
+                "zip_name": {
+                  "type": "string",
+                  "extra": {
+                    "index": 2
+                  }
+                },
+                "not_converted_api": {
+                  "type": "string",
+                  "extra": {
+                    "index": 3
+                  }
+                }
+              }
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plugin_u8EdZ",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 1560,
+          "y": 234
+        }
+      },
+      "data": {
+        "title": "torch2msadapter",
+        "inputs": {
+          "inputParameters": {
+            "query": {
+              "type": "ref",
+              "content": [
+                "code_3ff3s",
+                "url"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "851ebe4d-c4e8-49e7-a9bc-dff302a7dbaa",
+            "toolName": "torch2msadapter",
+            "pluginID": "863094ee-834c-4e0b-ba05-0b9a16a352fe",
+            "pluginName": "torch2msadapter",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "extra": {
+                    "index": 1
+                  }
+                },
+                "file_name": {
+                  "type": "string",
+                  "extra": {
+                    "index": 2
+                  }
+                }
+              }
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "condition_ms2LG",
+      "type": "4",
+      "meta": {
+        "position": {
+          "x": 1100,
+          "y": 214
+        }
+      },
+      "data": {
+        "title": "选择器",
+        "branches": [
+          {
+            "conditions": [
+              {
+                "left": {
+                  "type": "ref",
+                  "content": [
+                    "code_3ff3s",
+                    "func_tag"
+                  ]
+                },
+                "operator": "eq",
+                "right": {
+                  "type": "constant",
+                  "content": "torch2ms",
+                  "schema": {
+                    "type": "string",
+                    "extra": {
+                      "weak": true
+                    }
+                  }
+                }
+              }
+            ],
+            "logic": 2,
+            "branchId": "branch_hy_7S"
+          },
+          {
+            "conditions": [
+              {
+                "left": {
+                  "type": "ref",
+                  "content": [
+                    "code_3ff3s",
+                    "func_tag"
+                  ]
+                },
+                "operator": "eq",
+                "right": {
+                  "type": "constant",
+                  "content": "torch2msa",
+                  "schema": {
+                    "type": "string",
+                    "extra": {
+                      "weak": true
+                    }
+                  }
+                }
+              }
+            ],
+            "logic": 2,
+            "branchId": "branch_e_tOjAwW"
+          },
+          {
+            "conditions": [],
+            "logic": 2,
+            "branchId": "branch_TMAYl"
+          }
+        ]
+      }
+    },
+    {
+      "id": "code_AGNRo",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 2020,
+          "y": 238
+        }
+      },
+      "data": {
+        "title": "结果合并",
+        "inputs": {
+          "inputParameters": {
+            "ms_input": {
+              "type": "ref",
+              "content": [
+                "plugin_GkYdQ",
+                "data",
+                "result"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "msa_input": {
+              "type": "ref",
+              "content": [
+                "plugin_u8EdZ",
+                "data",
+                "file_name"
+              ],
+              "extra": {
+                "index": 1
+              }
+            },
+            "ms_notfound": {
+              "type": "ref",
+              "content": [
+                "plugin_GkYdQ",
+                "data",
+                "not_converted_api"
+              ],
+              "extra": {
+                "index": 2
+              }
+            },
+            "func_notfound": {
+              "type": "ref",
+              "content": [
+                "code_74feF",
+                "result"
+              ],
+              "extra": {
+                "index": 3
+              }
+            }
+          },
+          "language": "python",
+          "code": "def main(args: Args):\n  result = \"检测结果包含msadapter不支持的api及精度未对齐的api告警提示，请下载压缩包查看：\"\n  if args.params.get('ms_input', None):\n    result = result + args.params['ms_input']\n    result = result + \"\\n发现不支持的API，请调用mindspore知识库将以下接口找到对应mindspore api映射，禁止胡编乱造不存在的接口:\\n\" +  args.params['ms_notfound'] \n    # \"\\n如果知识库中未找到对应的api，可调用Google_Search插件进行查询未对应的api\"\n  if args.params.get('msa_input', None):\n    result = result + args.params['msa_input']    \n  if args.params.get('func_notfound', None):\n    result = result + args.params['func_notfound']   \n     \n  return {'result': result}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "string",
+              "description": "代码执行结果"
+            }
+          },
+          "required": [
+            "result"
+          ]
+        },
+        "exceptionConfig": {
+          "retryTimes": 3,
+          "timeoutSeconds": 30,
+          "processType": "break",
+          "executeStep": {
+            "defaultStep": "0",
+            "errorStep": "1"
+          }
+        }
+      }
+    },
+    {
+      "id": "code_3ff3s",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 640,
+          "y": 239
+        }
+      },
+      "data": {
+        "title": "转换类型判断",
+        "inputs": {
+          "inputParameters": {
+            "input": {
+              "type": "ref",
+              "content": [
+                "start_3Sf5_",
+                "query"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "language": "python",
+          "code": "def main(args: Args):\n  inputs = args.params['input']\n  func_tag, url = inputs.split(\";\")\n  return {'func_tag': func_tag,\n         \"url\":url}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "func_tag": {
+              "type": "string",
+              "description": "代码执行结果"
+            },
+            "url": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            }
+          },
+          "required": [
+            "func_tag"
+          ]
+        },
+        "exceptionConfig": {
+          "retryTimes": 3,
+          "timeoutSeconds": 30,
+          "processType": "break",
+          "executeStep": {
+            "defaultStep": "0",
+            "errorStep": "1"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "sourceNodeID": "start_3Sf5_",
+      "targetNodeID": "code_3ff3s"
+    },
+    {
+      "sourceNodeID": "code_AGNRo",
+      "targetNodeID": "end_3Sf5_",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "condition_ms2LG",
+      "targetNodeID": "code_74feF",
+      "sourcePortID": "branch_TMAYl"
+    },
+    {
+      "sourceNodeID": "code_74feF",
+      "targetNodeID": "code_AGNRo",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "condition_ms2LG",
+      "targetNodeID": "plugin_GkYdQ",
+      "sourcePortID": "branch_hy_7S"
+    },
+    {
+      "sourceNodeID": "plugin_GkYdQ",
+      "targetNodeID": "code_AGNRo"
+    },
+    {
+      "sourceNodeID": "condition_ms2LG",
+      "targetNodeID": "plugin_u8EdZ",
+      "sourcePortID": "branch_e_tOjAwW"
+    },
+    {
+      "sourceNodeID": "plugin_u8EdZ",
+      "targetNodeID": "code_AGNRo"
+    },
+    {
+      "sourceNodeID": "code_3ff3s",
+      "targetNodeID": "condition_ms2LG",
+      "sourcePortID": "0"
+    }
+  ]
+}
