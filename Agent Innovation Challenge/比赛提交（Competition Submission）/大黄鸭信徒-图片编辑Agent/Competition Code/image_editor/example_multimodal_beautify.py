@@ -78,9 +78,9 @@ async def create_multimodal_beautify_agent():
         agent_version="1.0",
         description="An agent that analyzes images using multimodal LLM and provides beautification suggestions",
         model=create_model_config(
-            model_name="Qwen/Qwen3-VL-32B-Thinking",  # 多模态视觉模型
-            api_key="sk-iimeqzridkmqtnoggoinouysymkkgwttphygwapjjtxcaitp",
-            api_base="https://api.siliconflow.cn/v1",
+            model_name="",  # 多模态视觉模型
+            api_key="",
+            api_base="",
         ),
         prompt_template=[
             {
