@@ -10,11 +10,11 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(script_dir, '.env')
 load_dotenv(dotenv_path=env_path)
 # 设置环境变量
-API_BASE = os.getenv("API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+API_BASE = os.getenv("API_BASE")
 # 为了满足BaseModelInfo的验证要求，提供一个非空的默认API密钥（实际使用时需要替换为真实密钥）
-API_KEY = os.getenv("API_KEY", "sk-3b15e251510747c28b569bdf214bf7c2")
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen-flash")
-MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "openai")  # 使用小写的openai以匹配model_library中的实现
+API_KEY = os.getenv("API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME")
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER")  # 使用小写的openai以匹配model_library中的实现
 os.environ["LLM_SSL_VERIFY"] = "False"
 
 # 检查必要的环境变量
@@ -40,6 +40,8 @@ from openjiuwen.core.memory.engine import MemoryEngine
 from openjiuwen.core.memory.config import MemoryConfig, SysMemConfig
 from openjiuwen.core.utils.llm.messages import BaseMessage
 from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
+# 使用DBM存储
+from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
 
 
 # 创建模型配置
@@ -65,8 +67,6 @@ async def init_memory_engine():
     sys_config = SysMemConfig()
     logger.debug(f"MemoryEngine配置: {sys_config}")
 
-    # 使用DBM存储
-    from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
     logger.debug("注册DBM存储")
     MemoryEngine.register_store(kv_store=DbmKVStore("memory.db"))
 
@@ -465,7 +465,7 @@ async def main():
 
     # 通过API获取新闻数据
     logger.info("开始通过API获取新闻数据...")
-    api_key = os.getenv("NEWSDATA_API_KEY", "pub_2fb5680cc9634869a0bafce3e7906806")
+    api_key = os.getenv("NEWSDATA_API_KEY")
     key_words = ["AI", "大模型", "量子计算"]
     country_enum = "cn,us,kr"
     language_enum = "zh,zht,en"

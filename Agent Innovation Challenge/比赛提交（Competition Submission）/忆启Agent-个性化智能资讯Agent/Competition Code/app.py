@@ -18,11 +18,11 @@ BASE_URL = "http://127.0.0.1:9000"
 USER_ID = "user_001"
 
 # 设置环境变量
-API_BASE = os.getenv("API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+API_BASE = os.getenv("API_BASE")
 # 为了满足BaseModelInfo的验证要求，提供一个非空的默认API密钥（实际使用时需要替换为真实密钥）
-API_KEY = os.getenv("API_KEY", "sk-3b15e251510747c28b569bdf214bf7c2")
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen-flash")
-MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "openai")  # 使用小写的openai以匹配model_library中的实现
+API_KEY = os.getenv("API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME")
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER")  # 使用小写的openai以匹配model_library中的实现
 os.environ["LLM_SSL_VERIFY"] = "False"
 
 # ---------------------------------------------------------
@@ -368,7 +368,7 @@ with st.sidebar:
     else:
         if st.button("▶ 启动 Agent", type="primary", use_container_width=True):
             st.session_state.agent_running = True
-            api_key = "pub_2fb5680cc9634869a0bafce3e7906806"
+            api_key = os.getenv("NEWSDATA_API_KEY")
             # 使用用户画像作为关键词
             key_words = st.session_state.memories
             country = "cn"
@@ -440,6 +440,7 @@ if view == "控制台":
                 st.session_state.memories = get_user_profile(USER_ID)
             else:
                 st.toast(f"保存完成，但有 {error_count} 条失败。", icon="⚠️")
+
                 # 即使有部分失败，也尝试获取最新的用户画像
                 st.session_state.memories = get_user_profile(USER_ID)
     st.markdown("---")
@@ -582,7 +583,7 @@ if view == "控制台":
                 # 使用用户画像作为关键词
                 key_words = st.session_state.memories
                 # 使用默认的API_KEY - 实际使用时可以让用户配置
-                api_key = "pub_2fb5680cc9634869a0bafce3e7906806"
+                api_key = os.getenv("NEWSDATA_API_KEY")
                 country = "cn"
                 language = "zh"
 

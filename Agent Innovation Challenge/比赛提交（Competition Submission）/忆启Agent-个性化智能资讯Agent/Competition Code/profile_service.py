@@ -52,23 +52,23 @@ from openjiuwen.core.memory.embed_models.api import APIEmbedModel
 from memory_workflow_agent import create_memory_workflow_agent, get_news, filter_news_fields
 from openjiuwen.core.memory.manage.data_id_manager import DataIdManager
 
-API_BASE = os.getenv("API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-API_KEY = os.getenv("API_KEY", "sk-3b15e251510747c28b569bdf214bf7c2")
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen-plus-latest")
-MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "openai")  # 使用小写的openai以匹配model_library中的实现
+API_BASE = os.getenv("API_BASE")
+API_KEY = os.getenv("API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME")
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER")  # 使用小写的openai以匹配model_library中的实现
 os.environ["LLM_SSL_VERIFY"] = "False"
 os.environ["EMBED_SSL_VERIFY"] = "False"
 
 embed_model = APIEmbedModel(
-    base_url=os.getenv("EMBED_API_BASE", "https://api.siliconflow.cn/v1/embeddings"),
-    model_name=os.getenv("EMBED_MODEL_NAME", "BAAI/bge-m3"),
-    api_key=os.getenv("EMBED_API_KEY", "sk-xicwxncrmiymkavenhjupgtprrqcejzcvtvhtncpahutlabd"),
-    timeout=int(os.getenv("EMBED_TIMEOUT", "30")),
-    max_retries=int(os.getenv("EMBED_MAX_RETRIES", "3")),
+    base_url=os.getenv("EMBED_API_BASE"),
+    model_name=os.getenv("EMBED_MODEL_NAME"),
+    api_key=os.getenv("EMBED_API_KEY"),
+    timeout=int(os.getenv("EMBED_TIMEOUT")),
+    max_retries=int(os.getenv("EMBED_MAX_RETRIES")),
 )
 
 # 使用之前定义的项目根目录
-# 将 resources 目录放在 memory_agent 目录下
+# 将 resources 目录放在 Competition Code 目录下
 data_id_generator = DataIdManager()
 resource_dir = os.path.join(script_dir, 'resources')
 
