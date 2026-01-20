@@ -1,0 +1,270 @@
+/* BuildMode.css - Styles for graph construction animation */
+
+/* Decision panel container */
+.build-mode-decision-panel {
+  background: white;
+  border-radius: clamp(8px, 1.5vw, 12px);
+  padding: clamp(12px, 2vh, 20px) clamp(15px, 2vw, 20px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: clamp(10px, 1.5vh, 15px);
+  min-height: clamp(50px, 8vh, 60px);
+  border-left: 4px solid #3b82f6;
+  transition: all 0.3s ease;
+}
+
+.build-mode-decision-panel.centered {
+  display: flex;
+  align-items: center;
+}
+
+.build-mode-decision-panel.action-create {
+  border-left-color: #10b981;
+}
+
+.build-mode-decision-panel.action-merge {
+  border-left-color: #3b82f6;
+}
+
+.build-mode-decision-panel.action-init {
+  border-left-color: #6366f1;
+}
+
+.build-mode-decision-panel.action-complete {
+  border-left-color: #8b5cf6;
+}
+
+/* Decision text with typewriter effect */
+.decision-workflow {
+  font-size: clamp(16px, 2.2vh, 20px);
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: clamp(8px, 1.2vh, 12px);
+}
+
+.decision-details {
+  font-size: clamp(13px, 1.8vh, 15px);
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: clamp(6px, 1vh, 8px);
+}
+
+.decision-summary {
+  font-size: clamp(11px, 1.5vh, 13px);
+  color: #6b7280;
+  font-style: italic;
+}
+
+
+/* Controls Wrapper - Two column layout */
+.build-mode-controls-wrapper {
+  display: flex;
+  gap: clamp(15px, 2vw, 20px);
+  margin-top: clamp(15px, 2vh, 20px);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* Left panel: Decision + Progress */
+.build-mode-info-panel {
+  flex: 1 1 min(400px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.5vh, 15px);
+  min-width: min(300px, 100%);
+}
+
+/* Right panel: Playback controls */
+.build-mode-controls-panel {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.8vh, 15px);
+  align-items: center;
+  background: white;
+  padding: clamp(12px, 1.5vh, 15px) clamp(15px, 2vw, 20px);
+  border-radius: clamp(8px, 1.5vw, 12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: min(200px, 100%);
+}
+
+/* Speed slider */
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.2vw, 10px);
+  width: 100%;
+  min-width: min(200px, 100%);
+}
+
+.speed-label {
+  font-size: clamp(11px, 1.5vh, 13px);
+  color: #4b5563;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.speed-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+.speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.speed-slider::-webkit-slider-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.2);
+}
+
+.speed-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.speed-slider::-moz-range-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.2);
+}
+
+/* Progress indicator */
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.5vw, 12px);
+  padding: clamp(10px, 1.5vh, 12px) clamp(15px, 2vw, 20px);
+  background: white;
+  border-radius: clamp(8px, 1.5vw, 12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.progress-text {
+  font-size: clamp(12px, 1.6vh, 14px);
+  color: #4b5563;
+  font-weight: 600;
+  min-width: clamp(100px, 15vw, 120px);
+  white-space: nowrap;
+}
+
+.progress-bar-container {
+  flex: 1;
+  height: clamp(6px, 1vh, 8px);
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+
+
+/* Stats display */
+.build-mode-stats {
+  display: flex;
+  gap: 15px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  min-width: 100px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-item.creates .stat-value {
+  color: #10b981;
+}
+
+.stat-item.merges .stat-value {
+  color: #3b82f6;
+}
+
+.stat-item.total .stat-value {
+  color: #8b5cf6;
+}
+
+/* Build mode container */
+.build-mode-container {
+  width: 100%;
+  max-width: min(1400px, 95vw);
+  margin: 0 auto;
+  padding: clamp(10px, 2vw, 20px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .build-mode-controls-wrapper {
+    flex-direction: column;
+  }
+  
+  .build-mode-info-panel,
+  .build-mode-controls-panel {
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  .build-mode-controls-panel {
+    align-items: stretch;
+  }
+  
+  .speed-control {
+    width: 100%;
+  }
+  
+  .build-mode-stats {
+    justify-content: space-around;
+  }
+  
+  .progress-text {
+    min-width: auto;
+    font-size: clamp(11px, 3vw, 14px);
+  }
+}
+

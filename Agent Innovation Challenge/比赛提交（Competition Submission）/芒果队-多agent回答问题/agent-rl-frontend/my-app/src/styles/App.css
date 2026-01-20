@@ -1,0 +1,45 @@
+.App {
+  font-family: Arial, sans-serif;
+  padding: 1vh 1vw;
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+button {
+  margin-top: 1vh;
+  padding: 0.8vh 1.5vw;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: clamp(12px, 1.2vh, 16px);
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+/* Responsive typography */
+h1 {
+  font-size: clamp(1.5rem, 3vh, 2.5rem);
+  margin: 1vh 0 2vh 0;
+}
+
+/* Ensure all containers are responsive */
+* {
+  box-sizing: border-box;
+}
+
+/* Media queries for better scaling on different screens */
+@media screen and (max-height: 900px) {
+  .App {
+    padding: 0.5vh 1vw;
+  }
+}
+
+@media screen and (max-height: 768px) {
+  h1 {
+    margin: 0.5vh 0 1vh 0;
+  }
+}
