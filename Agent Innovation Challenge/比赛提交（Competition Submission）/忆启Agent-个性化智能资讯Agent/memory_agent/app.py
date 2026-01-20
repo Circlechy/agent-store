@@ -251,6 +251,45 @@ SAMPLE_NEWS = [
 # AI 服务
 # ---------------------------------------------------------
 
+def generate_profile_from_content(content):
+    if not model:
+        st.warning("AI 客户端未初始化，无法生成用户画像。")
+        return []
+
+    prompt = f"""
+你是一位用户画像专家。
+请根据以下内容，为用户生成3个简短的、新的用户画像信息。
+
+内容：
+{content}
+
+输出格式要求：
+1. 生成3个用户画像。
+2. 每个画像占一行，以换行符分隔。
+3. 只输出画像内容，不要添加任何解释、说明或序号。
+4. 画像内容应简明扼要，反映用户的兴趣点。
+
+例如：
+对AI生成的艺术感兴趣
+关注AIGC技术的发展
+喜欢使用Midjourney等工具
+"""
+
+    try:
+        with st.spinner("正在根据您的兴趣更新用户画像..."):
+            result = model.invoke(
+                model_name=MODEL_NAME,
+                messages=[BaseMessage(role="user", content=prompt)]
+            )
+            logger.info(f"Generated profile from content: {result.content}")
+            new_profiles = result.content.strip().split('\n')
+            # Filter out any empty strings that might result from split
+            return [p.strip() for p in new_profiles if p.strip()]
+    except Exception as e:
+        st.error(f"生成用户画像时出错: {e}")
+        return []
+
+
 def generate_brief():
     if not model:
         return "AI 客户端未初始化。"
@@ -489,7 +528,29 @@ if view == "控制台":
                                 col1, col2, _ = st.columns([1, 1, 5])
                                 with col1:
                                     if st.button("👍 感兴趣", key=f"brief_like_{idx}"):
-                                        st.toast("感谢您的反馈！")
+                                        new_profiles = generate_profile_from_content(content)
+                                        if new_profiles:
+                                            added_count = 0
+                                            session = requests.Session()
+                                            for p in new_profiles:
+                                                if p not in st.session_state.memories:
+                                                    st.session_state.memories.append(p)
+                                                    # added_count += 1
+                                                    payload = {
+                                                        "user_id": USER_ID,  # 用户唯一 ID
+                                                        "message": p  # 用户画像文本
+                                                    }
+                                                    url = f"{BASE_URL}/add_profile"
+                                                    try:
+                                                        response = session.post(url, json=payload, timeout=10)
+                                                        if response.status_code == 200:
+                                                            added_count += 1
+                                                    except Exception as e:
+                                                        st.error(f"保存用户画像失败: {e}")
+                                            st.toast(f"用户画像已更新！新增 {added_count} 条。")
+                                            st.rerun()
+                                        else:
+                                            st.toast("未能生成新的用户画像。")
                                 with col2:
                                     if st.button("👎 不感兴趣", key=f"brief_dislike_{idx}"):
                                         st.toast("感谢您的反馈！")
@@ -551,7 +612,32 @@ if view == "控制台":
                     col1, col2, _ = st.columns([1, 1, 5])
                     with col1:
                         if st.button("👍 感兴趣", key=f"news_like_{idx}"):
-                            st.toast("感谢您的反馈！")
+                            news_content = f"标题：{title}\n摘要：{summary}"
+                            new_profiles = generate_profile_from_content(news_content)
+                            if new_profiles:
+                                added_count = 0
+                                session = requests.Session()
+                                for p in new_profiles:
+                                    if p not in st.session_state.memories:
+                                        st.session_state.memories.append(p)
+                                        added_count += 1
+                                        st.session_state.memories.append(p)
+                                        # added_count += 1
+                                        payload = {
+                                            "user_id": USER_ID,  # 用户唯一 ID
+                                            "message": p  # 用户画像文本
+                                        }
+                                        url = f"{BASE_URL}/add_profile"
+                                        try:
+                                            response = session.post(url, json=payload, timeout=10)
+                                            if response.status_code == 200:
+                                                added_count += 1
+                                        except Exception as e:
+                                            st.error(f"保存用户画像失败: {e}")
+                                st.toast(f"用户画像已更新！新增 {added_count} 条。")
+                                st.rerun()
+                            else:
+                                st.toast("未能生成新的用户画像。")
                     with col2:
                         if st.button("👎 不感兴趣", key=f"news_dislike_{idx}"):
                             st.toast("感谢您的反馈！")
