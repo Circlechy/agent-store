@@ -64,7 +64,7 @@
 
 ## 🎥 Demo
 
-[Presentation Agent Demo](demo.mp4)
+[Presentation Agent Demo](https://gitcode.com/xiehanchen_riemann/agent-store/blob/main/Agent%20Innovation%20Challenge/%E6%AF%94%E8%B5%9B%E6%8F%90%E4%BA%A4%EF%BC%88Competition%20Submission%EF%BC%89/%E5%B0%8F%E9%BB%84%E9%B8%AD%E5%98%8E%E5%98%8E%E6%A3%92%E9%98%9F-%E6%BC%94%E8%AE%B2%E5%8A%A9%E6%89%8BAgent/demo.mp4)
 
 
 ---
@@ -228,13 +228,23 @@
 
 ---
 
-## 🚀 快速开始
+## 快速上手
 
-```bash
-git clone https://gitcode.com/xiehanchen_riemann/openJiuwen-XHYDemo.git
+基于Mac开发, Python版本为3.12
 
+### 配置环境
+
+```python
+pip install -r requirements.txt
 ```
 
+### 配置API
+
+```python
+os.environ.setdefault("API_KEY", "YOUR API KEY") //替换成你的api
+```
+
+并完成API KEY配置
 ---
 
 ## 📜 路线图
