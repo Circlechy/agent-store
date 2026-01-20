@@ -13,7 +13,7 @@
 
 目前，**我们的Agent已经能够完整完成一次往往要放射技师耗时10多分钟的头部颅脑MRI检测**，未来我们计划与复旦医学院AIMMM团队共建更强大的医用检测设备自动化Agent，为患者解忧，为医者纾困。
 
-[Demo请点击此处查看](https://gitcode.com/Oliver_Qiang/AutoCursor/blob/main/demo/CT_scan_demo.mp4)
+[Demo请点击此处查看](https://gitcode.com/Oliver_Qiang/AutoCursor/blob/main/demo/MRI_scan_demo.mp4)
 
 [1]The state-of-the-art in cardiac MRI reconstruction: Results of the CMRxRecon challenge in MICCAI 2023
 
@@ -67,7 +67,7 @@ pip install -r requirements.txt
 
 ### 快速开始
 1. **启动程序**  
-`python ./core/autoCursorCT.py`
+`python ./core/autoCursor_MRI.py`
 2. **切换到目标应用**  
     程序启动后将有5秒时间切换到目标应用窗口
 3. **执行自动化操作**   
