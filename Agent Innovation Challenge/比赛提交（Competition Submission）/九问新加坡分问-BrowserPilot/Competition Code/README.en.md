@@ -38,20 +38,6 @@
 | Precise screenshot region recognition | Excel data processing | Cross-app multi-step workflows | Context-based learning optimization |
 | Deep Search | Form filling & submission | Price comparison, booking, ordering | Gets smarter with use |
 
----
-
-## 🎬 Demo Videos
-
-<!-- Insert your demo videos here -->
-
-| Demo | Description |
-|------|-------------|
-| [🎥 Demo 1: Web Q&A & Screenshot Recognition](#) | Open the plugin, ask questions about web content; select regions for AI to interpret |
-| [🎥 Demo 2: Deep Search](#) | One question, AI automatically searches multiple rounds, summarizes, and provides complete answers |
-| [🎥 Demo 3: Email & Excel Office Tasks](#) | Auto-read emails, compose replies; process Excel data, generate reports |
-| [🎥 Demo 4: Recipe to Shopping Cart](#) | Understand recipe videos/articles, auto-open shopping app, one-click add all ingredients |
-
----
 
 ## ✨ Core Features
 
@@ -140,15 +126,15 @@ MODEL_PROVIDER=openrouter
 
 #### 4. Start Services
 
+**Windows:**
 ```powershell
-# Activate virtual environment
-.\.venv\Scripts\Activate.ps1    # Windows PowerShell
-# source .venv/bin/activate     # macOS/Linux
-# Start browser tool service
-uv run python .\browser_use_mcp_server_cdp.py --host 127.0.0.1 --port 8930
-# Open new terminal, start Agent API service
-uvicorn examples.super_agent.api.server:app --host 0.0.0.0 --port 8000
+# Start
+.\start_agent.ps1
+```
 
+**macOS:**
+```bash
+./start_agent.sh
 
 ```
 
@@ -156,15 +142,16 @@ uvicorn examples.super_agent.api.server:app --host 0.0.0.0 --port 8000
 
 ### Frontend Installation
 
-```bash
-# 1. Enter frontend directory
-git clone https://github.com/xxx/frontend.git
-cd frontend
-# 2. Start Chrome browser as administrator
-.\Start-CdpLanBridge.ps1 -ServerIp 172.20.10.3 -ListenIp 172.20.10.8 -KillChromeFirst  ## If frontend and backend are on different machines
-# If frontend and backend are on the same machine, start as follows:
-# .\browser_start_client.ps1
+#### Start Chrome Browser
+**Windows:**
+```powershell
+# Start
+.\browser_start_client.ps1
+```
 
+**macOS:**
+```bash
+./browser_start_client.sh
 ```
 
 #### Load Plugin into Browser
@@ -190,78 +177,19 @@ cd frontend
 
 ### Overall Architecture
 
-<!-- Insert your architecture diagram here -->
-
-```
-[Architecture Diagram Placeholder - Please insert architecture diagram here]
-```
-
-### System Components
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Browser Plugin (Frontend)                        │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐       │
-│  │   Web Q&A   │  │ Screenshot  │  │ Deep Search │  │ Task Panel  │       │
-│  │   (VQA)    │  │ Recognition │  │             │  │  Progress   │       │
-│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘       │
-└────────┼───────────────┼───────────────┼───────────────┼───────────────┘
-         │               │               │               │
-         ▼               ▼               ▼               ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Agent Service (Backend)                          │
-│  ┌──────────────────────────────────────────────────────────────────┐ │
-│  │                  SuperReActAgent (OpenJiuwen)                     │ │
-│  │    • Intent Understanding  • Task Planning  • Tool Calling       │ │
-│  │    • Reflective Evolution  • Context Management                  │ │
-│  └──────────────────────────────────────────────────────────────────┘ │
-│                                  │                                     │
-│    ┌─────────────────────────────┼─────────────────────────────┐      │
-│    │                             │                             │      │
-│    ▼                             ▼                             ▼      │
-│  ┌──────────────┐  ┌──────────────────────────┐  ┌──────────────┐    │
-│  │  🔍 Smart Q&A │  │      💼 Office Assist     │  │ 🛒 Complex    │    │
-│  │  • Web Under- │  │  • Email Read/Reply      │  │   Tasks      │    │
-│  │    standing   │  │  • Excel Processing      │  │ • Cross-app  │    │
-│  │  • Screenshot │  │                          │  │ • Multi-step │    │
-│  │  • Deep Search│  │                          │  │ • Shopping   │    │
-│  └──────────────┘  └──────────────────────────┘  └──────────────┘    │
-│                                  │                                     │
-│    ┌─────────────────────────────┴─────────────────────────────┐      │
-│    │                      🔄 Self-Evolution Engine               │      │
-│    │     Failure Reflection → Context Learning → Strategy       │      │
-│    │              Adjustment → Re-execution                     │      │
-│    └───────────────────────────────────────────────────────────┘      │
-│                                  │                                     │
-│  ┌───────────┬───────────┬───────────┬───────────┬───────────┐       │
-│  │ Browser   │  Visual   │  Search   │  Office   │   Code    │       │
-│  │ Control   │  Under-   │  Engine   │  Suite    │ Execution │       │
-│  │ (CDP)     │ standing  │           │(Email/    │ (Python)  │       │
-│  │           │  (VLM)    │           │  Excel)   │           │       │
-│  └───────────┴───────────┴───────────┴───────────┴───────────┘       │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
-### Browser Pilot
-
-| Layer | Component | Description |
-|-------|-----------|-------------|
-| **Agent Layer** | SuperReActAgent | Enhanced ReAct loop + Self-evolution capability |
-| **Vision Layer** | VisionModule | Web understanding, screenshot recognition, OCR |
-| **Context Layer** | ContextManager | Long conversation summarization, overflow handling |
-| **Tool Layer** | MCP Servers | Browser, search, office, code execution |
-| **Interface Layer** | REST API | Frontend-backend communication, SSE streaming |
+<p align="center">
+  <img src="assets/架构图_en.png" alt="Architecture" width="800">
+</p>
 
 
 ### Technical Highlights
 
 | Feature | Description |
 |---------|-------------|
-| **Visual Understanding** | Multimodal LLM supports web/screenshot content understanding |
-| **ReAct Reasoning** | Think → Act → Observe, up to 20 iterations |
-| **Self-Evolution** | Reflect on failures, auto-adjust strategy and retry |
-| **Long Task Support** | Cross-app, multi-step task orchestration and execution |
-| **Streaming Response** | Real-time display of AI thinking process and execution progress |
+| **SuperReAct** | Enhanced ReAct loop: Think → Act → Observe, supports multi-round iterative reasoning |
+| **Browser Use** | Browser automation, cross-page, multi-step task execution |
+| **Reflective Evolution** | Auto-reflect on failures, adjust strategy and retry, gets smarter with use |
+| **Multimodal Visual Understanding** | Supports visual understanding and Q&A for web content and screenshot regions |
 
 ### Supported Models
 

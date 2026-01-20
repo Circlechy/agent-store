@@ -24,7 +24,6 @@ ENV/
 # Build / distribution
 # =========================
 build/
-dist/
 *.egg-info/
 
 # =========================
