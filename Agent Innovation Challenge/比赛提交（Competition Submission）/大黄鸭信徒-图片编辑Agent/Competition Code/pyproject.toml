@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "image-editor-agent"
+version = "0.1.0"
+description = "A Multimodal Image Editing Agent using OpenJiuWen and MCP"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Your Name", email = "your.email@example.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "openjiuwen==0.1.1",
+    "pillow>=10.0.0",
+    "streamlit>=1.30.0", # 用于构建前端
+    "python-dotenv>=1.0.0", # 用于环境变量管理
+    "numpy>=1.24.0",
+    "flask>=3.1.2",
+    "flask-cors>=6.0.2",
+]
+
+[project.scripts]
+image-editor-cli = "image_editor.cli:main"
+image-editor-ui = "image_editor.ui:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["image_editor*", "image_editor_mcp*"]
