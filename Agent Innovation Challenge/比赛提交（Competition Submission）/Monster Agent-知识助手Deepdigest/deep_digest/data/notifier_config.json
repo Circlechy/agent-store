@@ -1,0 +1,8 @@
+{
+  "reminder_times": [
+    "09:00",
+    "14:00"
+  ],
+  "enabled": true,
+  "show_empty_notification": false
+}
