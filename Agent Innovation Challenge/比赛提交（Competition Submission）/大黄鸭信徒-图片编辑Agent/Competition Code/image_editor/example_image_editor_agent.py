@@ -57,9 +57,9 @@ async def create_image_editor_agent():
         agent_version="1.0",
         description="An agent specialized in image editing tasks",
         model=create_model_config(
-            model_name="Qwen/Qwen3-VL-32B-Instruct",  # 使用 SiliconFlow 上的正确模型名称
-            api_key="sk-iimeqzridkmqtnoggoinouysymkkgwttphygwapjjtxcaitp",
-            api_base="https://api.siliconflow.cn/v1",
+            model_name="",  # 使用 SiliconFlow 上的正确模型名称
+            api_key="",
+            api_base="",
         ),
         prompt_template=[
             {

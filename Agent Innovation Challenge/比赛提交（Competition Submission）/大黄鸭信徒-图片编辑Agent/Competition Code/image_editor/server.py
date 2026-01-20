@@ -17,7 +17,7 @@ class ImageEditingService:
             # 确保 API KEY 从环境变量读取，而不是硬编码
             if not os.getenv("SILICONFLOW_API_KEY"):
                 # 兼容代码中的硬编码key，但建议用户改用环境变量
-                os.environ["SILICONFLOW_API_KEY"] = "sk-iimeqzridkmqtnoggoinouysymkkgwttphygwapjjtxcaitp"
+                os.environ["SILICONFLOW_API_KEY"] = ""
 
             self.agent = await create_multimodal_beautify_agent()
 
