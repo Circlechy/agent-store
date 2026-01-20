@@ -343,7 +343,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     # 导航
-    view = st.radio("导航", ["控制台", "对话"], label_visibility="collapsed")
+    view = "控制台"
     st.divider()
 
     # Agent 服务控制
@@ -645,68 +645,3 @@ if view == "控制台":
                     with col2:
                         if st.button("👎 不感兴趣", key=f"news_dislike_{idx}"):
                             st.toast("感谢您的反馈！")
-
-    # --------------------------
-    # 对话界面
-    # --------------------------
-
-    # 显示聊天记录
-    for msg in st.session_state.chat_history:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    # 聊天输入
-    if prompt := st.chat_input("根据您的用户画像或新闻提问..."):
-        st.session_state.chat_history.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        if model:
-            try:
-                system_instruction = f"""
-你是 WorkflowAgent，一个乐于助人的助手。
-
-用户画像 / 长期记忆:
-{st.session_state.memories}
-
-请始终根据记忆中定义的用户偏好行事。
-**请用中文回复**。
-"""
-
-                messages = [BaseMessage(content=system_instruction, role="user")]
-
-                for m in st.session_state.chat_history:
-                    role = "user" if m["role"] == "user" else "assistant"
-                    messages.append(BaseMessage(content=m["content"], role=role))
-                    payload = {
-                        "user_id": USER_ID,  # 用户唯一 ID
-                        "message": m["content"]  # 用户画像文本
-                    }
-                    url = f"{BASE_URL}/add_profile"
-                    session = requests.Session()
-                    try:
-                        response = session.post(url, json=payload, timeout=10)
-                        if response.status_code == 200:
-                            pass
-                        else:
-                            st.warning(f"保存画像失败: {response.text}")
-                    except Exception as e:
-                        st.error(f"保存用户画像失败: {e}")
-                completion = model.invoke(
-                    model_name=MODEL_NAME,
-                    messages=messages
-                )
-
-                response_text = completion.content
-
-                st.session_state.chat_history.append(
-                    {"role": "assistant", "content": response_text}
-                )
-
-                with st.chat_message("assistant"):
-                    st.markdown(response_text)
-
-            except Exception as e:
-                st.error(f"生成回复时出错: {e}")
-        else:
-            st.error("AI 模型未连接。")
