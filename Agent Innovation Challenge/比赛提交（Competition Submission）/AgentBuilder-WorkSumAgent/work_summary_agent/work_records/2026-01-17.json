@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2026-01-17T09:30:00",
+    "content": {
+      "tasks": [
+        "代码审查",
+        "技术文档编写",
+        "周报整理"
+      ],
+      "work_content": "今天进行了代码审查，检查了本周提交的代码质量和规范性。开始编写本周的技术文档，整理工作周报。",
+      "achievements": [
+        {
+          "title": "代码审查完成",
+          "description": "完成了本周代码审查，发现并修复了一些潜在问题",
+          "impact": "提升了代码质量和可维护性"
+        }
+      ],
+      "issues": [
+        "部分代码缺少注释，影响可维护性",
+        "技术文档还需要补充更多使用场景和最佳实践"
+      ],
+      "next_steps": [
+        "补充代码注释，提升代码可读性",
+        "完善技术文档，添加更多示例和最佳实践",
+        "准备下周的工作计划"
+      ],
+      "metadata": {
+        "analysis_time": "2026-01-17T10:15:00.000000",
+        "original_length": 234,
+        "original_word_count": 45,
+        "has_tasks": true,
+        "has_achievements": true,
+        "has_issues": true,
+        "has_next_steps": true
+      }
+    }
+  }
+]

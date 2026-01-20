@@ -1,0 +1,27 @@
+# 工作总结管理系统 - 依赖包
+
+# Web框架
+flask>=2.3.0
+flask-cors>=4.0.0
+werkzeug>=2.3.0
+
+# 核心依赖（openJiuwen框架）
+openjiuwen>=0.1.0
+
+# OCR功能（图片文字识别）
+paddlepaddle>=2.5.0
+paddleocr>=2.7.0
+
+# 多模态模型支持
+openai>=1.0.0
+
+# 图像处理
+Pillow>=10.0.0
+
+# 屏幕截图（优先使用 mss，跨平台且高效）
+mss>=9.0.0
+# 备选截图库（如果 mss 不可用）
+# pyautogui>=0.9.54
+
+# 环境变量管理
+python-dotenv>=1.0.0
