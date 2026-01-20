@@ -235,6 +235,205 @@ def _analyze_camera_view_internal(camera_type: str, question: str) -> Dict:
     return _analyze_image_internal(image_data, full_question)
 
 
+def _analyze_video_internal(video_path: str, question: str, max_frames: int = 100) -> Dict:
+    """分析视频（内部函数）：多帧联合分析，将帧拼成时间序列图一次性分析
+    
+    改进：不再逐帧单独分析，而是将多帧拼成一张网格图，让模型能看到
+    时间序列变化，从而判断运动方向、逆行等动态行为。
+    """
+    video_file = Path(video_path)
+    if not video_file.exists():
+        return {
+            "success": False,
+            "error": f"视频文件不存在: {video_path}",
+            "suggestion": "请重新上传视频或检查视频路径"
+        }
+
+    try:
+        import cv2  # type: ignore
+        import numpy as np
+    except Exception:
+        return {
+            "success": False,
+            "error": "未安装opencv-python，无法进行视频抽帧分析",
+            "suggestion": "请安装opencv-python或在requirements.txt中启用该依赖"
+        }
+
+    cap = cv2.VideoCapture(str(video_file))
+    if not cap.isOpened():
+        return {
+            "success": False,
+            "error": "无法打开视频文件",
+            "suggestion": "请确认视频格式是否受支持"
+        }
+
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0  # 默认30fps
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 640)
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 480)
+    
+    if frame_count <= 0:
+        cap.release()
+        return {
+            "success": False,
+            "error": "视频帧数为0，无法分析",
+            "suggestion": "请确认视频文件内容是否有效"
+        }
+
+    duration_sec = frame_count / fps
+    
+    # 根据视频长度决定抽帧数量，最多 max_frames 帧
+    # 短视频：尽量多抽帧（每秒10帧）
+    # 长视频：均匀采样到 max_frames
+    target_frames = min(max_frames, max(6, int(duration_sec * 10)))  # 每秒10帧，最少6帧
+    
+    # 均匀采样帧索引
+    indices = []
+    if target_frames >= frame_count:
+        # 帧数少于目标，全部使用
+        indices = list(range(frame_count))
+    else:
+        step = frame_count / target_frames
+        for i in range(target_frames):
+            idx = min(int(round(i * step)), frame_count - 1)
+            if idx not in indices:
+                indices.append(idx)
+    
+    # 读取所有帧
+    frames_data = []
+    for idx in indices:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+        ok, frame = cap.read()
+        if not ok:
+            continue
+        timestamp = idx / fps if fps > 0 else float(idx)
+        frames_data.append({
+            "frame": frame,
+            "timestamp": timestamp,
+            "index": idx
+        })
+    
+    cap.release()
+    
+    if not frames_data:
+        return {
+            "success": False,
+            "error": "视频抽帧失败，未获取到有效帧",
+            "suggestion": "请尝试更换视频或检查视频格式"
+        }
+    
+    # 计算网格布局（尽量接近正方形）
+    n_frames = len(frames_data)
+    if n_frames <= 3:
+        cols, rows = n_frames, 1
+    elif n_frames <= 6:
+        cols, rows = 3, 2
+    elif n_frames <= 9:
+        cols, rows = 3, 3
+    else:
+        cols = 4
+        rows = (n_frames + cols - 1) // cols
+    
+    # 缩放单帧尺寸（避免拼图太大）
+    max_single_width = 400
+    scale = min(1.0, max_single_width / frame_width)
+    single_w = int(frame_width * scale)
+    single_h = int(frame_height * scale)
+    
+    # 创建拼图画布
+    grid_img = np.zeros((rows * single_h, cols * single_w, 3), dtype=np.uint8)
+    
+    # 填充帧并添加时间戳标注
+    timestamp_labels = []
+    for i, fd in enumerate(frames_data):
+        row = i // cols
+        col = i % cols
+        
+        # 缩放帧
+        resized = cv2.resize(fd["frame"], (single_w, single_h))
+        
+        # 添加时间戳标注（左上角）
+        ts_text = f"{fd['timestamp']:.2f}s"
+        timestamp_labels.append(ts_text)
+        
+        # 绘制半透明背景
+        overlay = resized.copy()
+        cv2.rectangle(overlay, (0, 0), (80, 25), (0, 0, 0), -1)
+        cv2.addWeighted(overlay, 0.6, resized, 0.4, 0, resized)
+        
+        # 绘制时间戳文字
+        cv2.putText(resized, ts_text, (5, 18), cv2.FONT_HERSHEY_SIMPLEX, 
+                    0.5, (255, 255, 255), 1, cv2.LINE_AA)
+        
+        # 绘制帧序号（右上角）
+        frame_num = f"#{i+1}"
+        cv2.putText(resized, frame_num, (single_w - 30, 18), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5, (0, 255, 255), 1, cv2.LINE_AA)
+        
+        # 放入网格
+        y1, y2 = row * single_h, (row + 1) * single_h
+        x1, x2 = col * single_w, (col + 1) * single_w
+        grid_img[y1:y2, x1:x2] = resized
+    
+    # 编码拼图
+    ok, buffer = cv2.imencode(".jpg", grid_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
+    if not ok:
+        return {
+            "success": False,
+            "error": "拼图编码失败",
+            "suggestion": "请尝试更换视频"
+        }
+    
+    grid_base64 = base64.b64encode(buffer.tobytes()).decode("utf-8")
+    grid_data_uri = f"data:image/jpeg;base64,{grid_base64}"
+    
+    # 构建多帧联合分析的提示词
+    frames_desc = "、".join(timestamp_labels)
+    prompt = f"""你是一个智能车载视觉分析助手。这是一段行车视频的时间序列截图，包含{n_frames}帧画面，
+按时间顺序从左到右、从上到下排列（{frames_desc}）。
+
+每帧左上角标注了时间戳，右上角标注了帧序号。请通过对比不同帧之间的变化来分析：
+1. 车辆的运动方向和轨迹变化
+2. 是否有异常行为（如逆行、突然变道、违规等）
+3. 场景中的关键事件和变化
+
+用户问题：{question}
+
+请基于多帧对比分析，给出准确的判断。如果涉及运动方向判断，请说明你是如何从帧序列中推断出来的。
+用简洁、专业的中文回答。"""
+
+    # 调用视觉模型分析拼图
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, _call_vision_model(buffer.tobytes(), prompt))
+                analysis = future.result(timeout=120)
+        else:
+            analysis = asyncio.run(_call_vision_model(buffer.tobytes(), prompt))
+    except Exception as e:
+        analysis = f"分析失败: {str(e)}"
+    
+    # 提取最后一帧作为关键帧（用于后续视觉工具调用）
+    last_frame = frames_data[-1]["frame"]
+    ok, last_buffer = cv2.imencode(".jpg", last_frame)
+    key_frame_data = None
+    if ok:
+        key_frame_base64 = base64.b64encode(last_buffer.tobytes()).decode("utf-8")
+        key_frame_data = f"data:image/jpeg;base64,{key_frame_base64}"
+    
+    return {
+        "success": True,
+        "analysis": analysis,
+        "frames": n_frames,
+        "duration": f"{duration_sec:.2f}s",
+        "video_path": str(video_file),
+        "key_frame_data": key_frame_data,
+        "grid_image": grid_data_uri  # 拼图也返回，方便调试
+    }
+
+
 def _ask_about_image_internal(image_data: str, question: str) -> Dict:
     """通用图片问答（内部函数）"""
     prompt = f"""你是一个智能车载助手。用户向你展示了一张图片并提出问题。
@@ -448,6 +647,168 @@ def check_surroundings(focus: str = "safety") -> Dict:
         results[cam] = analysis.get("analysis", "分析失败")
     
     return {"success": True, "focus": focus, "analyzed_cameras": available, "results": results}
+
+
+def _create_traffic_report_internal(
+    violation_type: str,
+    vehicle_type: str = None,
+    vehicle_color: str = None,
+    license_plate: str = None,
+    location: str = None,
+    description: str = None,
+    image_data: str = None
+) -> Dict:
+    """
+    创建交通违规举报表单（内部函数）
+    
+    Args:
+        violation_type: 违规类型（如：逆行、闯红灯、违停等）
+        vehicle_type: 车辆类型/品牌（如：白色轿车、黑色SUV）
+        vehicle_color: 车辆颜色
+        license_plate: 车牌号（如果识别到）
+        location: 违规地点
+        description: 详细描述
+        image_data: 相关图片数据（base64）
+    
+    Returns:
+        包含举报表单数据的字典，前端据此渲染表单
+    """
+    from datetime import datetime
+    
+    # 获取当前车辆位置作为默认地点
+    car_state = get_car_state()
+    current_location = None
+    if car_state and car_state.vehicle:
+        vehicle = car_state.vehicle
+        # VehicleState 中有 current_location_name, current_location_city
+        if vehicle.current_location_name:
+            current_location = f"{vehicle.current_location_city}{vehicle.current_location_name}" if vehicle.current_location_city else vehicle.current_location_name
+    
+    # 获取当前时间
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # 构建表单数据，标记哪些字段需要手动填写
+    report_form = {
+        "form_type": "traffic_report",
+        "form_title": "交通违规举报",
+        "fields": {
+            "violation_type": {
+                "label": "违规类型",
+                "value": violation_type or "",
+                "editable": True,
+                "required": True,
+                "options": ["逆行", "闯红灯", "实线变道", "违规变道", "压线行驶", "违停", "超速", "加塞", "其他"],
+                "auto_filled": bool(violation_type)
+            },
+            "report_time": {
+                "label": "发生时间",
+                "value": current_time,
+                "editable": True,
+                "required": True,
+                "type": "datetime",
+                "auto_filled": True
+            },
+            "location": {
+                "label": "发生地点",
+                "value": location or current_location or "",
+                "editable": True,
+                "required": True,
+                "placeholder": "请输入或确认违规发生地点",
+                "auto_filled": bool(location or current_location)
+            },
+            "vehicle_type": {
+                "label": "车辆类型",
+                "value": vehicle_type or "",
+                "editable": True,
+                "required": False,
+                "placeholder": "如：白色轿车、黑色SUV",
+                "auto_filled": bool(vehicle_type)
+            },
+            "vehicle_color": {
+                "label": "车辆颜色",
+                "value": vehicle_color or "",
+                "editable": True,
+                "required": False,
+                "placeholder": "如：白色、黑色、银灰色",
+                "auto_filled": bool(vehicle_color)
+            },
+            "license_plate": {
+                "label": "车牌号码",
+                "value": license_plate or "",
+                "editable": True,
+                "required": False,
+                "placeholder": "如：浙A·12345（未识别请手动填写）",
+                "auto_filled": bool(license_plate),
+                "warning": "未识别到车牌" if not license_plate else None
+            },
+            "description": {
+                "label": "详细描述",
+                "value": description or "",
+                "editable": True,
+                "required": False,
+                "type": "textarea",
+                "placeholder": "请描述违规行为的具体情况",
+                "auto_filled": bool(description)
+            }
+        },
+        "has_image": bool(image_data),
+        "image_data": image_data if image_data else None,
+        "status": "draft",  # draft: 待提交, submitted: 已提交
+        "missing_required": [],
+        "suggestions": []
+    }
+    
+    # 检查必填字段
+    missing = []
+    for field_name, field_info in report_form["fields"].items():
+        if field_info.get("required") and not field_info.get("value"):
+            missing.append(field_info["label"])
+    report_form["missing_required"] = missing
+    
+    # 生成建议
+    suggestions = []
+    if not license_plate:
+        suggestions.append("⚠️ 未能识别车牌号，请根据记忆手动填写，或上传更清晰的图片")
+    if not vehicle_type and not vehicle_color:
+        suggestions.append("💡 建议补充车辆特征（类型、颜色），有助于交警核实")
+    if not description:
+        suggestions.append("📝 建议添加详细描述，说明违规行为的具体情况")
+    report_form["suggestions"] = suggestions
+    
+    return {
+        "success": True,
+        "message": "已生成交通违规举报表单，请确认或补充信息后提交",
+        "report_form": report_form
+    }
+
+
+@tool(name="create_traffic_report",
+      description="创建交通违规举报表单并在前端弹出。当用户需要举报交通违规时调用。务必传入所有已识别到的信息，特别是车牌号码！",
+      params=[
+          Param(name="violation_type", description="违规类型：逆行/闯红灯/实线变道/违规变道/压线行驶/违停/超速/加塞/其他", type="str", required=True),
+          Param(name="vehicle_type", description="车辆类型，如：轿车、SUV、货车、面包车等", type="str", required=False),
+          Param(name="vehicle_color", description="车辆颜色，如：白色、黑色、银色等", type="str", required=False),
+          Param(name="license_plate", description="车牌号码，非常重要！如果从图片/视频中识别到了车牌必须传入，格式如：浙A·12345", type="str", required=False),
+          Param(name="location", description="违规发生地点", type="str", required=False),
+          Param(name="description", description="违规行为的详细描述", type="str", required=False)
+      ])
+def create_traffic_report(
+    violation_type: str,
+    vehicle_type: str = None,
+    vehicle_color: str = None,
+    license_plate: str = None,
+    location: str = None,
+    description: str = None
+) -> Dict:
+    """创建交通违规举报表单"""
+    return _create_traffic_report_internal(
+        violation_type=violation_type,
+        vehicle_type=vehicle_type,
+        vehicle_color=vehicle_color,
+        license_plate=license_plate,
+        location=location,
+        description=description
+    )
 
 
 if __name__ == "__main__":

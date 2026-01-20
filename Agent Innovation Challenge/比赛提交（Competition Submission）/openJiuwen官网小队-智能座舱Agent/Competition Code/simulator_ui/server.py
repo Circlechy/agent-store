@@ -13,7 +13,9 @@ import asyncio
 import json
 import logging
 import base64
+import time
 import uuid
+import tempfile
 from pathlib import Path
 from typing import List, Optional
 from datetime import datetime
@@ -61,7 +63,8 @@ from tools.vision_tools import (
     _analyze_image_internal,
     _analyze_camera_view_internal,
     _ask_about_image_internal,
-    _identify_vehicle_internal
+    _identify_vehicle_internal,
+    _analyze_video_internal
 )
 
 from tools.baidu_map import baidu_direction_driving
@@ -181,6 +184,40 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 # 存储每个用户的对话历史 {session_id: [{"role": "user/assistant", "content": "..."}]}
 conversation_histories: dict = {}
 MAX_HISTORY_ROUNDS = 20  # 最多保留20轮对话（40条消息）
+
+# ============ 临时视频上传管理 ============
+VIDEO_UPLOAD_TTL_SECONDS = 60 * 60  # 1小时
+VIDEO_UPLOAD_MAX_ITEMS = 20
+VIDEO_UPLOAD_DIR = Path(tempfile.gettempdir()) / "jiuwen_video_uploads"
+VIDEO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+video_uploads: dict = {}
+
+
+def cleanup_video_uploads():
+    now = time.time()
+    expired_ids = [
+        video_id for video_id, meta in video_uploads.items()
+        if now - meta.get("uploaded_at", now) > VIDEO_UPLOAD_TTL_SECONDS
+    ]
+    for video_id in expired_ids:
+        meta = video_uploads.pop(video_id, {})
+        path = meta.get("path")
+        if path and Path(path).exists():
+            try:
+                Path(path).unlink()
+            except Exception:
+                logger.warning(f"清理视频失败: {path}")
+
+    if len(video_uploads) > VIDEO_UPLOAD_MAX_ITEMS:
+        items = sorted(video_uploads.items(), key=lambda item: item[1].get("uploaded_at", 0))
+        for video_id, meta in items[:len(video_uploads) - VIDEO_UPLOAD_MAX_ITEMS]:
+            video_uploads.pop(video_id, None)
+            path = meta.get("path")
+            if path and Path(path).exists():
+                try:
+                    Path(path).unlink()
+                except Exception:
+                    logger.warning(f"清理视频失败: {path}")
 
 # 允许跨域
 app.add_middleware(
@@ -725,6 +762,7 @@ class ChatRequest(BaseModel):
     speaker_seat: Optional[str] = None  # 说话者座位（主驾/副驾）
     use_memory: Optional[bool] = True
     image_data: Optional[str] = None  # 可选的图片数据
+    video_id: Optional[str] = None  # 可选的视频上传ID
     tts_playback: Optional[str] = "browser"
 
 class ClearHistoryRequest(BaseModel):
@@ -768,6 +806,13 @@ def add_to_history(session_id: str, role: str, content: str, image_data: str = N
     max_messages = MAX_HISTORY_ROUNDS * 2
     if len(history) > max_messages:
         conversation_histories[session_id] = history[-max_messages:]
+
+
+def get_video_upload_meta(video_id: str) -> Optional[dict]:
+    if not video_id:
+        return None
+    cleanup_video_uploads()
+    return video_uploads.get(video_id)
 
 
 def format_history_for_agent(session_id: str) -> list:
@@ -873,6 +918,15 @@ def extract_tool_steps(messages: list) -> list:
             content = msg.get("content")
             step["success"] = _parse_tool_success(content)
             step["result_summary"] = _summarize_tool_result(content)
+            
+            # 检测是否是举报表单工具
+            if step.get("tool") == "create_traffic_report" and content:
+                try:
+                    content_data = json.loads(content) if isinstance(content, str) else content
+                    if content_data.get("report_form"):
+                        step["report_form"] = content_data["report_form"]
+                except (json.JSONDecodeError, TypeError):
+                    pass
 
     return steps
 
@@ -943,15 +997,41 @@ async def chat(data: ChatRequest):
         # 构建用户消息
         user_message = data.question
         image_data_for_agent = None
-        
+        image_analysis_text = None
+        video_analysis_text = None
+
         # 如果有图片，先进行图片分析
         if data.image_data:
             image_analysis = _ask_about_image_internal(data.image_data, data.question)
             if image_analysis.get("success"):
-                # 将图片分析结果作为上下文，并告诉Agent原始图片数据可用
-                user_message = f"[用户上传了一张图片并提问: {data.question}]\n图片分析结果: {image_analysis.get('analysis', '')}\n注意：原始图片数据已通过全局状态传递，如需重新分析可使用analyze_image工具，参数image_path请使用全局状态中的current_image_data"
-                # 保存图片数据供Agent使用
+                image_analysis_text = image_analysis.get("analysis", "")
                 image_data_for_agent = data.image_data
+
+        # 如果有视频，进行抽帧分析
+        if data.video_id:
+            video_meta = get_video_upload_meta(data.video_id)
+            if not video_meta:
+                return {"success": False, "error": "视频已过期或不存在，请重新上传"}
+            video_result = _analyze_video_internal(video_meta.get("path"), data.question)
+            if not video_result.get("success"):
+                return {"success": False, "error": video_result.get("error", "视频分析失败")}
+            video_analysis_text = video_result.get("analysis", "")
+            # 使用视频关键帧作为后续视觉工具的图片数据（如果没有图片上传）
+            if not image_data_for_agent and video_result.get("key_frame_data"):
+                image_data_for_agent = video_result["key_frame_data"]
+
+        if image_analysis_text or video_analysis_text:
+            items = []
+            if image_analysis_text:
+                items.append(f"图片分析结果: {image_analysis_text}")
+            if video_analysis_text:
+                items.append(f"视频抽帧分析结果: {video_analysis_text}")
+            notice = "注意：视频为临时上传，仅基于抽帧画面推断。视频关键帧已作为当前图片数据传递，如需分析可使用analyze_image工具。" if video_analysis_text else ""
+            image_notice = "注意：原始图片数据已通过全局状态传递，如需重新分析可使用analyze_image工具，参数image_path请使用全局状态中的current_image_data" if image_analysis_text and not video_analysis_text else ""
+            notices = " ".join([n for n in [notice, image_notice] if n])
+            user_message = f"[用户上传了{'图片' if image_analysis_text else ''}{'和' if image_analysis_text and video_analysis_text else ''}{'视频' if video_analysis_text else ''}并提问: {data.question}]\n" + "\n".join(items)
+            if notices:
+                user_message = f"{user_message}\n{notices}"
         
         # 添加用户消息到历史
         add_to_history(session_id, "user", data.question, data.image_data)
@@ -1024,13 +1104,45 @@ async def chat_stream(data: ChatRequest):
 
             user_message = data.question
             image_data_for_agent = None
+            image_analysis_text = None
+            video_analysis_text = None
 
             # 如果有图片，先进行图片分析
             if data.image_data:
                 image_analysis = _ask_about_image_internal(data.image_data, data.question)
                 if image_analysis.get("success"):
-                    user_message = f"[用户上传了一张图片并提问: {data.question}]\n图片分析结果: {image_analysis.get('analysis', '')}\n注意：原始图片数据已通过全局状态传递，如需重新分析可使用analyze_image工具，参数image_path请使用全局状态中的current_image_data"
+                    image_analysis_text = image_analysis.get("analysis", "")
                     image_data_for_agent = data.image_data
+
+            # 如果有视频，进行抽帧分析
+            if data.video_id:
+                video_meta = get_video_upload_meta(data.video_id)
+                if not video_meta:
+                    await emit({"event": "error", "data": {"error": "视频已过期或不存在，请重新上传"}})
+                    done_event.set()
+                    return
+                video_result = _analyze_video_internal(video_meta.get("path"), data.question)
+                if not video_result.get("success"):
+                    await emit({"event": "error", "data": {"error": video_result.get("error", "视频分析失败")}})
+                    done_event.set()
+                    return
+                video_analysis_text = video_result.get("analysis", "")
+                # 使用视频关键帧作为后续视觉工具的图片数据（如果没有图片上传）
+                if not image_data_for_agent and video_result.get("key_frame_data"):
+                    image_data_for_agent = video_result["key_frame_data"]
+
+            if image_analysis_text or video_analysis_text:
+                items = []
+                if image_analysis_text:
+                    items.append(f"图片分析结果: {image_analysis_text}")
+                if video_analysis_text:
+                    items.append(f"视频抽帧分析结果: {video_analysis_text}")
+                notice = "注意：视频为临时上传，仅基于抽帧画面推断。视频关键帧已作为当前图片数据传递，如需分析可使用analyze_image工具。" if video_analysis_text else ""
+                image_notice = "注意：原始图片数据已通过全局状态传递，如需重新分析可使用analyze_image工具，参数image_path请使用全局状态中的current_image_data" if image_analysis_text and not video_analysis_text else ""
+                notices = " ".join([n for n in [notice, image_notice] if n])
+                user_message = f"[用户上传了{'图片' if image_analysis_text else ''}{'和' if image_analysis_text and video_analysis_text else ''}{'视频' if video_analysis_text else ''}并提问: {data.question}]\n" + "\n".join(items)
+                if notices:
+                    user_message = f"{user_message}\n{notices}"
 
             # 添加用户消息到历史
             add_to_history(session_id, "user", data.question, data.image_data)
@@ -1049,11 +1161,18 @@ async def chat_stream(data: ChatRequest):
             tool_steps = extract_tool_steps(tool_trace or [])
             add_to_history(session_id, "assistant", result)
 
+            # 检查是否有举报表单
+            report_form = None
+            for step in tool_steps:
+                if step.get("report_form"):
+                    report_form = step["report_form"]
+                    break
+
             audio_payload = None
             if data.tts_playback == "browser_audio" and result:
                 audio_payload = await synthesize_audio_base64_async(result)
 
-            await emit({
+            final_response = {
                 "type": "final",
                 "answer": result,
                 "session_id": session_id,
@@ -1061,7 +1180,13 @@ async def chat_stream(data: ChatRequest):
                 "tool_steps": tool_steps,
                 "audio_base64": (audio_payload or {}).get("audio_base64"),
                 "audio_mime": (audio_payload or {}).get("audio_mime")
-            })
+            }
+            
+            # 如果有举报表单，添加到响应中
+            if report_form:
+                final_response["report_form"] = report_form
+            
+            await emit(final_response)
         except Exception as e:
             logger.error(f"流式对话执行失败: {e}")
             await emit({"type": "error", "error": str(e)})
@@ -1256,6 +1381,29 @@ async def upload_and_ask(
         return result
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+@app.post("/api/vision/video/upload")
+async def upload_video(file: UploadFile = File(...)):
+    """临时上传视频，返回视频ID用于后续提问"""
+    cleanup_video_uploads()
+    video_id = str(uuid.uuid4())
+    suffix = Path(file.filename or "").suffix or ".mp4"
+    target_path = VIDEO_UPLOAD_DIR / f"{video_id}{suffix}"
+    content = await file.read()
+    target_path.write_bytes(content)
+    video_uploads[video_id] = {
+        "path": str(target_path),
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "uploaded_at": time.time()
+    }
+    return {
+        "success": True,
+        "video_id": video_id,
+        "filename": file.filename,
+        "message": "视频上传成功"
+    }
 
 
 @app.post("/api/vision/identify-vehicle")

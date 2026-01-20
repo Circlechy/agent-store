@@ -134,6 +134,10 @@ let currentSpeaker = 'driver';
 // 当前附加的图片
 let attachedImage = null;
 
+// 当前附加的视频（临时上传ID）
+let attachedVideoId = null;
+let attachedVideoName = null;
+
 // 会话ID - 从 localStorage 获取或生成新的，只有清空对话时才更换
 let sessionId = localStorage.getItem('chatSessionId');
 if (!sessionId) {

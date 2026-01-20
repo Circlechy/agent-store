@@ -28,3 +28,6 @@ window.toggleEnvironment = toggleEnvironment;
 window.toggleSection = toggleSection;
 window.updateEnvConfig = updateEnvConfig;
 window.resetEnvironmentConfig = resetEnvironmentConfig;
+window.triggerImagePicker = triggerImagePicker;
+window.triggerVideoPicker = triggerVideoPicker;
+window.removeAttachedVideo = removeAttachedVideo;

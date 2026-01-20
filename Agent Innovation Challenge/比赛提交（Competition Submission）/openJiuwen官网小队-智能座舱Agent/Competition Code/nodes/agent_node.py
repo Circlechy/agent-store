@@ -33,6 +33,7 @@ from tools.vision_tools import (
     identify_vehicle_ahead,
     check_surroundings,
     ask_about_image,
+    create_traffic_report,
 )
 
 dotenv.load_dotenv(dotenv_path=".env")
@@ -124,6 +125,7 @@ class AgentNode(BaseNode):
             identify_vehicle_ahead.get_tool_info(),
             check_surroundings.get_tool_info(),
             ask_about_image.get_tool_info(),
+            create_traffic_report.get_tool_info(),
         ]
         tools_dict = {
             "search_repo": search_repo,
@@ -141,6 +143,7 @@ class AgentNode(BaseNode):
             "identify_vehicle_ahead": identify_vehicle_ahead,
             "check_surroundings": check_surroundings,
             "ask_about_image": ask_about_image,
+            "create_traffic_report": create_traffic_report,
         }
 
         final_assistant_message = None

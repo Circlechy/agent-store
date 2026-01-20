@@ -13,6 +13,14 @@ function initChat() {
             reader.readAsDataURL(file);
         }
     });
+
+    // 视频上传（临时）
+    document.getElementById('chat-video-input').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (file) {
+            await uploadTempVideo(file);
+        }
+    });
     
     // 回车发送
     document.getElementById('chat-input').addEventListener('keypress', e => {
@@ -21,6 +29,78 @@ function initChat() {
             sendMessage();
         }
     });
+}
+
+function triggerImagePicker() {
+    const input = document.getElementById('chat-image-input');
+    if (!input) return;
+    if (typeof input.showPicker === 'function') {
+        try {
+            input.showPicker();
+            return;
+        } catch (e) {
+            // fallback to click
+        }
+    }
+    input.click();
+}
+
+function triggerVideoPicker() {
+    const input = document.getElementById('chat-video-input');
+    if (!input) return;
+    if (typeof input.showPicker === 'function') {
+        try {
+            input.showPicker();
+            return;
+        } catch (e) {
+            // fallback to click
+        }
+    }
+    input.click();
+}
+
+async function uploadTempVideo(file) {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        showToast('视频上传中...', 'info');
+        const response = await fetch('/api/vision/video/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success && data.video_id) {
+            attachedVideoId = data.video_id;
+            attachedVideoName = data.filename || file.name;
+            showAttachedVideo(attachedVideoName);
+            showToast(`视频已上传`, 'success');
+        } else {
+            showToast(data.error || '视频上传失败', 'error');
+        }
+    } catch (error) {
+        showToast('视频上传失败: ' + error.message, 'error');
+    } finally {
+        const input = document.getElementById('chat-video-input');
+        if (input) input.value = '';
+    }
+}
+
+function showAttachedVideo(videoName) {
+    const container = document.getElementById('video-attach');
+    const nameEl = document.getElementById('attach-video-name');
+    if (container && nameEl) {
+        nameEl.textContent = videoName || '已上传视频';
+        container.style.display = 'inline-flex';
+    }
+}
+
+function removeAttachedVideo() {
+    attachedVideoId = null;
+    attachedVideoName = null;
+    const container = document.getElementById('video-attach');
+    if (container) {
+        container.style.display = 'none';
+    }
 }
 
 function toggleSpeaker() {
@@ -146,7 +226,7 @@ async function sendMessage() {
     const input = document.getElementById('chat-input');
     const message = input.value.trim();
     
-    if (!message && !attachedImage) {
+    if (!message && !attachedImage && !attachedVideoId) {
         showToast('请输入消息', 'info');
         return;
     }
@@ -154,12 +234,15 @@ async function sendMessage() {
     const sendBtn = document.getElementById('send-btn');
     sendBtn.disabled = true;
     
-    // 添加用户消息（传递当前说话者）
-    addMessage('user', message, attachedImage, false, currentSpeaker);
+    // 添加用户消息（传递当前说话者和视频名称）
+    const videoNameToShow = attachedVideoName;
+    addMessage('user', message, attachedImage, false, currentSpeaker, videoNameToShow);
     
     input.value = '';
     const imageToSend = attachedImage;
+    const videoIdToSend = attachedVideoId;
     removeAttachedImage();
+    clearAttachedVideo();
     
     // 添加加载状态
     const loadingId = addLoadingMessage();
@@ -174,6 +257,7 @@ async function sendMessage() {
         speaker_name: speakerName,
         speaker_seat: speakerSeat,
         image_data: imageToSend,
+        video_id: videoIdToSend,
         use_memory: true,
         tts_playback: ttsPlaybackMode
     };
@@ -185,6 +269,15 @@ async function sendMessage() {
     await sendMessageStream(payload, loadingId);
     
     sendBtn.disabled = false;
+}
+
+function clearAttachedVideo() {
+    attachedVideoId = null;
+    attachedVideoName = null;
+    const container = document.getElementById('video-attach');
+    if (container) {
+        container.style.display = 'none';
+    }
 }
 
 function sendQuickMessage(message) {
@@ -365,6 +458,12 @@ function handleStreamEvent(eventType, data, loadingId) {
         }
         const answerText = data?.answer || '已完成';
         addMessage('assistant', answerText);
+        
+        // 检查是否有举报表单
+        if (data?.report_form) {
+            handleReportFormResponse({ report_form: data.report_form });
+        }
+        
         if (ttsPlaybackMode === 'browser_audio') {
             const played = playAudioBase64(data?.audio_base64, data?.audio_mime);
             if (!played) {
@@ -584,7 +683,7 @@ function addOrUpdateToolTraceFromSteps(steps) {
     });
 }
 
-function addMessage(role, content, imageData = null, isError = false, speaker = null) {
+function addMessage(role, content, imageData = null, isError = false, speaker = null, videoName = null) {
     const container = document.getElementById('chat-messages');
     
     // 移除欢迎消息（如果是第一条真正的消息）
@@ -619,11 +718,17 @@ function addMessage(role, content, imageData = null, isError = false, speaker = 
         imageHtml = `<div class="message-image"><img src="${imageData}" alt=""></div>`;
     }
     
+    let videoHtml = '';
+    if (videoName) {
+        videoHtml = `<div class="message-video"><span class="video-icon">🎬</span><span class="video-label">${escapeHtml(videoName)}</span></div>`;
+    }
+    
     messageDiv.innerHTML = `
         <div class="message-avatar">${avatar}</div>
         <div class="message-content">
             ${speakerLabel}
             ${imageHtml}
+            ${videoHtml}
             <div class="message-bubble ${isError ? 'error' : ''}">${formatMessage(content)}</div>
             <div class="message-time">${time}</div>
         </div>
@@ -779,3 +884,219 @@ async function loadChatHistory() {
         // 静默失败
     }
 }
+
+// ============ 交通违规举报功能 ============
+
+// 当前举报表单数据
+let currentReportForm = null;
+
+/**
+ * 渲染举报卡片到聊天气泡中
+ */
+function renderReportCard(reportForm) {
+    const fields = reportForm.fields;
+    
+    // 构建字段HTML
+    let fieldsHtml = '';
+    const displayFields = [
+        { key: 'violation_type', label: '违规类型' },
+        { key: 'report_time', label: '时间' },
+        { key: 'location', label: '地点' },
+        { key: 'vehicle_type', label: '车型' },
+        { key: 'license_plate', label: '车牌' }
+    ];
+    
+    displayFields.forEach(({ key, label }) => {
+        const field = fields[key];
+        if (field) {
+            const value = field.value || '';
+            const valueClass = !value ? 'missing' : (field.auto_filled ? 'auto' : '');
+            const displayValue = value || '待填写';
+            fieldsHtml += `
+                <div class="report-card-field">
+                    <span class="report-card-label">${label}：</span>
+                    <span class="report-card-value ${valueClass}">${escapeHtml(displayValue)}</span>
+                </div>
+            `;
+        }
+    });
+    
+    return `
+        <div class="report-card-bubble">
+            <div class="report-card-header">
+                <span class="report-card-icon">🚨</span>
+                <span class="report-card-title">${reportForm.form_title || '交通违规举报'}</span>
+            </div>
+            <div class="report-card-body">
+                ${fieldsHtml}
+            </div>
+            <div class="report-card-footer">
+                <button class="report-card-btn" onclick="openReportPanel()">查看/编辑举报表单</button>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * 显示举报表单模态框
+ */
+function openReportPanel() {
+    const modal = document.getElementById('report-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // 禁止背景滚动
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+/**
+ * 关闭举报表单模态框
+ */
+function closeReportPanel() {
+    const modal = document.getElementById('report-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        // 恢复背景滚动
+        document.body.style.overflow = '';
+    }
+}
+
+/**
+ * 用数据填充举报表单
+ */
+function fillReportForm(reportForm) {
+    currentReportForm = reportForm;
+    const fields = reportForm.fields;
+    const form = document.getElementById('report-form');
+    
+    if (!form) return;
+    
+    // 填充各字段
+    Object.keys(fields).forEach(fieldName => {
+        const fieldData = fields[fieldName];
+        const input = form.querySelector(`[name="${fieldName}"]`);
+        
+        if (input) {
+            if (fieldName === 'report_time' && fieldData.value) {
+                // datetime-local 需要特殊格式
+                const dt = new Date(fieldData.value.replace(' ', 'T'));
+                if (!isNaN(dt.getTime())) {
+                    input.value = dt.toISOString().slice(0, 16);
+                }
+            } else {
+                input.value = fieldData.value || '';
+            }
+            
+            // 标记自动填充的字段
+            if (fieldData.auto_filled && fieldData.value) {
+                input.classList.add('auto-filled');
+            } else {
+                input.classList.remove('auto-filled');
+            }
+        }
+    });
+    
+    // 显示车牌警告
+    const licenseWarning = document.getElementById('license-warning');
+    if (licenseWarning) {
+        const licensePlate = fields.license_plate;
+        if (licensePlate && licensePlate.warning) {
+            licenseWarning.textContent = licensePlate.warning;
+            licenseWarning.style.display = 'block';
+        } else {
+            licenseWarning.style.display = 'none';
+        }
+    }
+    
+    // 显示建议
+    const suggestionsContainer = document.getElementById('report-suggestions');
+    if (suggestionsContainer && reportForm.suggestions) {
+        suggestionsContainer.innerHTML = reportForm.suggestions.map(s => 
+            `<div class="report-suggestion">${escapeHtml(s)}</div>`
+        ).join('');
+    }
+    
+    // 显示图片
+    const imagePreview = document.getElementById('report-image-preview');
+    const noImageHint = document.getElementById('no-image-hint');
+    const reportImage = document.getElementById('report-image');
+    
+    if (reportForm.has_image && reportForm.image_data) {
+        if (imagePreview) imagePreview.style.display = 'block';
+        if (noImageHint) noImageHint.style.display = 'none';
+        if (reportImage) reportImage.src = reportForm.image_data;
+    } else {
+        if (imagePreview) imagePreview.style.display = 'none';
+        if (noImageHint) noImageHint.style.display = 'block';
+    }
+}
+
+/**
+ * 处理举报表单响应（工具调用结果）
+ */
+function handleReportFormResponse(reportData) {
+    if (!reportData || !reportData.report_form) return;
+    
+    const reportForm = reportData.report_form;
+    
+    // 填充并显示表单面板
+    fillReportForm(reportForm);
+    openReportPanel();
+}
+
+/**
+ * 提交举报
+ */
+async function submitReport() {
+    const form = document.getElementById('report-form');
+    if (!form) return;
+    
+    const formData = new FormData(form);
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    
+    // 验证必填字段
+    const required = ['violation_type', 'report_time', 'location'];
+    const missing = required.filter(field => !data[field]);
+    
+    if (missing.length > 0) {
+        showToast('请填写必填字段', 'warning');
+        return;
+    }
+    
+    // 模拟提交（实际项目中应调用后端API）
+    try {
+        // 这里可以调用实际的举报API
+        // const response = await fetch('/api/report/submit', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(data)
+        // });
+        
+        // 更新状态
+        const statusBadge = document.querySelector('.status-badge');
+        if (statusBadge) {
+            statusBadge.textContent = '已提交';
+            statusBadge.classList.remove('draft');
+            statusBadge.classList.add('submitted');
+        }
+        
+        showToast('举报已提交，感谢您的反馈！', 'success');
+        
+        // 延迟关闭面板
+        setTimeout(() => {
+            closeReportPanel();
+        }, 1500);
+        
+    } catch (error) {
+        showToast('提交失败，请稍后重试', 'error');
+    }
+}
+
+// 导出到全局
+window.openReportPanel = openReportPanel;
+window.closeReportPanel = closeReportPanel;
+window.submitReport = submitReport;
+window.handleReportFormResponse = handleReportFormResponse;

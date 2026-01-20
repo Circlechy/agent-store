@@ -83,7 +83,8 @@ from tools.vision_tools import (
     analyze_image, identify_location, check_parking_spot,
     read_road_sign, analyze_dashcam_frame, scan_car_interior,
     set_camera_image, analyze_camera_view,
-    identify_vehicle_ahead, check_surroundings, ask_about_image
+    identify_vehicle_ahead, check_surroundings, ask_about_image,
+    create_traffic_report
 )
 # 新增：乘客管理工具
 from tools.carTools.passenger import (
@@ -202,6 +203,7 @@ class SmartCommuteAgent(BaseNode):
             identify_vehicle_ahead.get_tool_info(),
             check_surroundings.get_tool_info(),
             ask_about_image.get_tool_info(),
+            create_traffic_report.get_tool_info(),
             # 乘客识别工具
             get_current_passengers.get_tool_info(),
             get_passenger_profile.get_tool_info(),
@@ -296,6 +298,7 @@ class SmartCommuteAgent(BaseNode):
             "identify_vehicle_ahead": identify_vehicle_ahead,
             "check_surroundings": check_surroundings,
             "ask_about_image": ask_about_image,
+            "create_traffic_report": create_traffic_report,
             # 乘客识别
             "get_current_passengers": get_current_passengers,
             "get_passenger_profile": get_passenger_profile,
