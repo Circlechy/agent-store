@@ -7,11 +7,10 @@ Uses LLM reasoning through ReActAgent framework.
 
 import re
 import subprocess
+import sys
 import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-from tqdm import tqdm
 
 from openjiuwen.core.common.schema.param import Param
 from openjiuwen.core.foundation.llm import ToolCall, ToolMessage
@@ -19,6 +18,8 @@ from openjiuwen.core.foundation.tool import tool
 from openjiuwen.core.session.session import Session
 from openjiuwen.core.single_agent.agents.react_agent import ReActAgent, ReActAgentConfig
 from openjiuwen.core.single_agent.schema.agent_card import AgentCard
+from tqdm import tqdm
+
 from tomato_review.agent.utils import configure_from_env, parse_pylint_output
 
 
@@ -115,23 +116,32 @@ class FixerAgent(ReActAgent):
 
     def _setup_prompt(self):
         """Set up system prompt for LLM reasoning."""
-        system_prompt = """You are an expert Python code fixer. Your task is to apply fixes to Python code based on review recommendations and PEP guidelines.
+        system_prompt = """You are an expert Python code fixer. Your task is to apply fixes to Python code based on review recommendations from the ReviewerAgent and PEP guidelines from the SearcherAgent.
 
 When fixing code:
 1. Use read_file to read the current file content
-2. Analyze the proposed changes and review recommendations
-3. Apply fixes carefully, preserving code logic while fixing style, naming, and best practice issues
-4. Use write_file to write the fixed code
-5. Use run_pylint to verify the fixes resolved the issues
-6. Use run_ruff_format and run_ruff_check_fix to ensure proper formatting
+2. Use read_file_context to understand code around specific lines that need fixing
+3. Carefully analyze the proposed changes provided by the reviewer, which include:
+   - Error descriptions with line numbers and error codes
+   - PEP references and guidelines from the searcher
+   - Code context and suggested fixes
+4. Apply fixes systematically, addressing each issue:
+   - Follow the PEP guidelines referenced in the proposed changes
+   - Preserve code logic and functionality
+   - Fix naming conventions, docstrings, imports, and style issues
+   - Ensure fixes align with the reviewer's recommendations
+5. Use write_file to write the fixed code
+6. Use run_pylint to verify the fixes resolved the issues
+7. Use run_ruff_format and run_ruff_check_fix to ensure proper formatting
 
 Your fixes should:
-- Follow PEP 8 style guidelines
-- Maintain code functionality
+- Follow PEP 8 and other relevant PEP guidelines as specified in the review
+- Maintain code functionality - never break working code
 - Improve code quality and readability
 - Address all identified issues systematically
+- Respect the reviewer's instructions and PEP context provided
 
-Be precise and careful - don't break working code."""
+Be precise and careful - don't break working code. When in doubt, preserve the original logic while fixing style and convention issues."""
 
         self.config.configure_prompt_template([{"role": "system", "content": system_prompt}])
         self.configure(self.config)
@@ -152,6 +162,23 @@ Be precise and careful - don't break working code."""
             """
             with open(file_path, "r", encoding="utf-8") as f:
                 return f.read()
+
+        # Tool: Read file context
+        async def read_file_context(file_path: str, line_num: int, context_lines: int = 5) -> str:
+            """Read file content with context around a specific line.
+
+            Args:
+                file_path: Path to the file
+                line_num: Line number (1-indexed)
+                context_lines: Number of lines before and after to include
+
+            Returns:
+                JSON string with context information
+            """
+            import json
+
+            context = agent_instance.read_file_context_tool(file_path, line_num, context_lines)
+            return json.dumps(context, indent=2)
 
         # Tool: Write file
         async def write_file(file_path: str, content: str) -> str:
@@ -213,6 +240,22 @@ Be precise and careful - don't break working code."""
             fixed_count = result.get("fixed_count", 0)
             return f"Ruff auto-fixed {fixed_count} issue(s)"
 
+        # Tool: Run Python code
+        async def run_code(code_or_file: str, is_file: bool = True) -> str:
+            """Execute Python code or run a Python file using the current Python environment.
+
+            Args:
+                code_or_file: Either a file path to execute, or Python code as a string
+                is_file: If True, treat code_or_file as a file path. If False, treat as code string.
+
+            Returns:
+                JSON string with execution results including stdout, stderr, returncode, and success status
+            """
+            import json
+
+            result = await agent_instance.run_code_tool(code_or_file, is_file)
+            return json.dumps(result, indent=2)
+
         # Create and register tools
         read_tool = tool(
             name="read_file",
@@ -223,6 +266,24 @@ Be precise and careful - don't break working code."""
                 "required": ["file_path"],
             },
         )(read_file)
+
+        read_context_tool = tool(
+            name="read_file_context",
+            description="Read a file with context around a specific line number. Useful for understanding code context when applying fixes.",
+            input_params={
+                "type": "object",
+                "properties": {
+                    "file_path": {"type": "string", "description": "Path to the file to read"},
+                    "line_num": {"type": "integer", "description": "Line number (1-indexed) to get context around"},
+                    "context_lines": {
+                        "type": "integer",
+                        "description": "Number of lines before and after to include (default: 5)",
+                        "default": 5,
+                    },
+                },
+                "required": ["file_path", "line_num"],
+            },
+        )(read_file_context)
 
         write_tool = tool(
             name="write_file",
@@ -267,19 +328,43 @@ Be precise and careful - don't break working code."""
             },
         )(run_ruff_check_fix)
 
+        run_code_tool = tool(
+            name="run_code",
+            description="Execute Python code or run a Python file using the current Python environment. Use this to test if your fixes work correctly by running the code.",
+            input_params={
+                "type": "object",
+                "properties": {
+                    "code_or_file": {
+                        "type": "string",
+                        "description": "Either a file path to execute, or Python code as a string",
+                    },
+                    "is_file": {
+                        "type": "boolean",
+                        "description": "If true, treat code_or_file as a file path. If false, treat as code string (default: true)",
+                        "default": True,
+                    },
+                },
+                "required": ["code_or_file"],
+            },
+        )(run_code)
+
         # Store tool instances for local execution
         self._local_tools["read_file"] = read_tool
+        self._local_tools["read_file_context"] = read_context_tool
         self._local_tools["write_file"] = write_tool
         self._local_tools["run_pylint"] = pylint_tool
         self._local_tools["run_ruff_format"] = ruff_format_tool
         self._local_tools["run_ruff_check_fix"] = ruff_fix_tool
+        self._local_tools["run_code"] = run_code_tool
 
         # Register tool cards
         self.add_ability(read_tool.card)
+        self.add_ability(read_context_tool.card)
         self.add_ability(write_tool.card)
         self.add_ability(pylint_tool.card)
         self.add_ability(ruff_format_tool.card)
         self.add_ability(ruff_fix_tool.card)
+        self.add_ability(run_code_tool.card)
 
     async def _execute_ability(self, tool_calls: Any, session: Session) -> list[tuple[Any, ToolMessage]]:
         """Override to handle local tool execution."""
@@ -332,6 +417,138 @@ Be precise and careful - don't break working code."""
     async def run_ruff_check_fix_tool(self, file_path: str) -> Dict[str, Any]:
         """Public method for running ruff check --fix (used by tools)."""
         return await self._run_ruff_check_fix(file_path)
+
+    def read_file_context_tool(self, file_path: str, line_num: int, context_lines: int = 5) -> Dict[str, Any]:
+        """Public method for reading file context (used by tools)."""
+        return self._read_file_context(file_path, line_num, context_lines)
+
+    async def run_code_tool(self, code_or_file: str, is_file: bool = True) -> Dict[str, Any]:
+        """Public method for running Python code (used by tools)."""
+        return await self._run_code(code_or_file, is_file)
+
+    def _read_file_context(self, file_path: str, line_num: int, context_lines: int = 5) -> Dict[str, Any]:
+        """Read file content with context around a specific line.
+
+        Args:
+            file_path: Path to the file
+            line_num: Line number (1-indexed)
+            context_lines: Number of lines before and after to include
+
+        Returns:
+            Dict with 'original_line', 'context_before', 'context_after', 'full_context'
+        """
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+
+            # Convert to 0-indexed
+            line_idx = line_num - 1
+
+            if line_idx < 0 or line_idx >= len(lines):
+                return {
+                    "original_line": "",
+                    "context_before": [],
+                    "context_after": [],
+                    "full_context": "",
+                }
+
+            # Get context window
+            start_idx = max(0, line_idx - context_lines)
+            end_idx = min(len(lines), line_idx + context_lines + 1)
+
+            context_before = lines[start_idx:line_idx]
+            original_line = lines[line_idx] if line_idx < len(lines) else ""
+            context_after = lines[line_idx + 1 : end_idx]
+
+            # Build full context with line numbers
+            full_context_lines = []
+            for i in range(start_idx, end_idx):
+                line_num_display = i + 1
+                prefix = ">>>" if i == line_idx else "   "
+                full_context_lines.append(f"{prefix} {line_num_display:4d} | {lines[i].rstrip()}")
+
+            return {
+                "original_line": original_line.rstrip(),
+                "context_before": [line.rstrip() for line in context_before],
+                "context_after": [line.rstrip() for line in context_after],
+                "full_context": "\n".join(full_context_lines),
+                "line_number": line_num,
+            }
+        except Exception as e:
+            return {
+                "original_line": "",
+                "context_before": [],
+                "context_after": [],
+                "full_context": f"Error reading file: {e}",
+            }
+
+    async def _run_code(self, code_or_file: str, is_file: bool = True) -> Dict[str, Any]:
+        """Execute Python code or run a Python file using the current Python environment.
+
+        Args:
+            code_or_file: Either a file path to execute, or Python code as a string
+            is_file: If True, treat code_or_file as a file path. If False, treat as code string.
+
+        Returns:
+            Dict with 'success', 'stdout', 'stderr', 'returncode', and 'error' (if any)
+        """
+        try:
+            # Get current Python interpreter
+            python_executable = sys.executable
+
+            if is_file:
+                # Execute a file
+                if not Path(code_or_file).exists():
+                    return {
+                        "success": False,
+                        "stdout": "",
+                        "stderr": f"File not found: {code_or_file}",
+                        "returncode": -1,
+                        "error": "FileNotFoundError",
+                    }
+
+                # Run the file
+                result = subprocess.run(
+                    [python_executable, code_or_file],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,  # 30 second timeout
+                    check=False,
+                )
+            else:
+                # Execute code string
+                # Use -c flag to execute code
+                result = subprocess.run(
+                    [python_executable, "-c", code_or_file],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,  # 30 second timeout
+                    check=False,
+                )
+
+            return {
+                "success": result.returncode == 0,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "returncode": result.returncode,
+            }
+
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "stdout": "",
+                "stderr": "Code execution timed out after 30 seconds",
+                "returncode": -1,
+                "error": "TimeoutExpired",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "stdout": "",
+                "stderr": f"Error executing code: {str(e)}",
+                "returncode": -1,
+                "error": type(e).__name__,
+            }
 
     def _apply_naming_fix(self, line: str, error_code: str, message: str) -> str:
         """Apply naming convention fixes.
@@ -715,12 +932,104 @@ Be precise and careful - don't break working code."""
 
         return "".join(lines)
 
+    def _format_proposed_changes_for_llm(self, proposed_changes: List[Dict[str, Any]]) -> str:
+        """Format proposed changes with PEP context for LLM input.
+
+        Args:
+            proposed_changes: List of proposed changes from ReviewerAgent
+
+        Returns:
+            Formatted string with all proposed changes and PEP context
+        """
+        if not proposed_changes:
+            return "No proposed changes to apply."
+
+        formatted_parts = [
+            "## Proposed Changes from Reviewer",
+            "",
+            f"Total issues to fix: {len(proposed_changes)}",
+            "",
+        ]
+
+        for i, change in enumerate(proposed_changes, 1):
+            formatted_parts.append(f"### Issue {i}")
+            formatted_parts.append("")
+
+            # Add description (includes line number, error code, message, and PEP references)
+            description = change.get("description", "")
+            if description:
+                formatted_parts.append(description)
+                formatted_parts.append("")
+
+            # Add line number and error details
+            line_num = change.get("line", 0)
+            code = change.get("code", "")
+            message = change.get("message", "")
+            if line_num:
+                formatted_parts.append(f"- **Line**: {line_num}")
+            if code:
+                formatted_parts.append(f"- **Error Code**: {code}")
+            if message:
+                formatted_parts.append(f"- **Error Message**: {message}")
+            formatted_parts.append("")
+
+            # Add PEP references
+            pep_refs = change.get("pep_references", [])
+            if pep_refs:
+                formatted_parts.append("**Relevant PEP Guidelines:**")
+                for ref in pep_refs:
+                    pep_num = ref.get("number", "")
+                    pep_url = ref.get("url", "")
+                    if pep_url:
+                        formatted_parts.append(f"- [PEP {pep_num}]({pep_url})")
+                    else:
+                        formatted_parts.append(f"- PEP {pep_num}")
+                formatted_parts.append("")
+
+            # Add code context
+            code_snippet = change.get("code_snippet", "")
+            original_code = change.get("original_code", "")
+            fixed_code = change.get("fixed_code", "")
+
+            if code_snippet:
+                formatted_parts.append("**Code Context:**")
+                formatted_parts.append("```python")
+                formatted_parts.append(code_snippet)
+                formatted_parts.append("```")
+                formatted_parts.append("")
+
+            # Add before/after if available
+            if original_code and fixed_code and original_code != fixed_code:
+                formatted_parts.append("**Suggested Fix:**")
+                formatted_parts.append("")
+                formatted_parts.append("**Before:**")
+                formatted_parts.append("```python")
+                formatted_parts.append(original_code)
+                formatted_parts.append("```")
+                formatted_parts.append("")
+                formatted_parts.append("**After:**")
+                formatted_parts.append("```python")
+                formatted_parts.append(fixed_code)
+                formatted_parts.append("```")
+                formatted_parts.append("")
+            elif original_code:
+                formatted_parts.append("**Original Code:**")
+                formatted_parts.append("```python")
+                formatted_parts.append(original_code)
+                formatted_parts.append("```")
+                formatted_parts.append("")
+
+            formatted_parts.append("---")
+            formatted_parts.append("")
+
+        return "\n".join(formatted_parts)
+
     async def invoke(
         self,
         inputs: Any,
         session: Optional[Any] = None,
     ) -> Dict[str, Any]:
-        """Generate fixed version of a file.
+        """Generate fixed version of a file using LLM reasoning.
 
         Args:
             inputs: Input dict with 'file_path' and 'review_results', or dict with 'file_path' and 'proposed_changes'
@@ -746,6 +1055,7 @@ Be precise and careful - don't break working code."""
 
         if not proposed_changes:
             return {
+                "success": True,
                 "fixed_file_path": None,
                 "original_file_path": file_path,
                 "fixed_content": None,
@@ -753,15 +1063,46 @@ Be precise and careful - don't break working code."""
                 "message": "No proposed changes to apply",
             }
 
-        # Apply fixes (single iteration - FSM will handle iterations)
-        # Modify file in place instead of creating _fixed.py
-        try:
-            # Apply fixes to file
-            fixed_content = self._apply_fixes(file_path, proposed_changes)
+        # Format proposed changes with PEP context for LLM
+        changes_summary = self._format_proposed_changes_for_llm(proposed_changes)
 
-            # Write fixed content back to original file (in place)
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(fixed_content)
+        # Build user query for LLM
+        user_query = f"""Please fix the Python file: {file_path}
+
+The reviewer has identified the following issues that need to be fixed:
+
+{changes_summary}
+
+Your task:
+1. Use read_file to read the current file content
+2. For each issue, use read_file_context to understand the code around the problematic line
+3. Apply fixes based on the reviewer's recommendations and PEP guidelines
+4. Use write_file to write the fixed code
+5. Use run_code to test the fixed code and ensure it still works correctly
+6. Use run_pylint to verify the fixes resolved the issues
+7. Use run_ruff_format and run_ruff_check_fix to ensure proper formatting
+
+Important:
+- Follow the PEP guidelines referenced in each issue
+- Preserve code logic and functionality - test with run_code to verify
+- Address all {len(proposed_changes)} issues systematically
+- Be precise and careful - don't break working code
+- Always test your fixes with run_code before finalizing"""
+        if "qwen3" in self.config.model_name.casefold():
+            user_query += " /no_think"
+
+        try:
+            # Use parent's ReAct loop - LLM will reason and use tools
+            llm_result = await super().invoke({"query": user_query}, session=session)
+
+            # Check if file was actually modified by reading it
+            fixed_content = None
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    fixed_content = f.read()
+            except Exception as e:
+                if file_logger:
+                    file_logger.warning("Could not read fixed file: %s", e)
 
             # Format the file with ruff (in place)
             ruff_format_result = await self._run_ruff_format(file_path)
@@ -773,6 +1114,16 @@ Be precise and careful - don't break working code."""
             if file_logger and ruff_fix_result.get("fixed_count", 0) > 0:
                 file_logger.info("ruff fixed %d issue(s) in %s", ruff_fix_result["fixed_count"], file_path)
 
+            # Verify fixes with pylint
+            pylint_result = await self._run_pylint(file_path)
+            remaining_errors = pylint_result.get("errors", [])
+            if file_logger:
+                file_logger.info(
+                    "After fixing: %d errors remaining (was %d issues to fix)",
+                    len(remaining_errors),
+                    len(proposed_changes),
+                )
+
             return {
                 "success": True,
                 "fixed_file_path": file_path,  # Same as original, modified in place
@@ -780,19 +1131,54 @@ Be precise and careful - don't break working code."""
                 "fixed_content": fixed_content,
                 "changes_applied": len(proposed_changes),
                 "ruff_fixes": ruff_fix_result.get("fixed_count", 0),
+                "remaining_errors": len(remaining_errors),
                 "message": f"File modified in place: {file_path}",
+                "llm_output": llm_result.get("output", ""),
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "fixed_file_path": None,
-                "original_file_path": file_path,
-                "fixed_content": None,
-                "changes_applied": 0,
-                "message": f"Error applying fixes: {str(e)}",
-                "error": str(e),
-            }
+            if file_logger:
+                file_logger.error("LLM fix failed: %s, falling back to rule-based fix", e)
+
+            # Fallback to rule-based fix
+            try:
+                fixed_content = self._apply_fixes(file_path, proposed_changes)
+
+                # Write fixed content back to original file (in place)
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(fixed_content)
+
+                # Format the file with ruff (in place)
+                ruff_format_result = await self._run_ruff_format(file_path)
+                if file_logger and not ruff_format_result.get("success"):
+                    file_logger.warning("ruff format failed: %s", ruff_format_result.get("stderr", ""))
+
+                # Auto-fix with ruff (in place)
+                ruff_fix_result = await self._run_ruff_check_fix(file_path)
+                if file_logger and ruff_fix_result.get("fixed_count", 0) > 0:
+                    file_logger.info("ruff fixed %d issue(s) in %s", ruff_fix_result["fixed_count"], file_path)
+
+                return {
+                    "success": True,
+                    "fixed_file_path": file_path,
+                    "original_file_path": file_path,
+                    "fixed_content": fixed_content,
+                    "changes_applied": len(proposed_changes),
+                    "ruff_fixes": ruff_fix_result.get("fixed_count", 0),
+                    "message": f"File modified in place (rule-based fallback): {file_path}",
+                    "fallback_used": True,
+                }
+            except Exception as fallback_error:
+                return {
+                    "success": False,
+                    "fixed_file_path": None,
+                    "original_file_path": file_path,
+                    "fixed_content": None,
+                    "changes_applied": 0,
+                    "message": f"Error applying fixes: {str(e)} (fallback also failed: {str(fallback_error)})",
+                    "error": str(e),
+                    "fallback_error": str(fallback_error),
+                }
 
 
 __all__ = ["FixerAgent"]

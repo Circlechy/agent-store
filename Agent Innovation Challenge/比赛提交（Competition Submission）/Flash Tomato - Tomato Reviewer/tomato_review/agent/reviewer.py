@@ -5,13 +5,12 @@ via SearcherAgent, and generates comprehensive markdown reports.
 Uses LLM reasoning through ReActAgent framework.
 """
 
+import os
 import re
 import subprocess
 import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-from tqdm import tqdm
 
 from openjiuwen.core.common.exception.exception import JiuWenBaseException
 from openjiuwen.core.common.schema.param import Param
@@ -20,6 +19,8 @@ from openjiuwen.core.foundation.tool import tool
 from openjiuwen.core.session.session import Session
 from openjiuwen.core.single_agent.agents.react_agent import ReActAgent, ReActAgentConfig
 from openjiuwen.core.single_agent.schema.agent_card import AgentCard
+from tqdm import tqdm
+
 from tomato_review.agent.fixer import FixerAgent
 from tomato_review.agent.searcher import SearcherAgent
 from tomato_review.agent.utils import (
@@ -757,7 +758,7 @@ Format your response as a detailed markdown report."""
 
             # Generate a structured report from LLM output
             no_issues = "\n\n✅ No issues found by pylint." if not errors else ""
-            sep = "-" * 80
+            sep = "\n" + "-" * 80 + "\n"
             report = f"# Code Review Report:\n`{file_path}`{no_issues}\n\n{llm_output}"
 
             if not errors:
@@ -1254,7 +1255,8 @@ Format your response as a detailed markdown report."""
 
             # Set up file logger for this file
             normalized_name = normalize_filename(file_path)
-            log_file_path = self._tomato_dirs["logs"] / f"{file_path}.log"
+            log_file_path = self._tomato_dirs["logs"] / Path(f"{file_path}.log").relative_to(Path.cwd())
+            os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
             file_logger = setup_file_logger(log_file_path, f"tomato_review_{normalized_name}")
             self._file_loggers[file_path] = file_logger
 
@@ -1279,8 +1281,9 @@ Format your response as a detailed markdown report."""
             if file_report.get("report"):
                 try:
                     # Use normalized filename for review
-                    review_filename = f"{file_path}.md"
-                    report_file_path = self._tomato_dirs["reviews"] / review_filename
+                    review_filename = f"{file_path}-report.md"
+                    report_file_path = self._tomato_dirs["reviews"] / Path(review_filename).relative_to(Path.cwd())
+                    os.makedirs(os.path.dirname(report_file_path), exist_ok=True)
 
                     with open(report_file_path, "w", encoding="utf-8") as f:
                         f.write(file_report["report"])

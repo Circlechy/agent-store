@@ -112,7 +112,7 @@ def setup_tomato_directories(base_path: Optional[Path] = None) -> Dict[str, Path
     tomato_dir = base_path / "tomato"
     backup_dir = tomato_dir / "backup"
     reviews_dir = tomato_dir / "reviews"
-    logs_dir = tomato_dir / "logs"
+    logs_dir = base_path / "logs" / "tomato"
 
     if tomato_dir.exists():
         shutil.rmtree(tomato_dir)

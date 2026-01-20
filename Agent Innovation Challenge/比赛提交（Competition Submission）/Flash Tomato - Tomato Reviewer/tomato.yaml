@@ -1,0 +1,17 @@
+tomato-review:
+  kb_id: "pep_kb"
+  milvus_uri: "http://your-milvus-host:19530"  # Update with your Milvus server URI
+  milvus_token: ""  # Add your Milvus token if required
+  database_name: "pep_kb"
+  embedding_model_name: "your-embedding-model"  # Update with your embedding model name
+  embedding_api_key: "sk-********************"  # Update with your API key
+  embedding_base_url: "http://your-embedding-server/v1/embeddings"  # Update with your embedding API URL
+  chunk_size: 512
+  chunk_overlap: 128
+  index_type: "hybrid"
+  api_base: "http://your-api-server/v1/"  # Update with your LLM API server URL
+  api_key: "sk-********************"  # Update with your LLM API key
+  model_name: "your-model-name"  # Update with your LLM model name
+  model_provider: "OpenAI"
+  verify_ssl: false
+  ssl_cert: null

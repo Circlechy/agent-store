@@ -63,7 +63,7 @@ def check_knowledge_base(
                     client.create_database(database_name)
                 else:
                     # Database doesn't exist - cannot continue
-                    return False, f"Database '{database_name}' does not exist in Milvus", False
+                    return False, f"Database '{database_name}' does not exist in Milvus, run tomato-review --build", False
         except Exception as e:
             # Cannot list databases - cannot continue
             return False, f"Cannot list databases: {e}", False
@@ -81,7 +81,7 @@ def check_knowledge_base(
             collections = client.list_collections()
             if collection_name not in collections:
                 if is_create:
-                    client.create_collection(collection_name)
+                    pass
                 else:
                     # Collection doesn't exist, but infrastructure is OK - can continue (create KB)
                     return False, f"Collection '{collection_name}' does not exist (KB not created)", True
@@ -141,7 +141,7 @@ async def setup_knowledge_base_if_needed(kb_config: Optional[dict[str, str]] = N
         pep_kb = await create_pep_knowledge_base(**kb_config)
 
     # Always update changed PEPs
-    print("Updating changed PEPs...")
+    print("Getting latest PEPs...")
     stats = await pep_kb.update_changed_peps(filter_status=True)
 
     print(f"✓ Update complete: {len(stats['updated'])} updated, {len(stats['added'])} added")

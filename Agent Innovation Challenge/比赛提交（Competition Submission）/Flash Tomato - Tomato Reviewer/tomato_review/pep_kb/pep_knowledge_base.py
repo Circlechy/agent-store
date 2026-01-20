@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from openjiuwen.core.common.logging import retrieval_logger
+from openjiuwen.core.retrieval import OpenAIEmbedding
 from openjiuwen.core.retrieval.common.config import (
     EmbeddingConfig,
     KnowledgeBaseConfig,
@@ -13,7 +14,6 @@ from openjiuwen.core.retrieval.common.config import (
     VectorStoreConfig,
 )
 from openjiuwen.core.retrieval.common.document import Document
-from openjiuwen.core.retrieval.embedding.api_embedding import APIEmbedding
 from openjiuwen.core.retrieval.indexing.indexer.milvus_indexer import MilvusIndexer
 from openjiuwen.core.retrieval.indexing.processor.chunker.chunking import TextChunker
 from openjiuwen.core.retrieval.indexing.processor.parser.auto_file_parser import AutoFileParser
@@ -23,6 +23,8 @@ from openjiuwen.core.retrieval.vector_store.milvus_store import MilvusVectorStor
 from .get_pep_index import CacheManager
 from .pep_models import PEPDocument
 from .pep_processor import build_pep_documents
+
+HAS_INIT = False
 
 
 class PEPKnowledgeBase:
@@ -89,7 +91,7 @@ class PEPKnowledgeBase:
             api_key=embedding_api_key,
             base_url=embedding_base_url,
         )
-        self.embed_model = APIEmbedding(
+        self.embed_model = OpenAIEmbedding(
             config=embedding_config,
             max_retries=10,
             timeout=60,
@@ -380,7 +382,7 @@ class PEPKnowledgeBase:
         pep_doc_map = {p.number: p for p in all_pep_documents}
 
         # Convert to Documents
-        documents_to_update = []
+        documents_to_update: list[Document] = []
 
         for pep_number in pep_numbers_to_update:
             pep_doc = pep_doc_map.get(pep_number)
@@ -408,7 +410,8 @@ class PEPKnowledgeBase:
         if documents_to_update:
             retrieval_logger.info("Updating %d PEP documents...", len(documents_to_update))
             try:
-                updated_doc_ids = await self.knowledge_base.update_documents(documents_to_update)
+                await self.knowledge_base.delete_documents(doc_ids=sorted({doc.id_ for doc in documents_to_update}))
+                updated_doc_ids = await self.knowledge_base.add_documents(documents_to_update)
                 stats["updated"].extend(updated_doc_ids)
                 retrieval_logger.info("✓ Successfully updated %d PEP documents", len(updated_doc_ids))
             except Exception as e:
@@ -470,11 +473,25 @@ async def create_pep_knowledge_base(
     Returns:
         PEPKnowledgeBase instance
     """
+    global HAS_INIT
+    api_key_splitpos = embedding_api_key.find("-")
+    if api_key_splitpos > 0:
+        head = embedding_api_key[: api_key_splitpos + 1]
+        tail = "*" * len(embedding_api_key[api_key_splitpos + 1 :])
+        if len(tail) > 5:
+            tail = tail[:-4] + embedding_api_key[-4:]
+        censored_api_key = head + tail
+    else:
+        censored_api_key = "*" * len(embedding_api_key)
+        if len(censored_api_key) > 5:
+            censored_api_key = censored_api_key[:-4] + embedding_api_key[-4:]
     config_str = (
-        f"{kb_id=},{milvus_uri=},\n  - {milvus_token=},\n  - {database_name=},\n  - {embedding_model_name=},\n  - "
-        + f"{embedding_api_key=},\n  - {embedding_base_url=},\n  - {kwargs=}"
+        f"  - {kb_id=}\n  - {milvus_uri=}\n  - {milvus_token=}\n  - {database_name=}\n  - {embedding_model_name=}\n  - "
+        + f"embedding_api_key={censored_api_key}\n  - {embedding_base_url=}\n  - {kwargs=}"
     )
-    print("Creating PEP Knowledge Base with settings:\n\t" + config_str)
+    if not HAS_INIT:
+        print("Creating PEP Knowledge Base with settings:\n" + config_str)
+        HAS_INIT = True
     return PEPKnowledgeBase(
         kb_id=kb_id,
         milvus_uri=milvus_uri,

@@ -19,10 +19,15 @@ from pathlib import Path
 from typing import List
 
 from tqdm import TqdmExperimentalWarning
-from tqdm.auto import tqdm
+
+try:
+    from tqdm.rich import tqdm
+except ImportError:
+    from tqdm.auto import tqdm
 
 from openjiuwen.core.foundation.llm.model import Model
 from openjiuwen.core.foundation.llm.schema.config import ModelClientConfig, ModelRequestConfig
+
 from tomato_review.agent import ReviewerAgent, SearcherAgent
 from tomato_review.agent.utils import setup_tomato_directories
 from tomato_review.config import get_kb_config, get_llm_config, load_config
@@ -141,7 +146,7 @@ Examples:
 
     parser.add_argument(
         "files",
-        nargs="+",
+        nargs="*",
         help="Python files or glob patterns to review (e.g., *.py, file1.py file2.py)",
     )
 
@@ -154,15 +159,23 @@ Examples:
     )
 
     parser.add_argument(
+        "-b",
+        "--mini-batch",
+        type=int,
+        default=20,
+        help="Mini batch size for files to process at the same time (default: 20)",
+    )
+
+    parser.add_argument(
         "--no-fix",
         action="store_true",
         help="Only review files without applying fixes",
     )
 
     parser.add_argument(
-        "--rebuild",
+        "--build",
         action="store_true",
-        help="Rebuilds Knowledge Base even if it exists",
+        help="Builds Knowledge Base from scratch",
     )
 
     parser.add_argument(
@@ -173,6 +186,8 @@ Examples:
     )
 
     args = parser.parse_args()
+    if not args.build and not args.files:
+        parser.error("files are required unless --build is used")
 
     # Load configuration
     config = load_config()
@@ -216,12 +231,12 @@ Examples:
     # Check and setup knowledge base
     print("Checking knowledge base...")
     is_valid, error, should_continue = check_knowledge_base(kb_config)
-    rebuild_kb = args.rebuild
+    build_kb = args.build
 
-    if rebuild_kb or not is_valid:
-        if rebuild_kb or should_continue:
+    if build_kb or not is_valid:
+        if build_kb or should_continue:
             # KB just needs to be created - offer to create it
-            if rebuild_kb:
+            if build_kb:
                 print("Knowledge base will be rebuilt.")
                 response = "y"
             else:
@@ -260,7 +275,7 @@ Examples:
             from tomato_review.pep_kb.pep_knowledge_base import create_pep_knowledge_base
 
             pep_kb = await create_pep_knowledge_base(**kb_config)
-            print("Updating changed PEPs...")
+            print("Getting latest PEPs...")
             stats = await pep_kb.update_changed_peps(filter_status=True)
             if stats["updated"] or stats["added"]:
                 print(f"✓ Updated: {len(stats['updated'])} PEPs, Added: {len(stats['added'])} PEPs")
@@ -414,42 +429,44 @@ Examples:
 
         # Run review with progress bar
         try:
-            print("Starting review process...")
+            print(f"Starting review process (batch size: {args.mini_batch})...")
             print("=" * 80)
 
-            result = await reviewer.invoke({"files": files})
+            for i in range(0, len(files), args.mini_batch):
+                j = i + args.mini_batch
+                result = await reviewer.invoke({"files": files[i:j]})
 
-            # Check for errors in result
-            if not result:
-                print("\n❌ Error: Review returned no results", file=sys.stderr)
-                sys.exit(1)
+                # Check for errors in result
+                if not result:
+                    print("\n❌ Error: Review returned no results", file=sys.stderr)
+                    sys.exit(1)
 
-            # Check if any files failed to process
-            reports = result.get("reports", [])
-            if reports:
-                failed_files = []
-                for report in reports:
-                    if report.get("errors") and isinstance(report.get("errors"), str):
-                        # Error message instead of error list
-                        failed_files.append(report.get("file_path", "Unknown"))
-                    elif "Error" in str(report.get("report", "")):
-                        failed_files.append(report.get("file_path", "Unknown"))
+                # Check if any files failed to process
+                reports = result.get("reports", [])
+                if reports:
+                    failed_files = []
+                    for report in reports:
+                        if report.get("errors") and isinstance(report.get("errors"), str):
+                            # Error message instead of error list
+                            failed_files.append(report.get("file_path", "Unknown"))
+                        elif "Error" in str(report.get("report", "")):
+                            failed_files.append(report.get("file_path", "Unknown"))
 
-                if failed_files:
-                    print(f"\n⚠️  Warning: {len(failed_files)} file(s) had errors during review:", file=sys.stderr)
-                    for f in failed_files:
-                        print(f"  - {f}", file=sys.stderr)
+                    if failed_files:
+                        print(f"\n⚠️  Warning: {len(failed_files)} file(s) had errors during review:", file=sys.stderr)
+                        for f in failed_files:
+                            print(f"  - {f}", file=sys.stderr)
 
-            # Check if review actually processed files
-            files_reviewed = result.get("files_reviewed", 0)
-            if files_reviewed == 0 and files:
-                print("\n❌ Error: No files were successfully reviewed", file=sys.stderr)
-                print("This may indicate:", file=sys.stderr)
-                print("  1. API authentication failure (check your API key)", file=sys.stderr)
-                print("  2. Network connectivity issues", file=sys.stderr)
-                print("  3. Configuration errors", file=sys.stderr)
-                print("\nCheck the logs in tomato/logs/ for more details.", file=sys.stderr)
-                sys.exit(1)
+                # Check if review actually processed files
+                files_reviewed = result.get("files_reviewed", 0)
+                if files_reviewed == 0 and files:
+                    print("\n❌ Error: No files were successfully reviewed", file=sys.stderr)
+                    print("This may indicate:", file=sys.stderr)
+                    print("  1. API authentication failure (check your API key)", file=sys.stderr)
+                    print("  2. Network connectivity issues", file=sys.stderr)
+                    print("  3. Configuration errors", file=sys.stderr)
+                    print("\nCheck the logs in tomato/logs/ for more details.", file=sys.stderr)
+                    sys.exit(1)
 
             print("\n" + "=" * 80)
             print("Review completed!")
