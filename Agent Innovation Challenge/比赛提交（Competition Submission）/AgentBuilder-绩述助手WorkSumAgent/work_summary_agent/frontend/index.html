@@ -1,0 +1,4198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作总结管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .panel {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .panel-header h2 {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* 输入面板 */
+        .input-panel {
+            min-width: 0;
+        }
+
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0;
+        }
+
+        .input-area label {
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        /* 文本框容器（类似聊天输入框） */
+        .input-wrapper {
+            position: relative;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            transition: border-color 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #667eea;
+        }
+
+        .input-wrapper textarea {
+            padding: 12px 50px 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            transition: none;
+            height: 100px;
+            min-height: 80px;
+            max-height: 250px;
+            line-height: 1.6;
+            background: transparent;
+        }
+
+        .input-wrapper textarea::placeholder {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .input-wrapper textarea:focus {
+            outline: none;
+        }
+
+        /* 文本框底部工具栏 */
+        .input-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .input-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            justify-content: flex-end;
+        }
+        
+        /* 提交按钮（在工具栏中） */
+        .submit-btn-inline {
+            padding: 6px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .submit-btn-inline:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .submit-btn-inline:active {
+            transform: translateY(0);
+        }
+        
+        .submit-btn-inline svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* 附件按钮 */
+        .attach-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+
+        .attach-btn:hover {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .attach-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 隐藏的文件输入 */
+        .hidden-file-input {
+            display: none;
+        }
+
+        .file-upload-section {
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px dashed #cbd5e0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: none; /* 默认隐藏，因为已经整合到文本框内 */
+        }
+
+        .file-upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .file-upload-section::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .file-upload-section::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .file-upload-section::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        .file-upload-section:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .file-upload-section:hover::before {
+            opacity: 1;
+        }
+
+        .input-wrapper.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .file-upload-section.dragover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #e8f0fe 0%, #d6e4ff 100%);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+            transform: scale(1.02);
+        }
+
+        .file-upload-section.dragover::before {
+            opacity: 1;
+        }
+
+        .file-upload-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+
+        .file-upload-btn {
+            padding: 12px 24px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-upload-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-upload-btn:active {
+            transform: translateY(0);
+        }
+
+        .file-upload-btn .icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .file-upload-btn .icon svg {
+            stroke: currentColor;
+        }
+
+        .file-upload-btn input[type="file"] {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .file-list::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .file-list::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* 文本框内联附件列表样式 */
+        .file-list-inline {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .file-list-inline .file-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #f0f4ff;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #555;
+            margin: 0;
+        }
+
+        .file-list-inline .file-item:hover {
+            background: #e8f0fe;
+            border-color: #667eea;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.15);
+        }
+
+        .file-list-inline .file-item-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .file-list-inline .file-icon {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .file-list-inline .file-name {
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-list-inline .file-size {
+            font-size: 10px;
+            color: #999;
+        }
+
+        .file-list-inline .file-remove {
+            padding: 0;
+            width: 16px;
+            height: 16px;
+            background: transparent;
+            color: #999;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            margin-left: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .file-list-inline .file-remove:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .file-item:hover {
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+            transform: translateX(2px);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .file-item-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .file-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            color: #999;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .file-remove {
+            background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+            color: #e53e3e;
+            border: 1px solid rgba(229, 62, 62, 0.2);
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .file-remove:hover {
+            background: linear-gradient(135deg, #fcc 0%, #faa 100%);
+            color: #c53030;
+            border-color: rgba(229, 62, 62, 0.4);
+            transform: scale(1.05);
+        }
+
+        .file-remove:active {
+            transform: scale(0.95);
+        }
+
+        .upload-hint {
+            text-align: center;
+            color: #718096;
+            font-size: 13px;
+            margin-top: 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+        }
+
+        .upload-hint::before {
+            content: '↓';
+            font-size: 16px;
+            color: #667eea;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-4px);
+            }
+            60% {
+                transform: translateY(-2px);
+            }
+        }
+
+        /* 生成报告面板 */
+        .report-panel {
+            min-width: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .report-controls {
+            margin-bottom: 16px;
+        }
+
+        /* 日历选择器样式 */
+        .calendar-picker {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .calendar-trigger {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .calendar-trigger:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .calendar-trigger.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .calendar-display {
+            flex: 1;
+            color: #333;
+        }
+
+        .calendar-display.empty {
+            color: #999;
+        }
+
+        .calendar-icon {
+            width: 18px;
+            height: 18px;
+            opacity: 0.6;
+        }
+
+        /* 图标样式 */
+        .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1em;
+            height: 1em;
+            vertical-align: middle;
+            margin-right: 0.25em;
+        }
+
+        .icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+            stroke: currentColor;
+        }
+
+        .icon.running svg {
+            fill: #28a745;
+            stroke: none;
+        }
+
+        .icon-running {
+            color: #28a745;
+        }
+
+        .icon-success {
+            color: #28a745;
+        }
+
+        .icon-warning {
+            color: #ff9800;
+        }
+
+        .icon-info {
+            color: #667eea;
+        }
+
+        .icon.loading {
+            animation: spin 1s linear infinite;
+            display: inline-flex;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .icon-large {
+            width: 1.5em;
+            height: 1.5em;
+        }
+
+        .icon-small {
+            width: 0.875em;
+            height: 0.875em;
+        }
+
+        .calendar-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            padding: 20px;
+            display: none;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .calendar-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-nav-btn {
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .calendar-nav-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .calendar-month-year {
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #999;
+            padding: 8px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .calendar-day.other-month {
+            color: #ccc;
+        }
+
+        .calendar-day.today {
+            background: #e8f0fe;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .calendar-day:hover:not(.disabled) {
+            background: #f0f4ff;
+            border-color: #667eea;
+        }
+
+        .calendar-day.selected {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.range-start {
+            background: #667eea;
+            color: white;
+            border-radius: 6px 0 0 6px;
+        }
+
+        .calendar-day.range-end {
+            background: #667eea;
+            color: white;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .calendar-day.in-range {
+            background: #e8f0fe;
+            color: #667eea;
+            border-radius: 0;
+        }
+
+        .calendar-day.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.has-record::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: #667eea;
+            border-radius: 50%;
+        }
+
+        .calendar-day.selected.has-record::after,
+        .calendar-day.range-start.has-record::after,
+        .calendar-day.range-end.has-record::after {
+            background: white;
+        }
+
+        .calendar-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .calendar-actions button {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .calendar-btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .calendar-btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .calendar-btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .calendar-btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .report-content {
+            flex: 1;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .report-content.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            text-align: center;
+        }
+
+        .report-section {
+            margin-bottom: 16px;
+        }
+
+        .report-section h3 {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .report-section p {
+            margin-bottom: 8px;
+        }
+
+        .report-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .report-header {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .report-header-info {
+            margin-bottom: 16px;
+        }
+
+        .report-header-title {
+            margin: 0 0 8px 0;
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-header-meta {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .report-action-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .report-action-btn:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .report-action-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .report-edit-form {
+            display: none;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            margin-bottom: 16px;
+        }
+
+        .report-edit-form.active {
+            display: block;
+        }
+
+        .report-edit-form-group {
+            margin-bottom: 16px;
+        }
+
+        .report-edit-form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .report-edit-form-group input,
+        .report-edit-form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .report-edit-form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .report-edit-form-group ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .report-edit-form-group li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .report-edit-form-group li input {
+            flex: 1;
+        }
+
+        .report-edit-form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .report-section li {
+            padding-left: 16px;
+            position: relative;
+            margin-bottom: 4px;
+        }
+
+        .report-section li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-start {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
+        }
+
+        .btn-stop:hover {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn-stop:active {
+            transform: translateY(0);
+        }
+
+        /* 记录展示面板 */
+        .records-panel {
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            resize: horizontal;
+            min-width: 400px;
+            max-width: 800px;
+            position: relative;
+        }
+        
+        .records-panel::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: transparent;
+            cursor: col-resize;
+            z-index: 10;
+        }
+
+        .records-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .records-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .records-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .records-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .records-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .date-selector {
+            margin-bottom: 16px;
+        }
+
+        .date-selector .btn-refresh {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+            flex: 0;
+            padding: 8px 16px;
+            min-width: 80px;
+        }
+
+        .date-selector .btn-refresh:hover {
+            background: #218838;
+            border-color: #218838;
+        }
+
+        .date-selector .btn-consolidate {
+            background: #ffc107;
+            color: #333;
+            border-color: #ffc107;
+            flex: 0;
+            padding: 8px 16px;
+            min-width: 80px;
+        }
+
+        .date-selector .btn-consolidate:hover {
+            background: #e0a800;
+            border-color: #e0a800;
+        }
+
+        .date-selector .btn-clear {
+            background: #dc3545;
+            color: #fff;
+            border-color: #dc3545;
+            flex: 0;
+            padding: 8px 16px;
+            min-width: 80px;
+        }
+
+        .date-selector .btn-clear:hover {
+            background: #c82333;
+            border-color: #bd2130;
+        }
+
+        .record-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .record-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .record-time {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .record-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .record-action-btn {
+            background: transparent;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .record-action-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .record-action-btn:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .record-action-btn.delete:hover {
+            background: #fee;
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .record-action-btn.edit:hover {
+            background: #e8f0fe;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        /* 编辑模式样式 */
+        .record-card.editing {
+            border-left-color: #ffc107;
+            background: #fffef0;
+        }
+
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .edit-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .edit-form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .edit-form-group input,
+        .edit-form-group textarea {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .edit-form-group input:focus,
+        .edit-form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .edit-form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .edit-form-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .edit-form-actions button {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .edit-form-actions .btn-save {
+            background: #667eea;
+            color: white;
+        }
+
+        .edit-form-actions .btn-save:hover {
+            background: #5568d3;
+        }
+
+        .edit-form-actions .btn-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .edit-form-actions .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            min-height: 40px;
+        }
+
+        .tag-input input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+            font-size: 13px;
+        }
+
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .tag-item .tag-remove {
+            cursor: pointer;
+            margin-left: 4px;
+            font-weight: bold;
+        }
+
+        .tag-item .tag-remove:hover {
+            opacity: 0.8;
+        }
+
+        .record-tasks {
+            margin-bottom: 10px;
+        }
+
+        .record-tasks .task-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        .record-content {
+            margin-bottom: 10px;
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .record-details {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .record-details section {
+            margin-bottom: 10px;
+        }
+
+        .record-details section:last-child {
+            margin-bottom: 0;
+        }
+
+        .record-details h4 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .record-details ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .record-details li {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 4px;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .record-details li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+        }
+
+        .achievements li::before {
+            color: #28a745;
+        }
+
+        .issues li::before {
+            color: #ff9800;
+        }
+
+        .next-steps li::before {
+            color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .loading-generating {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            min-height: 150px;
+            padding: 50px 40px;
+        }
+
+        .loading-generating-text {
+            font-size: 20px;
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f0f0f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 350px 1fr 350px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                height: auto;
+                min-height: calc(100vh - 40px);
+            }
+
+            .input-panel,
+            .records-panel,
+            .report-panel {
+                grid-column: 1;
+            }
+
+            .records-panel {
+                resize: vertical;
+                resize: both;
+                min-height: 400px;
+                max-height: 600px;
+            }
+
+            .calendar-dropdown {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 90%;
+                max-width: 400px;
+                max-height: 80vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 输入面板 -->
+        <div class="panel input-panel">
+            <div class="panel-header">
+                <h2><span class="icon icon-large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></span> 添加工作记录</h2>
+            </div>
+
+            <div id="message-container"></div>
+
+            <!-- 手动输入设置（方式一） -->
+            <div class="manual-input-section" style="margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border: 2px solid #e0e0e0;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <label style="font-weight: 500; color: #555; font-size: 13px;">
+                        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span> 
+                        方式一：手动输入
+                    </label>
+                </div>
+                <div class="input-area">
+                    <!-- 文本框容器（类似聊天输入框） -->
+                <div class="input-wrapper" 
+                     ondrop="handleDrop(event)" 
+                     ondragover="handleDragOver(event)" 
+                     ondragleave="handleDragLeave(event)">
+                    <textarea 
+                        id="work-input" 
+                        placeholder="请输入您的工作内容，或点击附件按钮上传文档/图片..."
+                    ></textarea>
+                    <!-- 底部工具栏 -->
+                    <div class="input-toolbar">
+                        <div class="input-toolbar-left">
+                            <!-- 附件按钮 -->
+                            <button class="attach-btn" onclick="document.getElementById('document-input').click()" title="上传文档">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                    <polyline points="13 2 13 9 20 9"></polyline>
+                                </svg>
+                            </button>
+                            <button class="attach-btn" onclick="document.getElementById('image-input').click()" title="上传图片">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                            </button>
+                            <!-- 隐藏的文件输入 -->
+                            <input type="file" id="document-input" class="hidden-file-input" accept=".pdf,.docx,.txt,.md,.json" onchange="handleFileSelect(event, 'document')" multiple>
+                            <input type="file" id="image-input" class="hidden-file-input" accept=".jpg,.jpeg,.png,.bmp,.gif,.tiff,.webp" onchange="handleFileSelect(event, 'image')" multiple>
+                        </div>
+                        <div class="input-toolbar-right">
+                            <span style="font-size: 11px; color: #999; margin-right: auto;">支持拖拽文件到此处</span>
+                            <button class="submit-btn-inline" onclick="submitWorkRecord()" title="提交记录">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                                提交
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 附件列表显示在文本框下方 -->
+                <div class="file-list-inline" id="file-list-inline"></div>
+                </div>
+                <div style="font-size: 11px; color: #999; margin-top: 6px; line-height: 1.4;">
+                    支持文本输入、文档上传（PDF、Word、TXT等）和图片上传 · 
+                    <span style="color: #2196f3;">提示：可直接拖拽文件到输入框区域</span>
+                </div>
+            </div>
+
+            <!-- 保留文件上传区域用于拖拽（隐藏但保留功能） -->
+            <div class="file-upload-section" id="file-upload-section" 
+                 ondrop="handleDrop(event)" 
+                 ondragover="handleDragOver(event)" 
+                 ondragleave="handleDragLeave(event)">
+            </div>
+
+            <!-- 自动截图设置（方式二） -->
+            <div class="auto-screenshot-section" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border: 2px solid #e0e0e0;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <label style="font-weight: 500; color: #555; font-size: 13px;">
+                        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></span> 
+                        方式二：自动截图
+                    </label>
+                    <span id="auto-screenshot-status" style="font-size: 12px; color: #999;">未启用</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="number" id="screenshot-interval" value="5" min="1" step="1" 
+                           style="width: 100px; padding: 6px 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 13px;"
+                           placeholder="间隔（秒）">
+                    <button class="btn btn-start" onclick="startAutoScreenshot()" id="start-auto-btn" style="flex: 1; padding: 8px 16px; font-size: 14px; font-weight: 500;">启动</button>
+                    <button class="btn btn-stop" onclick="stopAutoScreenshot()" id="stop-auto-btn" style="flex: 1; padding: 8px 16px; font-size: 14px; font-weight: 500; display: none;">停止</button>
+                </div>
+                <!-- 统计信息显示区域 -->
+                <div id="screenshot-stats" style="display: none; margin-top: 8px; padding: 8px; background: #fff; border-radius: 6px; font-size: 12px; color: #666; border: 1px solid #e0e0e0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>📸 已截图：<strong id="stats-total">0</strong> 张</span>
+                        <span>✅ 已处理：<strong id="stats-processed">0</strong> 张</span>
+                    </div>
+                    <div id="stats-processing-container" style="display: none; color: #ff9800; margin-top: 4px;">
+                        <span>⏳ 正在处理：<strong id="stats-processing">0</strong> 张</span>
+                        <span id="stats-queue-container" style="display: none; margin-left: 8px;">
+                            <span>📋 队列等待：<strong id="stats-queue-size">0</strong> 张</span>
+                        </span>
+                        <div id="stats-current-processing" style="display: none; margin-top: 4px; font-size: 11px; color: #999;">
+                            当前处理：<span id="stats-current-file"></span>
+                        </div>
+                        <span style="margin-left: 8px; font-size: 11px; color: #999;">处理完成后会显示在工作记录中</span>
+                    </div>
+                </div>
+                <div style="font-size: 11px; color: #999; margin-top: 6px; line-height: 1.4;">
+                    自动截取屏幕并分析工作内容（建议间隔1-60秒） · 
+                    <span style="color: #ff9800;">注意：自动截图会先识别重点区域，忽略无关内容</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 记录展示面板 -->
+        <div class="panel records-panel">
+            <div class="panel-header">
+                <h2><span class="icon icon-large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></span> 工作记录</h2>
+            </div>
+
+            <div class="date-selector">
+                <!-- 日历选择器 -->
+                <div class="calendar-picker">
+                    <div class="calendar-trigger" onclick="toggleRecordCalendar()" id="record-calendar-trigger">
+                        <svg class="calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"></line>
+                            <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"></line>
+                            <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"></line>
+                        </svg>
+                        <span class="calendar-display empty" id="record-calendar-display">点击选择日期</span>
+                    </div>
+                    
+                    <div class="calendar-dropdown" id="record-calendar-dropdown">
+                        <div class="calendar-header">
+                            <button class="calendar-nav-btn" onclick="changeRecordMonth(-1)">‹</button>
+                            <span class="calendar-month-year" id="record-calendar-month-year"></span>
+                            <button class="calendar-nav-btn" onclick="changeRecordMonth(1)">›</button>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <div class="calendar-weekday">日</div>
+                            <div class="calendar-weekday">一</div>
+                            <div class="calendar-weekday">二</div>
+                            <div class="calendar-weekday">三</div>
+                            <div class="calendar-weekday">四</div>
+                            <div class="calendar-weekday">五</div>
+                            <div class="calendar-weekday">六</div>
+                        </div>
+                        <div class="calendar-days" id="record-calendar-days"></div>
+                        <div class="calendar-actions">
+                            <button class="calendar-btn-secondary" onclick="clearRecordDate()">清除</button>
+                            <button class="calendar-btn-primary" onclick="confirmRecordDate()">确定</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 刷新、整合和清空按钮 -->
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button class="btn btn-refresh" onclick="loadRecords()" style="flex: 1; padding: 8px 16px; font-size: 13px;">刷新</button>
+                    <button class="btn btn-consolidate" onclick="consolidateRecords()" title="整合相似记录，减少碎片化" style="flex: 1; padding: 8px 16px; font-size: 13px;">整合</button>
+                    <button class="btn btn-clear" onclick="clearAllRecords()" title="清空该日期的所有记录" style="flex: 1; padding: 8px 16px; font-size: 13px;">清空</button>
+                </div>
+            </div>
+
+            <div class="records-container" id="records-container">
+                <div class="loading">正在加载工作记录...</div>
+            </div>
+        </div>
+
+        <!-- 生成报告面板 -->
+        <div class="panel report-panel">
+            <div class="panel-header">
+                <h2><span class="icon icon-large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span> 生成报告</h2>
+            </div>
+
+            <div class="report-controls">
+                <label style="margin-bottom: 12px; display: block;">选择日期范围：</label>
+                
+                <!-- 日历选择器 -->
+                <div class="calendar-picker">
+                    <div class="calendar-trigger" onclick="toggleCalendar()" id="calendar-trigger">
+                        <svg class="calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"></line>
+                            <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"></line>
+                            <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"></line>
+                        </svg>
+                        <span class="calendar-display empty" id="calendar-display">点击选择日期范围</span>
+                    </div>
+                    
+                    <div class="calendar-dropdown" id="calendar-dropdown">
+                        <div class="calendar-header">
+                            <button class="calendar-nav-btn" onclick="changeMonth(-1)">‹</button>
+                            <span class="calendar-month-year" id="calendar-month-year"></span>
+                            <button class="calendar-nav-btn" onclick="changeMonth(1)">›</button>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <div class="calendar-weekday">日</div>
+                            <div class="calendar-weekday">一</div>
+                            <div class="calendar-weekday">二</div>
+                            <div class="calendar-weekday">三</div>
+                            <div class="calendar-weekday">四</div>
+                            <div class="calendar-weekday">五</div>
+                            <div class="calendar-weekday">六</div>
+                        </div>
+                        <div class="calendar-days" id="calendar-days"></div>
+                        <div class="calendar-actions">
+                            <button class="calendar-btn-secondary" onclick="clearDateRange()">清除</button>
+                            <button class="calendar-btn-primary" onclick="confirmDateRange()">确定</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="generateReport()" style="margin-top: 12px; width: 100%;">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span> 生成报告
+                </button>
+            </div>
+
+            <div class="report-content empty" id="report-content">
+                <div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p>选择日期范围并点击"生成报告"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SVG图标系统
+        const Icons = {
+            // 文档/笔记图标
+            document: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>`,
+            // 列表/记录图标
+            list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>`,
+            // 图表/报告图标
+            chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>`,
+            // 刷新/循环图标
+            refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>`,
+            // 警告图标
+            warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>`,
+            // 成功/勾选图标
+            check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>`,
+            // 图钉/标记图标
+            pin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+            </svg>`,
+            // 日历图标
+            calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>`,
+            // 相机/截图图标
+            camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+            </svg>`,
+            // 运行中/绿色圆点
+            running: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="10"></circle>
+            </svg>`,
+            // 图片图标
+            image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>`,
+            // 文件图标
+            file: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                <polyline points="13 2 13 9 20 9"></polyline>
+            </svg>`,
+            // 加载/等待图标
+            loading: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+            </svg>`,
+            // 整合/链接图标
+            consolidate: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>`,
+            // 编辑图标
+            edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>`,
+            // 删除图标
+            delete: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>`,
+            // 保存图标
+            save: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>`,
+            // 取消/关闭图标
+            cancel: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>`
+        };
+
+        // 创建图标HTML的函数
+        function icon(name, size = 'normal') {
+            const sizeClass = size === 'large' ? 'icon-large' : size === 'small' ? 'icon-small' : '';
+            return `<span class="icon ${sizeClass}">${Icons[name] || ''}</span>`;
+        }
+
+        // 上传的文件列表
+        let uploadedFiles = [];
+
+        // 初始化日期选择器为今天（已迁移到日历选择器，此代码已废弃）
+
+        // 显示消息
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('message-container');
+            const className = type === 'error' ? 'error-message' : 'success-message';
+            container.innerHTML = `<div class="${className}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // 获取文件图标
+        function getFileIcon(fileName, type) {
+            if (type === 'image') {
+                return icon('image');
+            }
+            const ext = fileName.split('.').pop().toLowerCase();
+            const iconMap = {
+                'pdf': icon('file'),
+                'docx': icon('file'),
+                'doc': icon('file'),
+                'txt': icon('file'),
+                'md': icon('document'),
+                'json': icon('list')
+            };
+            return iconMap[ext] || icon('file');
+        }
+
+        // 处理文件选择
+        function handleFileSelect(event, type) {
+            const files = Array.from(event.target.files);
+            addFiles(files, type);
+            event.target.value = ''; // 重置input，允许重复选择同一文件
+        }
+
+        // 处理拖拽
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.currentTarget.classList.remove('dragover');
+            
+            const files = Array.from(event.dataTransfer.files);
+            const imageExts = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp'];
+            const docExts = ['.pdf', '.docx', '.txt', '.md', '.json'];
+            
+            files.forEach(file => {
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                if (imageExts.includes(ext)) {
+                    addFiles([file], 'image');
+                } else if (docExts.includes(ext)) {
+                    addFiles([file], 'document');
+                } else {
+                    showMessage(`不支持的文件格式: ${ext}`, 'error');
+                }
+            });
+        }
+
+        // 添加文件到列表
+        function addFiles(files, type) {
+            files.forEach(file => {
+                // 检查文件大小（限制为50MB）
+                if (file.size > 50 * 1024 * 1024) {
+                    showMessage(`文件 ${file.name} 过大（超过50MB）`, 'error');
+                    return;
+                }
+                
+                uploadedFiles.push({
+                    file: file,
+                    type: type,
+                    id: Date.now() + Math.random()
+                });
+            });
+            updateFileList();
+        }
+
+        // 移除文件
+        function removeFile(id) {
+            uploadedFiles = uploadedFiles.filter(f => f.id !== id);
+            updateFileList();
+        }
+
+        // 更新文件列表显示（显示在文本框下方）
+        function updateFileList() {
+            const fileListInline = document.getElementById('file-list-inline');
+            if (!fileListInline) {
+                return; // 如果元素不存在，直接返回
+            }
+            
+            if (uploadedFiles.length === 0) {
+                fileListInline.innerHTML = '';
+                fileListInline.style.display = 'none';
+                return;
+            }
+            
+            fileListInline.style.display = 'flex';
+            fileListInline.innerHTML = uploadedFiles.map(f => `
+                <div class="file-item">
+                    <div class="file-item-info">
+                        <span class="file-icon">${getFileIcon(f.file.name, f.type)}</span>
+                        <span class="file-name" title="${f.file.name}">${f.file.name}</span>
+                        <span class="file-size">${formatFileSize(f.file.size)}</span>
+                        <span style="font-size: 11px; color: #667eea; margin-left: 4px;">${f.type === 'image' ? '图片' : '文档'}</span>
+                    </div>
+                    <button class="file-remove" onclick="removeFile(${f.id})" title="删除">×</button>
+                </div>
+            `).join('');
+        }
+
+        // 清空输入
+        function clearInput() {
+            const workInput = document.getElementById('work-input');
+            if (workInput) {
+                workInput.value = '';
+            }
+            uploadedFiles = [];
+            updateFileList();
+            
+            // 确保文件输入也被清除
+            const documentInput = document.getElementById('document-input');
+            const imageInput = document.getElementById('image-input');
+            if (documentInput) documentInput.value = '';
+            if (imageInput) imageInput.value = '';
+        }
+
+        // 提交工作记录
+        async function submitWorkRecord() {
+            const input = document.getElementById('work-input').value.trim();
+            const hasFiles = uploadedFiles.length > 0;
+            
+            if (!input && !hasFiles) {
+                showMessage('请输入工作内容或上传文件', 'error');
+                return;
+            }
+
+            try {
+                showMessage('正在提交...', 'success');
+                
+                // 保存要提交的内容（在清除前保存）
+                const textToSubmit = input;
+                const filesToSubmit = hasFiles ? [...uploadedFiles] : [];
+                
+                // 立即清除输入和文件（不等待后端处理）
+                clearInput();
+                showMessage('记录已提交，正在后台处理...', 'success');
+                
+                // 异步提交（不阻塞UI）
+                if (hasFiles) {
+                    // 提交文件（异步，不等待完成）
+                    submitFilesAsync(filesToSubmit, textToSubmit).catch(error => {
+                        console.error('文件提交错误:', error);
+                        showMessage(`提交失败: ${error.message}`, 'error');
+                    });
+                } else if (textToSubmit) {
+                    // 提交文本（异步，不等待完成）
+                    submitTextAsync(textToSubmit).catch(error => {
+                        console.error('文本提交错误:', error);
+                        showMessage(`提交失败: ${error.message}`, 'error');
+                    });
+                }
+                
+                // 延迟刷新记录列表（给后端一些处理时间）
+                setTimeout(() => {
+                    loadRecords();
+                }, 1000);
+            } catch (error) {
+                console.error('提交错误:', error);
+                showMessage(`提交失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 异步提交文件（不阻塞UI）
+        async function submitFilesAsync(filesToSubmit, textInput) {
+            for (const fileItem of filesToSubmit) {
+                const formData = new FormData();
+                formData.append('file', fileItem.file);
+                formData.append('type', fileItem.type);
+                formData.append('timestamp', new Date().toISOString());
+                if (textInput) {
+                    formData.append('text_content', textInput);
+                }
+                
+                const response = await fetch('/api/work-records/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({ error: '未知错误' }));
+                    throw new Error(`文件 ${fileItem.file.name} 上传失败: ${error.error || '未知错误'}`);
+                }
+            }
+        }
+        
+        // 异步提交文本（不阻塞UI）
+        async function submitTextAsync(textInput) {
+            const response = await fetch('/api/work-records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content: textInput,
+                    timestamp: new Date().toISOString()
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || '提交失败');
+            }
+        }
+
+        // 提交文件（保留用于兼容性，但已改为使用submitFilesAsync）
+        async function submitFiles() {
+            // 获取用户输入的文本内容（如果有）
+            const textInput = document.getElementById('work-input').value.trim();
+            
+            // 保存文件列表的副本，因为提交过程中可能会清除
+            const filesToSubmit = [...uploadedFiles];
+            
+            await submitFilesAsync(filesToSubmit, textInput);
+        }
+
+        // 格式化时间
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 渲染记录卡片
+        function renderRecordCard(record, isEditing = false) {
+            const content = record.content || {};
+            const timestamp = record.timestamp || '';
+            const date = timestamp.split('T')[0];
+            const time = timestamp.split('T')[1]?.substring(0, 5) || timestamp.split('T')[0];
+            const recordId = `record-${timestamp.replace(/[:.]/g, '-')}`;
+
+            // 如果是编辑模式
+            if (isEditing) {
+                return renderEditForm(record, date, timestamp);
+            }
+
+            let html = `
+                <div class="record-card" id="${recordId}" data-timestamp="${timestamp}" data-date="${date}">
+                    <div class="record-header">
+                        <span class="record-time">${time}</span>
+                        <div class="record-actions">
+                            <button class="record-action-btn edit" onclick="editRecord('${date}', '${encodeURIComponent(timestamp)}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                编辑
+                            </button>
+                            <button class="record-action-btn delete" onclick="deleteRecord('${date}', '${encodeURIComponent(timestamp)}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                                删除
+                            </button>
+                        </div>
+                    </div>
+            `;
+
+            if (content.tasks && content.tasks.length > 0) {
+                html += '<div class="record-tasks">';
+                content.tasks.forEach(task => {
+                    html += `<span class="task-tag">${task}</span>`;
+                });
+                html += '</div>';
+            }
+
+            if (content.work_content) {
+                html += `<div class="record-content">${content.work_content}</div>`;
+            }
+
+            const hasDetails = content.achievements?.length || content.issues?.length || content.next_steps?.length;
+            if (hasDetails) {
+                html += '<div class="record-details">';
+                
+                if (content.achievements?.length > 0) {
+                    html += '<section class="achievements">';
+                    html += `<h4><span class="icon icon-success">${Icons.check}</span> 成果</h4><ul>`;
+                    content.achievements.forEach(ach => {
+                        // 支持字典格式的achievements
+                        if (typeof ach === 'object' && ach !== null && !Array.isArray(ach)) {
+                            // 如果是字典，格式化显示
+                            let achText = '';
+                            if (ach.title) {
+                                achText += `<strong>${ach.title}</strong>`;
+                            }
+                            if (ach.description) {
+                                achText += achText ? ': ' + ach.description : ach.description;
+                            }
+                            if (ach.impact) {
+                                achText += ` (影响: ${ach.impact})`;
+                            }
+                            // 如果没有匹配到标准字段，显示所有字段
+                            if (!achText) {
+                                const parts = [];
+                                for (const [key, value] of Object.entries(ach)) {
+                                    if (value) {
+                                        parts.push(`${key}: ${value}`);
+                                    }
+                                }
+                                achText = parts.join(', ');
+                            }
+                            html += `<li>${achText || JSON.stringify(ach)}</li>`;
+                        } else {
+                            // 如果是字符串，直接显示
+                        html += `<li>${ach}</li>`;
+                        }
+                    });
+                    html += '</ul></section>';
+                }
+
+                if (content.issues?.length > 0) {
+                    html += '<section class="issues">';
+                    html += `<h4><span class="icon icon-warning">${Icons.warning}</span> 问题</h4><ul>`;
+                    content.issues.forEach(issue => {
+                        html += `<li>${issue}</li>`;
+                    });
+                    html += '</ul></section>';
+                }
+
+                if (content.next_steps?.length > 0) {
+                    html += '<section class="next-steps">';
+                    html += `<h4><span class="icon icon-info">${Icons.pin}</span> 下一步</h4><ul>`;
+                    content.next_steps.forEach(step => {
+                        html += `<li>${step}</li>`;
+                    });
+                    html += '</ul></section>';
+                }
+
+                html += '</div>';
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        // 渲染编辑表单
+        function renderEditForm(record, date, timestamp) {
+            const content = record.content || {};
+            const recordId = `record-${timestamp.replace(/[:.]/g, '-')}`;
+            
+            let html = `
+                <div class="record-card editing" id="${recordId}" data-timestamp="${timestamp}" data-date="${date}">
+                    <div class="edit-form">
+                        <div class="edit-form-group">
+                            <label>任务/项目（每行一个）</label>
+                            <div class="tag-input" id="tasks-input-${recordId}">
+                                ${(content.tasks || []).map(task => 
+                                    `<span class="tag-item">${escapeHtml(task)}<span class="tag-remove" onclick="removeTag(this)">×</span></span>`
+                                ).join('')}
+                                <input type="text" placeholder="输入任务后按回车添加" onkeypress="handleTagInput(event, this, '${recordId}')">
+                            </div>
+                        </div>
+                        
+                        <div class="edit-form-group">
+                            <label>工作内容</label>
+                            <textarea id="work-content-${recordId}" placeholder="输入工作内容">${escapeHtml(content.work_content || '')}</textarea>
+                        </div>
+                        
+                        <div class="edit-form-group">
+                            <label>成果（每行一个）</label>
+                            <textarea id="achievements-${recordId}" placeholder="输入成果，每行一个">${(content.achievements || []).map(ach => {
+                                if (typeof ach === 'object' && ach !== null) {
+                                    return `${ach.title || ''}: ${ach.description || ''}${ach.impact ? ` (影响: ${ach.impact})` : ''}`;
+                                }
+                                return ach;
+                            }).join('\n')}</textarea>
+                        </div>
+                        
+                        <div class="edit-form-group">
+                            <label>问题（每行一个）</label>
+                            <textarea id="issues-${recordId}" placeholder="输入问题，每行一个">${(content.issues || []).join('\n')}</textarea>
+                        </div>
+                        
+                        <div class="edit-form-group">
+                            <label>下一步计划（每行一个）</label>
+                            <textarea id="next-steps-${recordId}" placeholder="输入下一步计划，每行一个">${(content.next_steps || []).join('\n')}</textarea>
+                        </div>
+                        
+                        <div class="edit-form-actions">
+                            <button class="btn-save" onclick="saveRecord('${date}', '${encodeURIComponent(timestamp)}', '${recordId}')">${icon('save')} 保存</button>
+                            <button class="btn-cancel" onclick="cancelEdit('${date}', '${encodeURIComponent(timestamp)}')">${icon('cancel')} 取消</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return html;
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 处理标签输入
+        function handleTagInput(event, input, recordId) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const value = input.value.trim();
+                if (value) {
+                    const tagHtml = `<span class="tag-item">${escapeHtml(value)}<span class="tag-remove" onclick="removeTag(this)">×</span></span>`;
+                    input.insertAdjacentHTML('beforebegin', tagHtml);
+                    input.value = '';
+                }
+            }
+        }
+
+        // 移除标签
+        function removeTag(element) {
+            element.closest('.tag-item').remove();
+        }
+
+        // 编辑记录
+        function editRecord(date, timestamp) {
+            // 设置编辑状态，暂停轮询更新
+            isEditing = true;
+            
+            // 找到对应的记录卡片
+            const recordCard = document.querySelector(`[data-date="${date}"][data-timestamp="${decodeURIComponent(timestamp)}"]`);
+            if (!recordCard) {
+                isEditing = false;
+                return;
+            }
+
+            // 使用记录日历的选中日期，如果没有则使用传入的日期
+            const selectedDate = recordCalendarState.selectedDate || date;
+            
+            // 重新加载记录并标记为编辑模式
+            loadRecordsForEdit(selectedDate, timestamp);
+        }
+
+        // 为编辑加载记录
+        async function loadRecordsForEdit(date, editTimestamp) {
+            const container = document.getElementById('records-container');
+            const dateStr = date || new Date().toISOString().split('T')[0];
+            
+            try {
+                // 先尝试从本地文件系统加载（与loadRecords保持一致）
+                let response = await fetch(`/work_records/${dateStr}.json`);
+                let records = null;
+                
+                if (response.ok) {
+                    records = await response.json();
+                } else {
+                    // 如果本地文件不存在，尝试使用API
+                    response = await fetch(`/api/work-records?date=${dateStr}`);
+                    if (response.ok) {
+                        records = await response.json();
+                    } else {
+                        throw new Error('加载失败');
+                    }
+                }
+                
+                if (!Array.isArray(records) || records.length === 0) {
+                    showMessage('该日期暂无工作记录', 'error');
+                    isEditing = false;
+                    return;
+                }
+                
+                // 找到要编辑的记录
+                const record = records.find(r => r.timestamp === decodeURIComponent(editTimestamp));
+                if (!record) {
+                    showMessage('记录不存在', 'error');
+                    isEditing = false;
+                    return;
+                }
+                
+                // 渲染所有记录，编辑的记录使用编辑模式
+                records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                container.innerHTML = records.map(r => 
+                    renderRecordCard(r, r.timestamp === decodeURIComponent(editTimestamp))
+                ).join('');
+                
+                // 滚动到编辑的记录
+                const editCard = document.querySelector(`[data-timestamp="${decodeURIComponent(editTimestamp)}"]`);
+                if (editCard) {
+                    editCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } catch (error) {
+                console.error('加载记录错误:', error);
+                showMessage(`加载失败: ${error.message}`, 'error');
+                isEditing = false;
+            }
+        }
+
+        // 保存记录
+        async function saveRecord(date, timestamp, recordId) {
+            try {
+                // 收集表单数据
+                const tasks = Array.from(document.querySelectorAll(`#tasks-input-${recordId} .tag-item`))
+                    .map(tag => tag.textContent.replace('×', '').trim())
+                    .filter(t => t);
+                
+                const workContent = document.getElementById(`work-content-${recordId}`).value.trim();
+                const achievementsText = document.getElementById(`achievements-${recordId}`).value.trim();
+                const issuesText = document.getElementById(`issues-${recordId}`).value.trim();
+                const nextStepsText = document.getElementById(`next-steps-${recordId}`).value.trim();
+                
+                // 解析achievements（支持多行）
+                const achievements = achievementsText.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line)
+                    .map(line => {
+                        // 尝试解析格式：title: description (影响: impact)
+                        const match = line.match(/^(.+?):\s*(.+?)(?:\s*\(影响:\s*(.+?)\))?$/);
+                        if (match) {
+                            return {
+                                title: match[1].trim(),
+                                description: match[2].trim(),
+                                impact: match[3] ? match[3].trim() : undefined
+                            };
+                        }
+                        return line; // 简单字符串
+                    });
+                
+                // 解析issues和next_steps（每行一个）
+                const issues = issuesText.split('\n').map(line => line.trim()).filter(line => line);
+                const nextSteps = nextStepsText.split('\n').map(line => line.trim()).filter(line => line);
+                
+                const content = {
+                    tasks: tasks,
+                    work_content: workContent,
+                    achievements: achievements,
+                    issues: issues,
+                    next_steps: nextSteps,
+                    metadata: {
+                        edited: true,
+                        edit_time: new Date().toISOString()
+                    }
+                };
+                
+                // 发送更新请求
+                const response = await fetch(`/api/work-records/${date}/${timestamp}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '保存失败');
+                }
+                
+                // 取消编辑状态，恢复轮询
+                isEditing = false;
+                
+                showMessage('记录已保存', 'success');
+                
+                // 重新加载记录
+                setTimeout(() => {
+                    loadRecords();
+                }, 500);
+            } catch (error) {
+                console.error('保存记录错误:', error);
+                showMessage(`保存失败: ${error.message}`, 'error');
+                // 即使保存失败，也取消编辑状态
+                isEditing = false;
+            }
+        }
+
+        // 取消编辑
+        function cancelEdit(date, timestamp) {
+            // 取消编辑状态，恢复轮询
+            isEditing = false;
+            loadRecords();
+        }
+
+        // 清空指定日期的所有记录
+        async function clearAllRecords() {
+            console.log('clearAllRecords 被调用');
+            // 使用记录日历的选中日期，如果没有则使用今天
+            const selectedDate = recordCalendarState.selectedDate || new Date().toISOString().split('T')[0];
+            console.log('选择的日期:', selectedDate);
+            
+            if (!confirm(`确定要清空 ${selectedDate} 的所有工作记录吗？\n此操作不可恢复！`)) {
+                return;
+            }
+            
+            // 二次确认
+            if (!confirm(`再次确认：将永久删除 ${selectedDate} 的所有记录，此操作不可恢复！`)) {
+                return;
+            }
+            
+            try {
+                showMessage('正在清空记录...', 'success');
+                console.log('开始发送清空请求，日期:', selectedDate);
+                
+                const response = await fetch(`/api/work-records/${selectedDate}/clear`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                console.log('收到响应，状态:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    let error;
+                    try {
+                        error = await response.json();
+                    } catch (e) {
+                        error = { error: `HTTP ${response.status}: ${response.statusText}` };
+                    }
+                    console.error('清空请求失败:', error);
+                    throw new Error(error.error || '清空失败');
+                }
+                
+                const result = await response.json();
+                console.log('清空结果:', result);
+                showMessage(result.message || '清空完成', 'success');
+                
+                // 重新加载记录（应该显示为空）
+                setTimeout(() => {
+                    loadRecords();
+                }, 500);
+            } catch (error) {
+                console.error('清空记录错误:', error);
+                showMessage(`清空失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 整合相似记录
+        async function consolidateRecords() {
+            console.log('consolidateRecords 被调用');
+            // 使用记录日历的选中日期，如果没有则使用今天
+            const selectedDate = recordCalendarState.selectedDate || new Date().toISOString().split('T')[0];
+            
+            console.log('选择的日期:', selectedDate);
+            
+            if (!confirm(`确定要整合 ${selectedDate} 的相似记录吗？\n这将合并相似的工作记录，减少碎片化。`)) {
+                console.log('用户取消了整合操作');
+                return;
+            }
+            
+            try {
+                showMessage('正在整合记录，请稍候...', 'success');
+                console.log('开始发送整合请求...');
+                
+                const response = await fetch(`/api/work-records/${selectedDate}/consolidate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        similarity_threshold: 0.2
+                    })
+                });
+                
+                console.log('收到响应，状态:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    let error;
+                    try {
+                        error = await response.json();
+                    } catch (e) {
+                        error = { error: `HTTP ${response.status}: ${response.statusText}` };
+                    }
+                    console.error('整合请求失败:', error);
+                    throw new Error(error.error || '整合失败');
+                }
+                
+                const result = await response.json();
+                console.log('整合结果:', result);
+                showMessage(result.message || '整合完成', 'success');
+                
+                // 重新加载记录
+                setTimeout(() => {
+                    loadRecords();
+                }, 500);
+            } catch (error) {
+                console.error('整合记录错误:', error);
+                showMessage(`整合失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 删除记录
+        async function deleteRecord(date, timestamp) {
+            if (!confirm('确定要删除这条记录吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/work-records/${date}/${timestamp}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '删除失败');
+                }
+                
+                showMessage('记录已删除', 'success');
+                
+                // 重新加载记录
+                setTimeout(() => {
+                    loadRecords();
+                }, 500);
+            } catch (error) {
+                console.error('删除记录错误:', error);
+                showMessage(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 加载工作记录
+        let lastRecordsCount = 0;  // 记录上次加载的记录数量
+        let lastRecordsHash = '';  // 记录上次加载的记录哈希值（用于检测变化）
+        
+        async function loadRecords(silent = false) {
+            // 如果正在编辑，跳过更新，避免打断用户编辑
+            if (isEditing) {
+                return;
+            }
+            
+            // 使用记录日历的选中日期，如果没有则使用今天
+            const selectedDate = recordCalendarState.selectedDate || new Date().toISOString().split('T')[0];
+            const container = document.getElementById('records-container');
+
+            if (!silent) {
+            container.innerHTML = '<div class="loading">正在加载工作记录...</div>';
+            }
+
+            try {
+                // 尝试从本地文件系统加载（开发模式）
+                const dateStr = selectedDate || new Date().toISOString().split('T')[0];
+                const response = await fetch(`/work_records/${dateStr}.json`);
+
+                if (!response.ok) {
+                    throw new Error('文件不存在');
+                }
+
+                const records = await response.json();
+                
+                if (!Array.isArray(records) || records.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p>该日期暂无工作记录</p>
+                        </div>
+                    `;
+                    lastRecordsCount = 0;
+                    lastRecordsHash = '';
+                    return;
+                }
+
+                // 按时间倒序排列
+                records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                // 计算记录哈希值（使用最新几条记录的时间戳）
+                const recordsHash = records.slice(0, 5).map(r => r.timestamp).join('|');
+                
+                // 检查是否有新记录
+                const hasNewRecords = records.length > lastRecordsCount || recordsHash !== lastRecordsHash;
+                
+                // 更新记录
+                container.innerHTML = records.map(record => renderRecordCard(record)).join('');
+                
+                // 刷新有记录的日期列表（如果当前日期有记录，确保它在列表中）
+                if (records.length > 0 && !recordCalendarState.datesWithRecords.includes(dateStr)) {
+                    recordCalendarState.datesWithRecords.push(dateStr);
+                    recordCalendarState.datesWithRecords.sort();
+                    // 重新渲染日历以显示新的小圆点
+                    renderRecordCalendar();
+                }
+                
+                // 如果有新记录且不是静默更新，滚动到顶部显示新内容
+                if (hasNewRecords && !silent && lastRecordsCount > 0) {
+                    container.scrollTop = 0;
+                }
+                
+                lastRecordsCount = records.length;
+                lastRecordsHash = recordsHash;
+            } catch (error) {
+                console.error('加载错误:', error);
+                // 尝试使用API加载
+                try {
+                    const dateStr = selectedDate || new Date().toISOString().split('T')[0];
+                    const response = await fetch(`/api/work-records?date=${dateStr}`);
+                    
+                    if (response.ok) {
+                        const records = await response.json();
+                        if (Array.isArray(records) && records.length > 0) {
+                            records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                            
+                            // 检查是否有新记录
+                            const recordsHash = records.slice(0, 5).map(r => r.timestamp).join('|');
+                            const hasNewRecords = records.length > lastRecordsCount || recordsHash !== lastRecordsHash;
+                            
+                            container.innerHTML = records.map(record => renderRecordCard(record)).join('');
+                            
+                            // 刷新有记录的日期列表
+                            if (records.length > 0 && !recordCalendarState.datesWithRecords.includes(dateStr)) {
+                                recordCalendarState.datesWithRecords.push(dateStr);
+                                recordCalendarState.datesWithRecords.sort();
+                                renderRecordCalendar();
+                            }
+                            
+                            if (hasNewRecords && !silent && lastRecordsCount > 0) {
+                                container.scrollTop = 0;
+                            }
+                            
+                            lastRecordsCount = records.length;
+                            lastRecordsHash = recordsHash;
+                            return;
+                        }
+                    }
+                } catch (apiError) {
+                    console.error('API错误:', apiError);
+                }
+                if (!silent) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p>该日期暂无工作记录</p>
+                        <p style="font-size: 12px; margin-top: 8px; color: #999;">提示：请确保后端服务正在运行</p>
+                    </div>
+                `;
+                }
+            }
+        }
+        
+        // 定时轮询检查新记录（每5秒检查一次）
+        let recordsPollInterval = null;
+        let isEditing = false;  // 标记是否正在编辑
+        
+        function startRecordsPolling() {
+            // 如果已经有轮询，先清除
+            if (recordsPollInterval) {
+                clearInterval(recordsPollInterval);
+            }
+            
+            // 每5秒检查一次新记录
+            recordsPollInterval = setInterval(() => {
+                // 如果正在编辑，跳过更新
+                if (!isEditing) {
+                    loadRecords(true);  // silent=true，静默更新，不显示加载提示
+                }
+            }, 5000);
+        }
+        
+        function stopRecordsPolling() {
+            if (recordsPollInterval) {
+                clearInterval(recordsPollInterval);
+                recordsPollInterval = null;
+            }
+        }
+
+        // 工作记录日历状态
+        let recordCalendarState = {
+            currentMonth: new Date().getMonth(),
+            currentYear: new Date().getFullYear(),
+            selectedDate: null,
+            datesWithRecords: []  // 有记录的日期列表
+        };
+
+        // 报告生成日历状态
+        let calendarState = {
+            currentMonth: new Date().getMonth(),
+            currentYear: new Date().getFullYear(),
+            startDate: null,
+            endDate: null,
+            selectingStart: true,
+            datesWithRecords: []  // 有记录的日期列表
+        };
+
+        // 初始化工作记录日历
+        async function initRecordCalendar() {
+            // 加载有记录的日期列表
+            await loadDatesWithRecords();
+            renderRecordCalendar();
+            // 点击外部关闭日历
+            document.addEventListener('click', (e) => {
+                const calendar = document.getElementById('record-calendar-dropdown');
+                const trigger = document.getElementById('record-calendar-trigger');
+                if (calendar && !calendar.contains(e.target) && !trigger.contains(e.target)) {
+                    calendar.classList.remove('show');
+                    if (trigger) trigger.classList.remove('active');
+                }
+            });
+        }
+
+        // 加载有记录的日期列表
+        async function loadDatesWithRecords() {
+            try {
+                const response = await fetch('/api/work-records/dates');
+                if (response.ok) {
+                    recordCalendarState.datesWithRecords = await response.json();
+                }
+            } catch (error) {
+                console.error('加载日期列表失败:', error);
+                recordCalendarState.datesWithRecords = [];
+            }
+        }
+
+        // 切换工作记录日历显示
+        function toggleRecordCalendar() {
+            const dropdown = document.getElementById('record-calendar-dropdown');
+            const trigger = document.getElementById('record-calendar-trigger');
+            if (dropdown && trigger) {
+                dropdown.classList.toggle('show');
+                trigger.classList.toggle('active');
+                if (dropdown.classList.contains('show')) {
+                    renderRecordCalendar();
+                }
+            }
+        }
+
+        // 切换工作记录月份
+        function changeRecordMonth(delta) {
+            recordCalendarState.currentMonth += delta;
+            if (recordCalendarState.currentMonth < 0) {
+                recordCalendarState.currentMonth = 11;
+                recordCalendarState.currentYear--;
+            } else if (recordCalendarState.currentMonth > 11) {
+                recordCalendarState.currentMonth = 0;
+                recordCalendarState.currentYear++;
+            }
+            renderRecordCalendar();
+        }
+
+        // 渲染工作记录日历
+        function renderRecordCalendar() {
+            const year = recordCalendarState.currentYear;
+            const month = recordCalendarState.currentMonth;
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+
+            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            const monthYearEl = document.getElementById('record-calendar-month-year');
+            if (monthYearEl) {
+                monthYearEl.textContent = `${year}年 ${monthNames[month]}`;
+            }
+
+            const calendarDays = document.getElementById('record-calendar-days');
+            if (!calendarDays) return;
+            calendarDays.innerHTML = '';
+
+            // 上个月的日期
+            const prevMonth = month === 0 ? 11 : month - 1;
+            const prevYear = month === 0 ? year - 1 : year;
+            const prevMonthLastDay = new Date(prevYear, prevMonth + 1, 0).getDate();
+
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const day = prevMonthLastDay - i;
+                const dayEl = createRecordDayElement(prevYear, prevMonth, day, true);
+                calendarDays.appendChild(dayEl);
+            }
+
+            // 当前月的日期
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
+                const dayEl = createRecordDayElement(year, month, day, false, isToday);
+                calendarDays.appendChild(dayEl);
+            }
+
+            // 下个月的日期（填满6行）
+            const totalCells = calendarDays.children.length;
+            const remainingCells = 42 - totalCells;
+            const nextMonth = month === 11 ? 0 : month + 1;
+            const nextYear = month === 11 ? year + 1 : year;
+
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayEl = createRecordDayElement(nextYear, nextMonth, day, true);
+                calendarDays.appendChild(dayEl);
+            }
+        }
+
+        // 创建工作记录日期元素
+        function createRecordDayElement(year, month, day, isOtherMonth, isToday = false) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            dayEl.textContent = day;
+
+            const dateStr = formatDate(year, month, day);
+            const date = new Date(year, month, day);
+
+            if (isOtherMonth) {
+                dayEl.classList.add('other-month');
+            }
+
+            if (isToday) {
+                dayEl.classList.add('today');
+            }
+
+            // 检查是否有记录
+            if (recordCalendarState.datesWithRecords.includes(dateStr)) {
+                dayEl.classList.add('has-record');
+            }
+
+            // 检查是否选中
+            if (recordCalendarState.selectedDate && dateStr === recordCalendarState.selectedDate) {
+                dayEl.classList.add('selected');
+            }
+
+            dayEl.onclick = () => selectRecordDate(year, month, day);
+            return dayEl;
+        }
+
+        // 选择工作记录日期
+        function selectRecordDate(year, month, day) {
+            const dateStr = formatDate(year, month, day);
+            recordCalendarState.selectedDate = dateStr;
+            updateRecordCalendarDisplay();
+            renderRecordCalendar();
+        }
+
+        // 更新工作记录日历显示
+        function updateRecordCalendarDisplay() {
+            const display = document.getElementById('record-calendar-display');
+            if (display) {
+                if (recordCalendarState.selectedDate) {
+                    display.textContent = recordCalendarState.selectedDate;
+                    display.classList.remove('empty');
+                } else {
+                    display.textContent = '点击选择日期';
+                    display.classList.add('empty');
+                }
+            }
+        }
+
+        // 清除工作记录日期
+        function clearRecordDate() {
+            recordCalendarState.selectedDate = null;
+            updateRecordCalendarDisplay();
+            renderRecordCalendar();
+        }
+
+        // 确认工作记录日期
+        function confirmRecordDate() {
+            if (recordCalendarState.selectedDate) {
+                updateRecordCalendarDisplay();
+                toggleRecordCalendar();
+                // 加载选中日期的记录
+                loadRecords();
+            } else {
+                showMessage('请选择一个日期', 'error');
+            }
+        }
+
+        // 初始化报告生成日历
+        async function initCalendar() {
+            // 加载有记录的日期列表
+            await loadCalendarDatesWithRecords();
+            renderCalendar();
+            // 点击外部关闭日历
+            document.addEventListener('click', (e) => {
+                const calendar = document.getElementById('calendar-dropdown');
+                const trigger = document.getElementById('calendar-trigger');
+                if (calendar && !calendar.contains(e.target) && !trigger.contains(e.target)) {
+                    calendar.classList.remove('show');
+                    if (trigger) trigger.classList.remove('active');
+                }
+            });
+        }
+
+        // 加载报告生成日历有记录的日期列表
+        async function loadCalendarDatesWithRecords() {
+            try {
+                const response = await fetch('/api/work-records/dates');
+                if (response.ok) {
+                    calendarState.datesWithRecords = await response.json();
+                }
+            } catch (error) {
+                console.error('加载日期列表失败:', error);
+                calendarState.datesWithRecords = [];
+            }
+        }
+
+        // 切换日历显示
+        async function toggleCalendar() {
+            const dropdown = document.getElementById('calendar-dropdown');
+            const trigger = document.getElementById('calendar-trigger');
+            dropdown.classList.toggle('show');
+            trigger.classList.toggle('active');
+            if (dropdown.classList.contains('show')) {
+                // 如果日期列表为空，先加载
+                if (calendarState.datesWithRecords.length === 0) {
+                    await loadCalendarDatesWithRecords();
+                }
+                renderCalendar();
+            }
+        }
+
+        // 切换月份
+        function changeMonth(delta) {
+            calendarState.currentMonth += delta;
+            if (calendarState.currentMonth < 0) {
+                calendarState.currentMonth = 11;
+                calendarState.currentYear--;
+            } else if (calendarState.currentMonth > 11) {
+                calendarState.currentMonth = 0;
+                calendarState.currentYear++;
+            }
+            renderCalendar();
+        }
+
+        // 渲染日历
+        function renderCalendar() {
+            const year = calendarState.currentYear;
+            const month = calendarState.currentMonth;
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+
+            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            document.getElementById('calendar-month-year').textContent = `${year}年 ${monthNames[month]}`;
+
+            const calendarDays = document.getElementById('calendar-days');
+            calendarDays.innerHTML = '';
+
+            // 上个月的日期
+            const prevMonth = month === 0 ? 11 : month - 1;
+            const prevYear = month === 0 ? year - 1 : year;
+            const prevMonthLastDay = new Date(prevYear, prevMonth + 1, 0).getDate();
+
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const day = prevMonthLastDay - i;
+                const dateStr = formatDate(prevYear, prevMonth, day);
+                const dayEl = createDayElement(prevYear, prevMonth, day, true);
+                calendarDays.appendChild(dayEl);
+            }
+
+            // 当前月的日期
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
+                const dayEl = createDayElement(year, month, day, false, isToday);
+                calendarDays.appendChild(dayEl);
+            }
+
+            // 下个月的日期（填满6行）
+            const totalCells = calendarDays.children.length;
+            const remainingCells = 42 - totalCells; // 6行 x 7列 = 42
+            const nextMonth = month === 11 ? 0 : month + 1;
+            const nextYear = month === 11 ? year + 1 : year;
+
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayEl = createDayElement(nextYear, nextMonth, day, true);
+                calendarDays.appendChild(dayEl);
+            }
+        }
+
+        // 创建日期元素
+        function createDayElement(year, month, day, isOtherMonth, isToday = false) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            dayEl.textContent = day;
+
+            const dateStr = formatDate(year, month, day);
+            const date = new Date(year, month, day);
+
+            if (isOtherMonth) {
+                dayEl.classList.add('other-month');
+            }
+
+            if (isToday) {
+                dayEl.classList.add('today');
+            }
+
+            // 检查是否有记录
+            if (calendarState.datesWithRecords.includes(dateStr)) {
+                dayEl.classList.add('has-record');
+            }
+
+            // 检查是否在选中范围内
+            if (calendarState.startDate && calendarState.endDate) {
+                if (dateStr === calendarState.startDate) {
+                    dayEl.classList.add('range-start');
+                } else if (dateStr === calendarState.endDate) {
+                    dayEl.classList.add('range-end');
+                } else if (dateStr > calendarState.startDate && dateStr < calendarState.endDate) {
+                    dayEl.classList.add('in-range');
+                }
+            } else if (calendarState.startDate && dateStr === calendarState.startDate) {
+                dayEl.classList.add('selected');
+            }
+
+            dayEl.onclick = () => selectDate(year, month, day);
+            return dayEl;
+        }
+
+        // 选择日期
+        function selectDate(year, month, day) {
+            const dateStr = formatDate(year, month, day);
+
+            if (calendarState.selectingStart || !calendarState.startDate) {
+                // 选择开始日期
+                calendarState.startDate = dateStr;
+                calendarState.endDate = null;
+                calendarState.selectingStart = false;
+            } else {
+                // 选择结束日期
+                if (dateStr < calendarState.startDate) {
+                    // 如果选择的日期早于开始日期，交换它们
+                    calendarState.endDate = calendarState.startDate;
+                    calendarState.startDate = dateStr;
+                } else {
+                    calendarState.endDate = dateStr;
+                }
+                calendarState.selectingStart = true;
+            }
+
+            updateCalendarDisplay();
+            renderCalendar();
+        }
+
+        // 格式化日期
+        function formatDate(year, month, day) {
+            return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+
+        // 更新日历显示
+        function updateCalendarDisplay() {
+            const display = document.getElementById('calendar-display');
+            if (calendarState.startDate && calendarState.endDate) {
+                if (calendarState.startDate === calendarState.endDate) {
+                    display.textContent = calendarState.startDate;
+                } else {
+                    display.textContent = `${calendarState.startDate} 至 ${calendarState.endDate}`;
+                }
+                display.classList.remove('empty');
+            } else if (calendarState.startDate) {
+                display.textContent = `${calendarState.startDate} (选择结束日期)`;
+                display.classList.remove('empty');
+            } else {
+                display.textContent = '点击选择日期范围';
+                display.classList.add('empty');
+            }
+        }
+
+        // 清除日期范围
+        function clearDateRange() {
+            calendarState.startDate = null;
+            calendarState.endDate = null;
+            calendarState.selectingStart = true;
+            updateCalendarDisplay();
+            renderCalendar();
+        }
+
+        // 确认日期范围
+        function confirmDateRange() {
+            if (calendarState.startDate) {
+                if (!calendarState.endDate) {
+                    calendarState.endDate = calendarState.startDate;
+                }
+                updateCalendarDisplay();
+                toggleCalendar();
+            } else {
+                showMessage('请至少选择一个日期', 'error');
+            }
+        }
+
+        // 生成报告
+        async function generateReport() {
+            const startDate = calendarState.startDate;
+            const endDate = calendarState.endDate || calendarState.startDate;
+            const reportContent = document.getElementById('report-content');
+
+            if (!startDate) {
+                showMessage('请选择日期范围', 'error');
+                return;
+            }
+
+            try {
+                reportContent.innerHTML = `
+                    <div class="loading loading-generating">
+                        <div class="loading-generating-text">正在生成报告...</div>
+                        <div class="loading-spinner"></div>
+                    </div>
+                `;
+                reportContent.classList.remove('empty');
+
+                const finalEndDate = endDate || startDate;
+                const response = await fetch(`/api/work-records/summary?start_date=${startDate}&end_date=${finalEndDate}`);
+                
+                if (response.ok) {
+                    const summary = await response.json();
+                    displayReport(summary, startDate, finalEndDate);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || '生成报告失败');
+                }
+            } catch (error) {
+                console.error('生成报告错误:', error);
+                reportContent.innerHTML = `
+                    <div class="empty">
+                        <p>报告生成失败</p>
+                        <p style="font-size: 11px; color: #999; margin-top: 8px;">${error.message}</p>
+                    </div>
+                `;
+                reportContent.classList.add('empty');
+            }
+        }
+
+        // 保存当前报告数据
+        let currentReportData = null;
+        let currentReportDates = { startDate: null, endDate: null };
+
+        // 显示报告内容
+        function displayReport(summary, startDate, endDate) {
+            const reportContent = document.getElementById('report-content');
+            reportContent.classList.remove('empty');
+
+            // 保存报告数据
+            currentReportData = summary;
+            currentReportDates = { startDate, endDate };
+
+            // 添加日期范围信息
+            const dateRange = startDate === endDate ? startDate : `${startDate} 至 ${endDate}`;
+            const recordCount = summary.metadata?.record_count || 0;
+            const daysDiff = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+            
+            let html = `<div class="report-header">
+                <div class="report-header-info">
+                    <h3 class="report-header-title">${icon('calendar')} ${dateRange}</h3>
+                    <p class="report-header-meta">共 ${recordCount} 条记录，${daysDiff} 天</p>
+                </div>
+                <div class="report-actions">
+                    <button class="report-action-btn" onclick="editReport()" title="编辑报告">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        编辑
+                    </button>
+                    <button class="report-action-btn" onclick="downloadReport()" title="下载为Markdown">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        下载
+                    </button>
+                </div>
+            </div>`;
+            
+            // 添加编辑表单（默认隐藏）
+            html += generateEditForm(summary);
+            
+            if (summary.tasks && summary.tasks.length > 0) {
+                html += '<div class="report-section">';
+                html += '<h3>主要任务</h3><ul>';
+                summary.tasks.forEach(task => {
+                    html += `<li>${task}</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            if (summary.work_content && Array.isArray(summary.work_content) && summary.work_content.length > 0) {
+                html += '<div class="report-section">';
+                html += '<h3>工作内容</h3><ul>';
+                summary.work_content.forEach(item => {
+                    html += `<li>${item}</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            if (summary.achievements && Array.isArray(summary.achievements) && summary.achievements.length > 0) {
+                html += '<div class="report-section">';
+                html += '<h3>取得成果</h3><ul>';
+                summary.achievements.forEach(ach => {
+                    // 支持向后兼容：如果是对象格式，提取文本；否则直接显示
+                    let achText = '';
+                    if (typeof ach === 'object' && ach !== null && !Array.isArray(ach)) {
+                        if (ach.description) {
+                            achText = ach.description;
+                        } else if (ach.title) {
+                            achText = ach.title;
+                        } else {
+                            achText = JSON.stringify(ach);
+                        }
+                    } else {
+                        achText = String(ach);
+                    }
+                    html += `<li>${achText}</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            if (summary.issues && summary.issues.length > 0) {
+                html += '<div class="report-section">';
+                html += '<h3>遇到问题</h3><ul>';
+                summary.issues.forEach(issue => {
+                    html += `<li>${issue}</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            if (summary.next_steps && summary.next_steps.length > 0) {
+                html += '<div class="report-section">';
+                html += '<h3>下一步计划</h3><ul>';
+                summary.next_steps.forEach(step => {
+                    html += `<li>${step}</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            reportContent.innerHTML = html || '<div class="empty"><p>暂无报告内容</p></div>';
+        }
+
+        // 生成编辑表单
+        function generateEditForm(summary) {
+            const tasks = summary.tasks || [];
+            const achievements = summary.achievements || [];
+            const issues = summary.issues || [];
+            const nextSteps = summary.next_steps || [];
+            
+            let formHtml = `<div class="report-edit-form" id="report-edit-form">
+                <h4 style="margin: 0 0 16px 0; color: #667eea;">编辑报告</h4>
+                
+                <div class="report-edit-form-group">
+                    <label>主要任务：</label>
+                    <ul id="edit-tasks">
+                        ${tasks.map((task, index) => `
+                            <li>
+                                <input type="text" value="${escapeHtml(task)}" data-index="${index}">
+                                <button type="button" onclick="removeEditItem('tasks', ${index})" style="padding: 4px 8px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">删除</button>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button type="button" onclick="addEditItem('tasks')" style="margin-top: 8px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">+ 添加任务</button>
+                </div>
+                
+                <div class="report-edit-form-group">
+                    <label>工作内容：</label>
+                    <ul id="edit-work-content">
+                        ${(Array.isArray(summary.work_content) ? summary.work_content : []).map((item, index) => `
+                            <li>
+                                <input type="text" value="${escapeHtml(item)}" data-index="${index}">
+                                <button type="button" onclick="removeEditItem('work-content', ${index})" style="padding: 4px 8px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">删除</button>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button type="button" onclick="addEditItem('work-content')" style="margin-top: 8px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">+ 添加工作内容</button>
+                </div>
+                
+                <div class="report-edit-form-group">
+                    <label>取得成果：</label>
+                    <ul id="edit-achievements">
+                        ${achievements.map((ach, index) => {
+                            // 支持向后兼容：如果是对象格式，提取文本；否则直接使用
+                            let achText = '';
+                            if (typeof ach === 'object' && ach !== null && !Array.isArray(ach)) {
+                                achText = ach.description || ach.title || '';
+                            } else {
+                                achText = String(ach);
+                            }
+                            return `
+                                <li>
+                                    <input type="text" value="${escapeHtml(achText)}" data-index="${index}">
+                                    <button type="button" onclick="removeEditItem('achievements', ${index})" style="padding: 4px 8px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">删除</button>
+                                </li>
+                            `;
+                        }).join('')}
+                    </ul>
+                    <button type="button" onclick="addEditItem('achievements')" style="margin-top: 8px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">+ 添加成果</button>
+                </div>
+                
+                <div class="report-edit-form-group">
+                    <label>遇到问题：</label>
+                    <ul id="edit-issues">
+                        ${issues.map((issue, index) => `
+                            <li>
+                                <input type="text" value="${escapeHtml(issue)}" data-index="${index}">
+                                <button type="button" onclick="removeEditItem('issues', ${index})" style="padding: 4px 8px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">删除</button>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button type="button" onclick="addEditItem('issues')" style="margin-top: 8px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">+ 添加问题</button>
+                </div>
+                
+                <div class="report-edit-form-group">
+                    <label>下一步计划：</label>
+                    <ul id="edit-next-steps">
+                        ${nextSteps.map((step, index) => `
+                            <li>
+                                <input type="text" value="${escapeHtml(step)}" data-index="${index}">
+                                <button type="button" onclick="removeEditItem('next-steps', ${index})" style="padding: 4px 8px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">删除</button>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button type="button" onclick="addEditItem('next-steps')" style="margin-top: 8px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">+ 添加计划</button>
+                </div>
+                
+                <div class="report-edit-form-actions">
+                    <button type="button" onclick="cancelEditReport()" style="padding: 8px 16px; background: #e0e0e0; color: #666; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">取消</button>
+                    <button type="button" onclick="saveEditReport()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">保存</button>
+                </div>
+            </div>`;
+            
+            return formHtml;
+        }
+
+        // HTML转义函数
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 编辑报告
+        function editReport() {
+            const editForm = document.getElementById('report-edit-form');
+            if (editForm) {
+                editForm.classList.add('active');
+                editForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // 取消编辑
+        function cancelEditReport() {
+            const editForm = document.getElementById('report-edit-form');
+            if (editForm) {
+                editForm.classList.remove('active');
+            }
+        }
+
+        // 保存编辑
+        function saveEditReport() {
+            if (!currentReportData) return;
+            
+            // 收集编辑后的数据
+            const editedData = { ...currentReportData };
+            
+            // 收集任务
+            const taskInputs = document.querySelectorAll('#edit-tasks input[type="text"]');
+            editedData.tasks = Array.from(taskInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+            
+            // 收集工作内容
+            const workContentInputs = document.querySelectorAll('#edit-work-content input[type="text"]');
+            editedData.work_content = Array.from(workContentInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+            
+            // 收集成果（现在是单个输入框）
+            const achievementInputs = document.querySelectorAll('#edit-achievements input[type="text"]');
+            editedData.achievements = Array.from(achievementInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+            
+            // 收集问题
+            const issueInputs = document.querySelectorAll('#edit-issues input[type="text"]');
+            editedData.issues = Array.from(issueInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+            
+            // 收集下一步计划
+            const nextStepInputs = document.querySelectorAll('#edit-next-steps input[type="text"]');
+            editedData.next_steps = Array.from(nextStepInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+            
+            // 更新报告数据并重新显示
+            currentReportData = editedData;
+            displayReport(editedData, currentReportDates.startDate, currentReportDates.endDate);
+            showMessage('报告已更新', 'success');
+        }
+
+        // 添加编辑项
+        function addEditItem(type) {
+            const listId = `edit-${type}`;
+            const list = document.getElementById(listId);
+            if (!list) return;
+            
+            const index = list.children.length;
+            const itemHtml = `
+                <li>
+                    <input type="text" placeholder="请输入内容" data-index="${index}">
+                    <button type="button" onclick="removeEditItem('${type}', ${index})" style="padding: 4px 8px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">删除</button>
+                </li>
+            `;
+            
+            list.insertAdjacentHTML('beforeend', itemHtml);
+        }
+
+        // 删除编辑项
+        function removeEditItem(type, index) {
+            const listId = `edit-${type}`;
+            const list = document.getElementById(listId);
+            if (!list) return;
+            
+            const items = list.querySelectorAll('li');
+            if (items[index]) {
+                items[index].remove();
+            }
+        }
+
+        // 下载报告（Markdown格式）
+        function downloadReport() {
+            if (!currentReportData) {
+                showMessage('没有可下载的报告', 'error');
+                return;
+            }
+            
+            const { startDate, endDate } = currentReportDates;
+            const dateRange = startDate === endDate ? startDate : `${startDate}_${endDate}`;
+            const filename = `工作报告_${dateRange}`;
+            
+            const markdown = generateMarkdown(currentReportData, startDate, endDate);
+            const blob = new Blob([markdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 生成Markdown格式
+        function generateMarkdown(summary, startDate, endDate) {
+            const dateRange = startDate === endDate ? startDate : `${startDate} 至 ${endDate}`;
+            const recordCount = summary.metadata?.record_count || 0;
+            const daysDiff = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+            
+            let md = `# 工作报告\n\n`;
+            md += `**日期范围：** ${dateRange}\n\n`;
+            md += `**统计信息：** 共 ${recordCount} 条记录，${daysDiff} 天\n\n`;
+            md += `---\n\n`;
+            
+            if (summary.tasks && summary.tasks.length > 0) {
+                md += `## 主要任务\n\n`;
+                summary.tasks.forEach(task => {
+                    md += `- ${task}\n`;
+                });
+                md += `\n`;
+            }
+            
+            if (summary.work_content && Array.isArray(summary.work_content) && summary.work_content.length > 0) {
+                md += `## 工作内容\n\n`;
+                summary.work_content.forEach(item => {
+                    md += `- ${item}\n`;
+                });
+                md += `\n`;
+            }
+            
+            if (summary.achievements && Array.isArray(summary.achievements) && summary.achievements.length > 0) {
+                md += `## 取得成果\n\n`;
+                summary.achievements.forEach(ach => {
+                    // 支持向后兼容：如果是对象格式，提取文本；否则直接使用
+                    let achText = '';
+                    if (typeof ach === 'object' && ach !== null && !Array.isArray(ach)) {
+                        achText = ach.description || ach.title || '';
+                    } else {
+                        achText = String(ach);
+                    }
+                    if (achText) {
+                        md += `- ${achText}\n`;
+                    }
+                });
+                md += `\n`;
+            }
+            
+            if (summary.issues && summary.issues.length > 0) {
+                md += `## 遇到问题\n\n`;
+                summary.issues.forEach(issue => {
+                    md += `- ${issue}\n`;
+                });
+                md += `\n`;
+            }
+            
+            if (summary.next_steps && summary.next_steps.length > 0) {
+                md += `## 下一步计划\n\n`;
+                summary.next_steps.forEach(step => {
+                    md += `- ${step}\n`;
+                });
+                md += `\n`;
+            }
+            
+            return md;
+        }
+
+        // 倒计时状态
+        let countdownTimer = null;
+        let countdownSeconds = 0;
+
+        // 请求浏览器通知权限
+        async function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                await Notification.requestPermission();
+            }
+        }
+
+        // 显示浏览器通知
+        function showNotification(title, body, tag = 'screenshot') {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    const notification = new Notification(title, {
+                        body: body,
+                        tag: tag,
+                        icon: '/favicon.ico', // 使用网站图标
+                        requireInteraction: false
+                    });
+                    
+                    // 点击通知时聚焦到页面
+                    notification.onclick = () => {
+                        window.focus();
+                        notification.close();
+                    };
+                    
+                    // 3秒后自动关闭
+                    setTimeout(() => notification.close(), 3000);
+                } catch (e) {
+                    console.warn('通知显示失败:', e);
+                }
+            }
+        }
+
+        // 启动自动截图（带倒计时）
+        async function startAutoScreenshot() {
+            console.log('startAutoScreenshot 被调用');
+            try {
+                const intervalInput = document.getElementById('screenshot-interval');
+                const startBtn = document.getElementById('start-auto-btn');
+                const statusEl = document.getElementById('auto-screenshot-status');
+                
+                console.log('DOM元素检查:', { intervalInput, startBtn, statusEl });
+                
+                if (!intervalInput || !startBtn || !statusEl) {
+                    console.error('找不到必要的DOM元素');
+                    showMessage('页面元素加载失败，请刷新页面重试', 'error');
+                    return;
+                }
+                
+                const interval = parseInt(intervalInput.value);
+                const originalText = startBtn.textContent || '启动';
+                
+                console.log('间隔值:', interval);
+                
+                if (!interval || isNaN(interval) || interval < 1) {
+                    showMessage('截图间隔至少1秒', 'error');
+                    return;
+                }
+
+                // 如果已有倒计时，取消它
+                if (countdownTimer) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                }
+
+                // 请求通知权限（不阻塞）
+                requestNotificationPermission().catch(err => {
+                    console.warn('请求通知权限失败:', err);
+                });
+
+                // 倒计时3秒
+                countdownSeconds = 3;
+                startBtn.disabled = true;
+                startBtn.textContent = `将在 ${countdownSeconds} 秒后开始...`;
+                statusEl.innerHTML = `${icon('loading')} 准备启动 (${countdownSeconds}秒后开始)`;
+                statusEl.style.color = '#ff9800';
+                statusEl.style.fontWeight = '500';
+                
+                console.log('倒计时开始');
+
+                countdownTimer = setInterval(() => {
+                    countdownSeconds--;
+                    if (countdownSeconds > 0) {
+                        startBtn.textContent = `将在 ${countdownSeconds} 秒后开始...`;
+                        statusEl.innerHTML = `${icon('loading')} 准备启动 (${countdownSeconds}秒后开始)`;
+                    } else {
+                        clearInterval(countdownTimer);
+                        countdownTimer = null;
+                        console.log('倒计时结束，开始启动截图');
+                        // 倒计时结束，真正启动
+                        actuallyStartAutoScreenshot(interval, startBtn, originalText);
+                    }
+                }, 1000);
+            } catch (error) {
+                console.error('启动自动截图错误:', error);
+                showMessage(`启动失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 真正启动自动截图
+        async function actuallyStartAutoScreenshot(interval, startBtn, originalText) {
+            try {
+                startBtn.textContent = '启动中...';
+                
+                const response = await fetch('/api/screenshot/auto/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ interval })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '启动失败');
+                }
+
+                const result = await response.json();
+                updateAutoScreenshotUI(true, interval);
+                
+                // 格式化间隔时间显示
+                const minutes = Math.floor(interval / 60);
+                const seconds = interval % 60;
+                let intervalText = '';
+                if (minutes > 0) {
+                    intervalText = `${minutes}分钟`;
+                    if (seconds > 0) {
+                        intervalText += `${seconds}秒`;
+                    }
+                } else {
+                    intervalText = `${seconds}秒`;
+                }
+                
+                showMessage(`自动截图已启动，间隔: ${intervalText}`, 'success');
+                
+                // 显示浏览器通知
+                showNotification(
+                    '自动截图已启动',
+                    `截图间隔: ${intervalText}`,
+                    'screenshot-started'
+                );
+            } catch (error) {
+                console.error('启动自动截图错误:', error);
+                showMessage(`启动失败: ${error.message}`, 'error');
+                // 恢复按钮状态
+                if (startBtn) {
+                    startBtn.disabled = false;
+                    startBtn.textContent = originalText;
+                }
+                const statusEl = document.getElementById('auto-screenshot-status');
+                statusEl.textContent = '⚪ 未启用';
+                statusEl.style.color = '#999';
+            }
+        }
+
+        // 停止自动截图
+        async function stopAutoScreenshot() {
+            console.log('stopAutoScreenshot 被调用');
+            
+            // 如果正在倒计时，取消倒计时
+            if (countdownTimer) {
+                console.log('取消倒计时');
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+                const startBtn = document.getElementById('start-auto-btn');
+                const statusEl = document.getElementById('auto-screenshot-status');
+                if (startBtn) {
+                    startBtn.disabled = false;
+                    startBtn.textContent = '启动';
+                }
+                if (statusEl) {
+                    statusEl.textContent = '⚪ 未启用';
+                    statusEl.style.color = '#999';
+                }
+                showMessage('已取消启动', 'success');
+                return;
+            }
+
+            const stopBtn = document.getElementById('stop-auto-btn');
+            const originalText = stopBtn ? stopBtn.textContent : '';
+            
+            console.log('准备停止截图，按钮状态:', {
+                stopBtn: !!stopBtn,
+                display: stopBtn?.style.display,
+                visible: stopBtn?.offsetParent !== null
+            });
+            
+            try {
+                // 显示加载状态
+                if (stopBtn) {
+                    stopBtn.disabled = true;
+                    stopBtn.textContent = '停止中...';
+                }
+                
+                console.log('发送停止请求到后端');
+                const response = await fetch('/api/screenshot/auto/stop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                console.log('后端响应:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: '未知错误' }));
+                    console.error('停止失败，错误信息:', errorData);
+                    throw new Error(errorData.error || '停止失败');
+                }
+
+                const result = await response.json();
+                console.log('停止成功，结果:', result);
+                
+                updateAutoScreenshotUI(false, 0);
+                
+                // 显示统计信息
+                if (result.stats) {
+                    const stats = result.stats;
+                    updateScreenshotStats(stats);
+                    
+                    const totalCaptured = stats.total_captured || 0;
+                    const processing = stats.processing || 0;
+                    const processed = stats.processed || 0;
+                    const duration = stats.session_duration || 0;
+                    
+                    let message = `自动截图已停止\n\n`;
+                    message += `📸 本次会话统计：\n`;
+                    message += `• 已截图：${totalCaptured} 张\n`;
+                    message += `• 已处理：${processed} 张\n`;
+                    if (processing > 0) {
+                        message += `• 正在处理：${processing} 张\n`;
+                        message += `\n💡 提示：正在处理的截图会在完成后自动显示在工作记录中`;
+                    }
+                    if (duration > 0) {
+                        const minutes = Math.floor(duration / 60);
+                        const seconds = duration % 60;
+                        message += `\n• 运行时长：${minutes}分${seconds}秒`;
+                    }
+                    
+                    showMessage(message, 'success', 8000);  // 显示8秒，让用户有时间阅读
+                    
+                    // 显示浏览器通知
+                    showNotification(
+                        '⏹️ 自动截图已停止',
+                        `已截图 ${totalCaptured} 张，${processing > 0 ? `正在处理 ${processing} 张` : '已全部处理完成'}`,
+                        'screenshot-stopped'
+                    );
+                    
+                    // 如果有正在处理的截图，定期更新统计信息
+                    if (processing > 0) {
+                        startStatsPolling();
+                    }
+                } else {
+                    showMessage('自动截图已停止', 'success');
+                    showNotification(
+                        '⏹️ 自动截图已停止',
+                        '截图功能已关闭',
+                        'screenshot-stopped'
+                    );
+                }
+            } catch (error) {
+                console.error('停止自动截图错误:', error);
+                showMessage(`停止失败: ${error.message}`, 'error');
+                
+                // 即使失败也尝试更新UI
+                try {
+                    updateAutoScreenshotUI(false, 0);
+                } catch (uiError) {
+                    console.error('更新UI失败:', uiError);
+                }
+            } finally {
+                // 恢复按钮状态（如果停止失败）
+                const currentStopBtn = document.getElementById('stop-auto-btn');
+                if (currentStopBtn && currentStopBtn.style.display !== 'none') {
+                    currentStopBtn.disabled = false;
+                    currentStopBtn.textContent = originalText || '停止';
+                }
+            }
+        }
+
+        // 更新自动截图UI状态
+        function updateAutoScreenshotUI(running, interval) {
+            const statusEl = document.getElementById('auto-screenshot-status');
+            const startBtn = document.getElementById('start-auto-btn');
+            const stopBtn = document.getElementById('stop-auto-btn');
+            const intervalInput = document.getElementById('screenshot-interval');
+
+            if (running) {
+                // 格式化间隔时间显示
+                const minutes = Math.floor(interval / 60);
+                const seconds = interval % 60;
+                let intervalText = '';
+                if (minutes > 0) {
+                    intervalText = `${minutes}分钟`;
+                    if (seconds > 0) {
+                        intervalText += `${seconds}秒`;
+                    }
+                } else {
+                    intervalText = `${seconds}秒`;
+                }
+                
+                statusEl.innerHTML = `<span class="icon icon-running"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg></span> 运行中 (间隔: ${intervalText})`;
+                statusEl.style.color = '#28a745';
+                statusEl.style.fontWeight = '500';
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                stopBtn.disabled = false;
+                stopBtn.textContent = '停止';
+                intervalInput.disabled = true;
+                intervalInput.style.backgroundColor = '#f0f0f0';
+            } else {
+                statusEl.textContent = '⚪ 未启用';
+                statusEl.style.color = '#999';
+                statusEl.style.fontWeight = 'normal';
+                startBtn.style.display = 'inline-block';
+                startBtn.disabled = false;
+                startBtn.textContent = '启动';
+                stopBtn.style.display = 'none';
+                intervalInput.disabled = false;
+                intervalInput.style.backgroundColor = 'white';
+                // 未运行时，如果有正在处理的截图，仍然显示统计信息
+                const statsEl = document.getElementById('screenshot-stats');
+                const processingEl = document.getElementById('stats-processing');
+                if (statsEl && processingEl && parseInt(processingEl.textContent) > 0) {
+                    statsEl.style.display = 'block';
+                } else if (statsEl) {
+                    // 如果没有正在处理的，隐藏统计信息
+                    statsEl.style.display = 'none';
+                }
+            }
+        }
+
+        // 统计信息轮询（用于更新正在处理的截图数量）
+        let statsPollingInterval = null;
+        
+        function startStatsPolling() {
+            // 如果已经有轮询在运行，先清除
+            if (statsPollingInterval) {
+                clearInterval(statsPollingInterval);
+            }
+            
+            // 每3秒更新一次统计信息
+            statsPollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/screenshot/auto/status');
+                    if (response.ok) {
+                        const status = await response.json();
+                        if (status.stats) {
+                            updateScreenshotStats(status.stats);
+                            
+                            // 如果没有正在处理的截图了，停止轮询
+                            if (status.stats.processing === 0) {
+                                clearInterval(statsPollingInterval);
+                                statsPollingInterval = null;
+                                
+                                // 隐藏统计信息（如果没有正在处理的）
+                                const statsEl = document.getElementById('screenshot-stats');
+                                if (statsEl) {
+                                    statsEl.style.display = 'none';
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('更新统计信息错误:', error);
+                }
+            }, 3000);  // 每3秒更新一次
+        }
+        
+        function stopStatsPolling() {
+            if (statsPollingInterval) {
+                clearInterval(statsPollingInterval);
+                statsPollingInterval = null;
+            }
+        }
+        
+        // 更新统计信息显示
+        function updateScreenshotStats(stats) {
+            // 更新统计信息显示
+            if (!stats) return;
+            
+            const totalEl = document.getElementById('stats-total');
+            const processedEl = document.getElementById('stats-processed');
+            const processingEl = document.getElementById('stats-processing');
+            const queueSizeEl = document.getElementById('stats-queue-size');
+            const queueContainerEl = document.getElementById('stats-queue-container');
+            const currentProcessingEl = document.getElementById('stats-current-processing');
+            const currentFileEl = document.getElementById('stats-current-file');
+            
+            if (totalEl) totalEl.textContent = stats.total_captured || 0;
+            if (processedEl) processedEl.textContent = stats.processed || 0;
+            
+            const processing = stats.processing || 0;
+            const queueSize = stats.queue_size || 0;
+            const currentProcessing = stats.current_processing;
+            
+            // 显示/隐藏处理状态容器
+            const processingContainer = document.getElementById('stats-processing-container');
+            if (processingContainer) {
+                if (processing > 0 || queueSize > 0) {
+                    processingContainer.style.display = 'block';
+                } else {
+                    processingContainer.style.display = 'none';
+                }
+            }
+            
+            if (processingEl) processingEl.textContent = processing;
+            
+            // 显示队列信息
+            if (queueSizeEl) queueSizeEl.textContent = queueSize;
+            if (queueContainerEl) {
+                if (queueSize > 0) {
+                    queueContainerEl.style.display = 'inline';
+                } else {
+                    queueContainerEl.style.display = 'none';
+                }
+            }
+            
+            // 显示当前处理的文件
+            if (currentFileEl && currentProcessing) {
+                currentFileEl.textContent = currentProcessing;
+                if (currentProcessingEl) {
+                    currentProcessingEl.style.display = 'block';
+                }
+            } else if (currentProcessingEl) {
+                currentProcessingEl.style.display = 'none';
+            }
+        }
+        
+        // 原有的 updateScreenshotStats 函数（如果存在）
+        function updateScreenshotStats_old(stats) {
+            const totalEl = document.getElementById('stats-total');
+            const processedEl = document.getElementById('stats-processed');
+            const processingEl = document.getElementById('stats-processing');
+            const processingContainer = document.getElementById('stats-processing-container');
+            const statsEl = document.getElementById('screenshot-stats');
+            
+            if (totalEl) totalEl.textContent = stats.total_captured || 0;
+            if (processedEl) processedEl.textContent = stats.processed || 0;
+            if (processingEl) processingEl.textContent = stats.processing || 0;
+            
+            // 如果有正在处理的截图，显示处理中提示
+            if (processingContainer && stats.processing > 0) {
+                processingContainer.style.display = 'block';
+            } else if (processingContainer) {
+                processingContainer.style.display = 'none';
+            }
+            
+            // 如果有统计信息，显示统计区域
+            if (statsEl && (stats.total_captured > 0 || stats.processing > 0)) {
+                statsEl.style.display = 'block';
+            }
+        }
+        
+        // 获取自动截图状态
+        async function loadAutoScreenshotStatus() {
+            try {
+                const response = await fetch('/api/screenshot/auto/status');
+                if (response.ok) {
+                    const status = await response.json();
+                    updateAutoScreenshotUI(status.running, status.interval);
+                    
+                    // 如果有统计信息，更新显示
+                    if (status.stats) {
+                        updateScreenshotStats(status.stats);
+                        
+                        // 如果有正在处理的截图，启动轮询
+                        if (status.stats.processing > 0) {
+                            startStatsPolling();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('获取自动截图状态错误:', error);
+            }
+        }
+
+        // 快捷键支持：Ctrl+Shift+S 停止截图
+        // 使用 window 级别的事件监听，确保全局可用
+        window.addEventListener('keydown', (e) => {
+            // Ctrl+Shift+S 或 Cmd+Shift+S (Mac)
+            const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+            const isShift = e.shiftKey;
+            // 检查按键（不区分大小写）
+            const isS = e.key === 'S' || e.key === 's' || e.keyCode === 83;
+            
+            if (isCtrlOrCmd && isShift && isS) {
+                // 阻止默认行为（避免浏览器快捷键冲突）
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('快捷键 Ctrl+Shift+S 被按下');
+                
+                // 检查是否正在运行（多种方式检查）
+                const statusEl = document.getElementById('auto-screenshot-status');
+                const stopBtn = document.getElementById('stop-auto-btn');
+                // 检查停止按钮是否可见
+                const isRunning = stopBtn && 
+                    stopBtn.style.display !== 'none' && 
+                    stopBtn.offsetParent !== null;
+                const isCountdown = countdownTimer !== null;
+                const statusText = statusEl?.textContent || '';
+                const hasRunningText = statusText.includes('运行中');
+                
+                console.log('状态检查:', { 
+                    statusText, 
+                    isRunning, 
+                    isCountdown,
+                    hasRunningText,
+                    stopBtnDisplay: stopBtn?.style.display,
+                    stopBtnVisible: stopBtn?.offsetParent !== null
+                });
+                
+                // 如果正在运行、倒计时中、或者状态文本包含"运行中"，都执行停止
+                if (isRunning || isCountdown || hasRunningText) {
+                    console.log('执行停止操作');
+                    stopAutoScreenshot();
+                    // 不在这里显示消息，让 stopAutoScreenshot 自己显示
+                } else {
+                    console.log('截图未在运行，忽略快捷键');
+                }
+            }
+        }, true); // 使用捕获阶段，确保能捕获到事件，即使输入框聚焦也能工作
+
+        // 页面加载时自动加载记录
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 初始化工作记录日历（默认选择今天）
+            const today = new Date().toISOString().split('T')[0];
+            recordCalendarState.selectedDate = today;
+            updateRecordCalendarDisplay();
+            
+            // 初始化两个日历
+            await initRecordCalendar();
+            initCalendar();
+            
+            // 加载今天的记录
+            loadRecords();
+            
+            loadAutoScreenshotStatus();
+            // 请求通知权限
+            requestNotificationPermission();
+            // 启动定时轮询检查新记录
+            startRecordsPolling();
+        });
+        
+        // 页面卸载时停止轮询
+        window.addEventListener('beforeunload', () => {
+            stopRecordsPolling();
+        });
+        
+        // 日期选择器变化时重置轮询（已迁移到日历选择器，此代码已废弃）
+
+        // 页面可见性变化时，如果截图正在运行，显示通知提醒
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // 页面隐藏时，检查截图状态
+                const statusEl = document.getElementById('auto-screenshot-status');
+                if (statusEl && statusEl.textContent.includes('运行中')) {
+                    // 获取间隔时间
+                    const interval = parseInt(document.getElementById('screenshot-interval').value) || 5;
+                    const minutes = Math.floor(interval / 60);
+                    const seconds = interval % 60;
+                    let intervalText = '';
+                    if (minutes > 0) {
+                        intervalText = `${minutes}分钟`;
+                        if (seconds > 0) {
+                            intervalText += `${seconds}秒`;
+                        }
+                    } else {
+                        intervalText = `${seconds}秒`;
+                    }
+                    
+                    showNotification(
+                        '自动截图运行中',
+                        `截图间隔: ${intervalText}`,
+                        'screenshot-running'
+                    );
+                }
+            }
+        });
+    </script>
+</body>
+</html>
