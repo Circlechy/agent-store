@@ -9,7 +9,7 @@
 **闺点子正是为解决这些痛点而生——它如同最懂你的闺蜜，能够基于对你的深度了解，洞察你内心的真实需求，在关键时刻给出最适合你的建议。**
 
 <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0;">
-  <img src="Competition Code/assets/merge.png" alt="Merge" 
+  <img src="Competition Code/assets/new.png" alt="new" 
        style="max-width: 1000px; width: 80%; height: auto; 
               border-radius: 12px;" />
 </div>
