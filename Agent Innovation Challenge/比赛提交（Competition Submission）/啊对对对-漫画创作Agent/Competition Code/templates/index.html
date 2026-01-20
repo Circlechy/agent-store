@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>漫画创作助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #f5f7fa;
+            font-family: "Inter", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chat-container {
+            max-width: 800px;
+            width: 100%;
+            height: calc(100vh - 40px);
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #ffffff;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            flex-shrink: 0;
+        }
+        .chat-title {
+            font-size: 16px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 15px;
+            line-height: 1.7;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background-color: #e0e0e0;
+            border-radius: 3px;
+        }
+        .chat-input {
+            display: flex;
+            padding: 16px 20px;
+            border-top: 1px solid #f0f0f0;
+            background-color: #ffffff;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        #userInput {
+            flex: 1;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #333;
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 15px;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        #userInput:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+        }
+        #sendBtn {
+            background-color: #4299e1;
+            border: none;
+            color: #ffffff;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+        #sendBtn:hover {
+            background-color: #3182ce;
+        }
+        .message-bubble {
+            margin-bottom: 16px;
+            max-width: 90%;
+            padding: 12px 16px;
+            border-radius: 8px;
+        }
+        .system-message {
+            align-self: flex-start;
+            background-color: #ffffff;
+            color: #000000;
+            border: 1px solid #f0f0f0;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #4299e1;
+            color: #ffffff;
+        }
+        .error-message {
+            align-self: flex-start;
+            background-color: #ffffff;
+            color: #e53e3e;
+            border: 1px solid #fee2e2;
+        }
+        .chat-image {
+            max-width: 100%;
+            max-height: 300px;
+            min-height: 50px;
+            margin: 8px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            object-fit: contain;
+            cursor: pointer;
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s ease;
+        }
+        .chat-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .modal-image {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        .image-tip {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .loading-bubble {
+            align-self: flex-start;
+            background-color: #f0fff4;
+            color: #2d7d46;
+            border: 1px solid #b3f0c8;
+            margin-bottom: 16px;
+            max-width: 90%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+        }
+        @keyframes loading-dots {
+            0%, 100% { content: "."; }
+            33% { content: ".."; }
+            66% { content: "..."; }
+        }
+        .loading-text::after {
+            content: "";
+            animation: loading-dots 1.5s infinite ease-in-out;
+            display: inline-block;
+            width: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">漫画创作助手</div>
+        </div>
+        <div class="chat-messages" id="terminalOutput">
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="请输入内容..." autocomplete="off">
+            <button id="sendBtn">发送</button>
+        </div>
+    </div>
+
+    <div class="image-modal" id="imageModal">
+        <img src="" alt="大图预览" class="modal-image" id="modalImage">
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const terminalOutput = document.getElementById('terminalOutput');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+
+
+        let loadingBubble = null;
+        
+        let systemMsgCache = []; 
+        let cacheTimer = null;    
+        const CACHE_DELAY = 10;  
+
+        // 自动滚动到底部
+        function scrollToBottom() {
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        // 核心：提取纯内容（去掉[]前缀）
+        function extractPureContent(content, prefix) {
+            return content.replace(prefix, '').trim();
+        }
+
+        // 图片放大功能
+        function openImageModal(src) {
+            modalImage.src = src;
+            imageModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭图片放大遮罩层
+        function closeImageModal() {
+            imageModal.style.display = 'none';
+            modalImage.src = '';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 开启加载状态
+        function startLoading() {
+            if (loadingBubble) return;
+            loadingBubble = document.createElement('div');
+            loadingBubble.className = 'loading-bubble';
+            const loadingText = document.createElement('div');
+            loadingText.className = 'loading-text';
+            loadingText.textContent = '正在处理';
+            loadingBubble.appendChild(loadingText);
+            terminalOutput.appendChild(loadingBubble);
+            scrollToBottom();
+        }
+
+        // 关闭加载状态
+        function stopLoading() {
+            if (loadingBubble && loadingBubble.parentElement) {
+                loadingBubble.parentElement.removeChild(loadingBubble);
+            }
+            loadingBubble = null;
+        }
+
+        //推送缓存的系统消息
+        function flushSystemMsgCache() {
+            if (systemMsgCache.length === 0) return;
+            // 合并缓存内容，用换行连接
+            const mergedContent = systemMsgCache.join('\n');
+            // 创建单个气泡显示合并内容
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble system-message';
+            // 替换换行符为<br>，实现气泡内换行
+            const formattedContent = mergedContent.replace(/\n/g, '<br>');
+            bubbleDiv.innerHTML = formattedContent;
+            // 添加到页面
+            terminalOutput.appendChild(bubbleDiv);
+            scrollToBottom();
+            // 清空缓存
+            systemMsgCache = [];
+            if (cacheTimer) {
+                clearTimeout(cacheTimer);
+                cacheTimer = null;
+            }
+        }
+
+        //添加系统消息到缓存 
+        function addToSystemCache(content) {
+            systemMsgCache.push(content);
+            // 重置定时器，延迟推送
+            if (cacheTimer) clearTimeout(cacheTimer);
+            cacheTimer = setTimeout(flushSystemMsgCache, CACHE_DELAY);
+        }
+
+        //添加输出内容到终端（集成缓存合并逻辑）
+        function addOutputLine(content) {
+           
+            if (content === '[OUTPUT] [LOADING]' || content === '[LOADING]') {
+                flushSystemMsgCache(); // 有加载状态时，立即推送缓存
+                startLoading();
+                return;
+            }
+            if (content === '[OUTPUT] [LOADING_END]' || content === '[LOADING_END]') {
+                stopLoading();
+                return;
+            }
+
+            let displayContent = content;
+
+           
+            if (content.startsWith('[YOU]') || content.startsWith('[ERROR]')) {
+                flushSystemMsgCache(); // 非系统消息，立即推送缓存
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.className = 'message-bubble';
+                if (content.startsWith('[YOU]')) {
+                    bubbleDiv.classList.add('user-message');
+                    displayContent = extractPureContent(content, '[YOU]');
+                    bubbleDiv.textContent = displayContent;
+                } else if (content.startsWith('[ERROR]')) {
+                    bubbleDiv.classList.add('error-message');
+                    displayContent = extractPureContent(content, '[ERROR]');
+                    bubbleDiv.textContent = displayContent;
+                }
+                terminalOutput.appendChild(bubbleDiv);
+                scrollToBottom();
+                return;
+            }
+
+           
+            if (content.startsWith('[OUTPUT]')) {
+                displayContent = extractPureContent(content, '[OUTPUT]');
+                // 图片消息：不缓存，直接生成气泡，清空缓存
+                if (displayContent.startsWith('[IMAGE]')) {
+                    flushSystemMsgCache();
+                    const bubbleDiv = document.createElement('div');
+                    bubbleDiv.className = 'message-bubble system-message';
+                    const imagePack = displayContent.replace('[IMAGE]', '').trim();
+                    const imageParts = imagePack.split('|');
+                    const friendlyTip = imageParts[0] || "图片生成成功";
+                    const realImagePath = imageParts[1] || "";
+
+                    const tipDiv = document.createElement('div');
+                    tipDiv.className = 'image-tip';
+                    tipDiv.textContent = friendlyTip;
+                    bubbleDiv.appendChild(tipDiv);
+
+                    if (realImagePath && realImagePath.startsWith('./test/')) {
+                        const imageUrl = realImagePath.replace('./test/', '/test/');
+                        const img = document.createElement('img');
+                        img.className = 'chat-image';
+                        img.src = imageUrl;
+                        img.alt = friendlyTip;
+                        img.onerror = function() {
+                            tipDiv.textContent = `${friendlyTip}（图片加载失败）`;
+                            bubbleDiv.classList.remove('system-message');
+                            bubbleDiv.classList.add('error-message');
+                            img.style.cursor = 'default';
+                            img.removeEventListener('click', () => openImageModal(imageUrl));
+                        };
+                        img.addEventListener('click', () => openImageModal(imageUrl));
+                        bubbleDiv.appendChild(img);
+                    } else {
+                        bubbleDiv.textContent = friendlyTip;
+                    }
+                    terminalOutput.appendChild(bubbleDiv);
+                    scrollToBottom();
+                } else {
+                    
+                    addToSystemCache(displayContent);
+                }
+                return;
+            }
+
+            
+            addToSystemCache(displayContent);
+        }
+
+        // 发送用户输入到后端
+        function sendUserInput() {
+            const inputValue = userInput.value.trim();
+            if (!inputValue) return;
+            fetch('/send_input', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input: inputValue })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) userInput.value = '';
+            })
+            .catch(error => {
+                addOutputLine(`[ERROR] 发送输入失败：${error.message}`);
+            });
+        }
+
+        // 绑定按钮和回车事件
+        sendBtn.addEventListener('click', sendUserInput);
+        userInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendUserInput();
+        });
+
+        // 绑定遮罩层和ESC关闭事件
+        imageModal.addEventListener('click', e => {
+            if (e.target === imageModal) closeImageModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && imageModal.style.display === 'flex') {
+                closeImageModal();
+            }
+        });
+
+        // 建立SSE连接（清理重复回调，集成调试日志）
+        const eventSource = new EventSource('/stream');
+        eventSource.onmessage = function(e) {
+            console.log("前端接收到底层数据：", e.data);
+            if (e.data) addOutputLine(e.data);
+        };
+
+        // 处理SSE连接错误
+        eventSource.onerror = function() {
+            addOutputLine('[ERROR] 终端连接断开，正在尝试重连...');
+            eventSource.close();
+            setTimeout(() => window.location.reload(), 3000);
+        };
+    </script>
+</body>
+</html>
