@@ -1,0 +1,28 @@
+# NovaStar 服务化配置文件
+# 此文件包含服务相关的配置，如功能开关、默认值、超时设置等
+
+# Agent 通用配置
+agent:
+  # LLM 模型名称（如 "gpt-4", "gpt-3.5-turbo" 等）
+  model: null
+  # 默认年龄
+  default_age: 6
+  # 是否启用意图识别
+  intent_recognition_enabled: true
+
+# Commander 配置
+commander: {}
+
+# Artist 配置
+artist:
+  # 是否启用内容生成
+  enable_content_generation: true
+
+# Mentor 配置
+mentor:
+  # 是否启用苏格拉底式教学
+  enable_socratic_teaching: true
+  # 是否启用汉字教学
+  enable_character_teaching: true
+  # 最大后续问题数量
+  max_follow_up_questions: 5
