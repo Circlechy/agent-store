@@ -1,0 +1,13 @@
+.idea/
+_version/
+data/
+other/
+build/
+dist/
+*.egg-info/
+
+__pycache__/
+**/__pycache__/
+
+**/service/process/logs/*
+service/process/logs/request.log
