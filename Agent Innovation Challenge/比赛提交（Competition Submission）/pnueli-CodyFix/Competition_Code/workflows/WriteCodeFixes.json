@@ -1,0 +1,648 @@
+{
+  "nodes": [
+    {
+      "id": "end_EpfpK",
+      "type": "2",
+      "meta": {
+        "position": {
+          "x": 4348,
+          "y": 174.25
+        }
+      },
+      "data": {
+        "title": "结束",
+        "inputs": {
+          "inputParameters": {
+            "result": {
+              "type": "ref",
+              "content": [
+                "loop_CSHMa",
+                "result"
+              ]
+            }
+          },
+          "streaming": false
+        },
+        "streaming": false
+      }
+    },
+    {
+      "id": "start_EpfpK",
+      "type": "1",
+      "meta": {
+        "position": {
+          "x": 180,
+          "y": 174.25
+        }
+      },
+      "data": {
+        "title": "开始",
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "RecommendationsArray": {
+              "type": "array",
+              "extra": {
+                "index": 1
+              },
+              "items": {
+                "type": "string"
+              },
+              "description": "The input is the output from previous workflow called FailedSummary"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "id": "loop_CSHMa",
+      "type": "5",
+      "meta": {
+        "position": {
+          "x": 540,
+          "y": 0
+        }
+      },
+      "data": {
+        "title": "循环",
+        "inputs": {
+          "loopParam": {
+            "type": "arrayLoop",
+            "loopNum": {
+              "type": "constant",
+              "content": 5,
+              "schema": {
+                "type": "integer"
+              }
+            },
+            "loopArray": {
+              "recommendationsArray": {
+                "type": "ref",
+                "content": [
+                  "start_EpfpK",
+                  "RecommendationsArray"
+                ],
+                "extra": {
+                  "index": 0
+                }
+              }
+            },
+            "intermediateVar": {}
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "ref",
+              "content": [
+                "code_JTt_K",
+                "result"
+              ]
+            }
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "block_start_5hcTm",
+          "type": "15",
+          "meta": {
+            "position": {
+              "x": 32,
+              "y": 46
+            }
+          },
+          "data": {
+            "title": "开始"
+          }
+        },
+        {
+          "id": "block_end_KHnmD",
+          "type": "16",
+          "meta": {
+            "position": {
+              "x": 3416,
+              "y": 46
+            }
+          },
+          "data": {
+            "title": "结束"
+          }
+        },
+        {
+          "id": "code_JTt_K",
+          "type": "10",
+          "meta": {
+            "position": {
+              "x": 3104,
+              "y": 74.5
+            }
+          },
+          "data": {
+            "title": "代码",
+            "inputs": {
+              "inputParameters": {
+                "url": {
+                  "type": "constant",
+                  "content": "http://10.10.10.174:1080/write-file",
+                  "schema": {
+                    "type": "string"
+                  },
+                  "extra": {
+                    "index": 0
+                  }
+                },
+                "body": {
+                  "type": "ref",
+                  "content": [
+                    "code_C9Dee",
+                    "FileJson"
+                  ],
+                  "extra": {
+                    "index": 1
+                  }
+                }
+              },
+              "language": "python",
+              "code": "import requests\nimport json\n\ndef main(args: Args):\n  url = args.params.get('url')\n  body = args.params.get('body')\n  headers = args.params.get('headers', {})\n  headers.setdefault(\"Content-Type\", \"application/json\")\n  try:    # Send POST request\n    response = requests.post(url, json=body, headers=headers)\n    # Check if the response was successful\n        \n    return {\n      \"result\": {\n        \"resp_code\": response.status_code,\n        \"content\": response.json() if response.headers.get(\"Content-Type\", \"\").startswith(\"application/json\") else response.text\n      }\n    }\n    \n  except requests.exceptions.RequestException as e:\n    return {\n      \"result\": {\n        \"resp_code\": 500,\n        \"content\": f\"An error occurred: {e}\"\n      }  \n    }\n\n\n"
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "object",
+                  "description": "代码执行结果"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            },
+            "exceptionConfig": {
+              "retryTimes": 3,
+              "timeoutSeconds": 30,
+              "processType": "break",
+              "executeStep": {
+                "defaultStep": "0",
+                "errorStep": "1"
+              }
+            }
+          }
+        },
+        {
+          "id": "plugin_3QfSI",
+          "type": "19",
+          "meta": {
+            "position": {
+              "x": 804,
+              "y": 11
+            }
+          },
+          "data": {
+            "title": "GetFileContent",
+            "inputs": {
+              "inputParameters": {
+                "filename": {
+                  "type": "ref",
+                  "content": [
+                    "code_Mp5oX",
+                    "Filename"
+                  ],
+                  "extra": {
+                    "index": 0
+                  }
+                }
+              },
+              "pluginParam": {
+                "toolID": "bb1ffb91-6c4c-428e-bcf2-d7b6cc7a7b26",
+                "toolName": "GetFileContent",
+                "pluginID": "cef25cf3-5aef-4d1b-a014-ed93eccd58ae",
+                "pluginName": "FileContentRetriever",
+                "pluginVersion": "draft"
+              }
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "error_code": {
+                  "type": "integer",
+                  "extra": {
+                    "index": 1
+                  }
+                },
+                "error_message": {
+                  "type": "string",
+                  "extra": {
+                    "index": 2
+                  }
+                },
+                "data": {
+                  "type": "object",
+                  "extra": {
+                    "index": 3
+                  },
+                  "properties": {}
+                }
+              },
+              "required": [
+                "error_code",
+                "error_message",
+                "data"
+              ]
+            }
+          }
+        },
+        {
+          "id": "code_C9Dee",
+          "type": "10",
+          "meta": {
+            "position": {
+              "x": 2644,
+              "y": 74.5
+            }
+          },
+          "data": {
+            "title": "prepare content body",
+            "inputs": {
+              "inputParameters": {
+                "Filename": {
+                  "type": "ref",
+                  "content": [
+                    "code_Mp5oX",
+                    "Filename"
+                  ],
+                  "extra": {
+                    "index": 0
+                  }
+                },
+                "NewContent": {
+                  "type": "ref",
+                  "content": [
+                    "code_aE2lO",
+                    "NewContent"
+                  ],
+                  "extra": {
+                    "index": 1
+                  }
+                }
+              },
+              "language": "python",
+              "code": "import json\n\ndef main(args):\n    params = args.params if hasattr(args, \"params\") else {}\n    \n    filename = params.get(\"Filename\", \"\") or \"\"\n    content = params.get(\"NewContent\", \"\") or \"\"\n    \n    body = {\n        \"filename\": filename,\n        \"content\": content\n    }\n    \n    return {\n        #\"FileJson\": json.dumps(body)\n       \"FileJson\": body\n    }\n"
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "FileJson": {
+                  "type": "string",
+                  "description": "代码执行结果"
+                }
+              },
+              "required": [
+                "FileJson"
+              ]
+            },
+            "exceptionConfig": {
+              "retryTimes": 3,
+              "timeoutSeconds": 30,
+              "processType": "break",
+              "executeStep": {
+                "defaultStep": "0",
+                "errorStep": "1"
+              }
+            }
+          }
+        },
+        {
+          "id": "llm_tEhTN",
+          "type": "3",
+          "meta": {
+            "position": {
+              "x": 1264,
+              "y": 0
+            }
+          },
+          "data": {
+            "title": "Apply code fix",
+            "inputs": {
+              "llmParam": {
+                "systemPrompt": {
+                  "type": "template",
+                  "content": "You are a code editor. Your ONLY job is to apply the diff and return the modified file.\n\nHas_code_fix: {{Has_code_fix}}\nFilename: {{Filename}}\n\nDiff:\n{{Diff}}\n\nOriginal file:\n{{Filecontent}}\n\nTASK: Apply the diff to the original file.\n\nThe diff shows:\n- Lines starting with \"-\" should be REMOVED from the original\n- Lines starting with \"+\" should be ADDED in their place\n\nFor this specific diff, you need to find:\nnos.makedirs\nAnd replace it with:\nos.makedirs\n\nCRITICAL RULES:\n1. Output ONLY the complete modified file content\n2. NO explanations\n3. NO markdown\n4. NO code blocks\n5. NO commentary\n6. Start your response with the first line of the file\n7. You need to write the whole code, from start to end, including the code fix. It will be the original content with the fix.\n8. End your response with the last line of the file\n\nBEGIN OUTPUT:"
+                },
+                "prompt": {
+                  "type": "template",
+                  "content": "{{input}}"
+                },
+                "model": {
+                  "id": "1",
+                  "name": "deepseek",
+                  "type": "deepseek-chat"
+                }
+              },
+              "inputParameters": {
+                "Filecontent": {
+                  "type": "ref",
+                  "content": [
+                    "plugin_3QfSI",
+                    "data"
+                  ],
+                  "extra": {
+                    "index": 0
+                  }
+                },
+                "Has_code_fix": {
+                  "type": "ref",
+                  "content": [
+                    "code_Mp5oX",
+                    "Has_code_fix"
+                  ],
+                  "extra": {
+                    "index": 1
+                  }
+                },
+                "Diff": {
+                  "type": "ref",
+                  "content": [
+                    "code_Mp5oX",
+                    "Diff"
+                  ],
+                  "extra": {
+                    "index": 2
+                  }
+                },
+                "Filename": {
+                  "type": "ref",
+                  "content": [
+                    "code_Mp5oX",
+                    "Filename"
+                  ],
+                  "extra": {
+                    "index": 3
+                  }
+                }
+              }
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string",
+                  "extra": {
+                    "index": 1
+                  }
+                }
+              },
+              "required": [
+                "output"
+              ]
+            }
+          }
+        },
+        {
+          "id": "code_aE2lO",
+          "type": "10",
+          "meta": {
+            "position": {
+              "x": 1724,
+              "y": 16
+            }
+          },
+          "data": {
+            "title": "check output",
+            "inputs": {
+              "inputParameters": {
+                "LLMOutput": {
+                  "type": "ref",
+                  "content": [
+                    "llm_tEhTN",
+                    "output"
+                  ],
+                  "extra": {
+                    "index": 0
+                  }
+                },
+                "Filename": {
+                  "type": "ref",
+                  "content": [
+                    "code_Mp5oX",
+                    "Filename"
+                  ],
+                  "extra": {
+                    "index": 1
+                  }
+                },
+                "FullPath": {
+                  "type": "ref",
+                  "content": [
+                    "code_Mp5oX"
+                  ],
+                  "extra": {
+                    "index": 2
+                  }
+                }
+              },
+              "language": "python",
+              "code": "def main(args):\n    params = args.params if hasattr(args, \"params\") else {}\n    \n    # Get LLM output\n    llm_output = params.get(\"LLMOutput\", \"\") or \"\"\n    \n    # Get filename \n    filename = params.get(\"Filename\", \"\") or \"\"\n    \n    # Check if we should write\n    output_stripped = llm_output.strip()\n    write_file = (\n        output_stripped != \"NO_CHANGES_NEEDED\" \n        and output_stripped != \"\" \n        and len(output_stripped) > 100\n    )\n    \n    return {\n        \"writeFile\": bool(write_file),\n        \"NewContent\": llm_output if write_file else \"\",\n        \"Filename\": filename\n    }"
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "writeFile": {
+                  "type": "boolean",
+                  "description": "代码执行结果"
+                },
+                "NewContent": {
+                  "type": "string",
+                  "extra": {
+                    "index": 2
+                  }
+                },
+                "Filename": {
+                  "type": "string",
+                  "extra": {
+                    "index": 3
+                  }
+                }
+              },
+              "required": [
+                "writeFile"
+              ]
+            },
+            "exceptionConfig": {
+              "retryTimes": 3,
+              "timeoutSeconds": 30,
+              "processType": "break",
+              "executeStep": {
+                "defaultStep": "0",
+                "errorStep": "1"
+              }
+            }
+          }
+        },
+        {
+          "id": "condition_a419w",
+          "type": "4",
+          "meta": {
+            "position": {
+              "x": 2184,
+              "y": 11
+            }
+          },
+          "data": {
+            "title": "选择器",
+            "branches": [
+              {
+                "conditions": [
+                  {
+                    "left": {
+                      "type": "ref",
+                      "content": [
+                        "code_aE2lO",
+                        "writeFile"
+                      ]
+                    },
+                    "operator": "eq",
+                    "right": {
+                      "type": "constant",
+                      "content": true,
+                      "schema": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                ],
+                "logic": 2,
+                "branchId": "branch_Aaruj"
+              },
+              {
+                "conditions": [],
+                "logic": 2,
+                "branchId": "branch_JCQEC"
+              }
+            ]
+          }
+        },
+        {
+          "id": "code_Mp5oX",
+          "type": "10",
+          "meta": {
+            "position": {
+              "x": 344,
+              "y": 16
+            }
+          },
+          "data": {
+            "title": "Check for code fix",
+            "inputs": {
+              "inputParameters": {
+                "input": {
+                  "type": "ref",
+                  "content": [
+                    "loop_CSHMa_locals",
+                    "recommendationsArray"
+                  ],
+                  "extra": {
+                    "index": 0
+                  }
+                }
+              },
+              "language": "python",
+              "code": "import re\n\ndef main(args):\n    try:\n        params = args.params\n        text = params.get(\"input\", \"\") if isinstance(params, dict) else \"\"\n        \n        if not text:\n            return {\n                \"Has_code_fix\": False,\n                \"Diff\": \"\",\n                \"Filename\": \"\"\n            }\n        \n        # Normalize escaped newlines to actual newlines\n        text = text.replace('\\\\n', '\\n')\n        \n        diff_start = text.find(\"```diff\")\n        if diff_start == -1:\n            return {\n                \"Has_code_fix\": False,\n                \"Diff\": \"\",\n                \"Filename\": \"\"\n            }\n        \n        content_start = diff_start + 7\n        diff_end = text.find(\"```\", content_start)\n        \n        if diff_end == -1:\n            return {\n                \"Has_code_fix\": False,\n                \"Diff\": \"\",\n                \"Filename\": \"\"\n            }\n        \n        diff_text = text[content_start:diff_end].strip()\n        \n        # Common file extensions\n        ext = r'\\.(py|js|ts|jsx|tsx|java|cpp|c|h|hpp|go|rs|rb|php|swift|kt|scala|sh|bash|yml|yaml|json|xml|html|css|sql|md|txt)'\n        \n        # Extract filename from diff header or surrounding text\n        filename = \"\"\n        \n        # Try diff header formats (within the diff itself)\n        diff_patterns = [\n            r'^[-+]{3} [ab]/(.+?' + ext + r')',  # --- a/file.py or +++ b/file.py\n            r'^diff --git a/(.+?' + ext + r')',   # diff --git a/file.py b/file.py\n            r'^Index: (.+?' + ext + r')',          # SVN style\n        ]\n        \n        for pattern in diff_patterns:\n            match = re.search(pattern, diff_text, re.MULTILINE)\n            if match:\n                filename = match.group(1)\n                break\n        \n        # Fallback: look in the full text for various filename patterns\n        if not filename:\n            text_patterns = [\n                r'\\*\\*File:\\s*(.+?' + ext + r')\\*\\*',  # **File: filename.py**\n                r'File:\\s*(.+?' + ext + r')',          # File: filename.py\n                r'in `([^`]+' + ext + r')`',           # in `filename.py`\n                r'file `([^`]+' + ext + r')`',         # file `filename.py`\n            ]\n            \n            for pattern in text_patterns:\n                match = re.search(pattern, text)\n                if match:\n                    filename = match.group(1)\n                    break\n        \n        return {\n            \"Has_code_fix\": True,\n            \"Diff\": diff_text,\n            \"Filename\": filename\n        }\n    \n    except Exception as e:\n        return {\n            \"Has_code_fix\": False,\n            \"Diff\": \"\",\n            \"Filename\": \"\"\n        }"
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "Has_code_fix": {
+                  "type": "boolean",
+                  "description": "代码执行结果"
+                },
+                "Diff": {
+                  "type": "string",
+                  "extra": {
+                    "index": 2
+                  }
+                },
+                "Filename": {
+                  "type": "string",
+                  "extra": {
+                    "index": 3
+                  }
+                }
+              },
+              "required": [
+                "Has_code_fix",
+                "Diff",
+                "Filename"
+              ]
+            },
+            "exceptionConfig": {
+              "retryTimes": 3,
+              "timeoutSeconds": 30,
+              "processType": "break",
+              "executeStep": {
+                "defaultStep": "0",
+                "errorStep": "1"
+              }
+            }
+          }
+        }
+      ],
+      "edges": [
+        {
+          "sourceNodeID": "block_start_5hcTm",
+          "targetNodeID": "code_Mp5oX"
+        },
+        {
+          "sourceNodeID": "code_JTt_K",
+          "targetNodeID": "block_end_KHnmD",
+          "sourcePortID": "0"
+        },
+        {
+          "sourceNodeID": "condition_a419w",
+          "targetNodeID": "block_end_KHnmD",
+          "sourcePortID": "branch_JCQEC"
+        },
+        {
+          "sourceNodeID": "code_C9Dee",
+          "targetNodeID": "code_JTt_K",
+          "sourcePortID": "0"
+        },
+        {
+          "sourceNodeID": "code_Mp5oX",
+          "targetNodeID": "plugin_3QfSI",
+          "sourcePortID": "0"
+        },
+        {
+          "sourceNodeID": "plugin_3QfSI",
+          "targetNodeID": "llm_tEhTN"
+        },
+        {
+          "sourceNodeID": "condition_a419w",
+          "targetNodeID": "code_C9Dee",
+          "sourcePortID": "branch_Aaruj"
+        },
+        {
+          "sourceNodeID": "llm_tEhTN",
+          "targetNodeID": "code_aE2lO"
+        },
+        {
+          "sourceNodeID": "code_aE2lO",
+          "targetNodeID": "condition_a419w",
+          "sourcePortID": "0"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "sourceNodeID": "loop_CSHMa",
+      "targetNodeID": "end_EpfpK"
+    },
+    {
+      "sourceNodeID": "start_EpfpK",
+      "targetNodeID": "loop_CSHMa"
+    }
+  ]
+}

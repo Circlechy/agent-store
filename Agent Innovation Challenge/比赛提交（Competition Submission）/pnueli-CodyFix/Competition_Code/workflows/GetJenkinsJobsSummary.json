@@ -1,0 +1,462 @@
+{
+  "nodes": [
+    {
+      "id": "start_EpfpK",
+      "type": "1",
+      "meta": {
+        "position": {
+          "x": 180,
+          "y": 28
+        }
+      },
+      "data": {
+        "title": "开始",
+        "outputs": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    },
+    {
+      "id": "plugin_ltvEk",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 640,
+          "y": 4
+        }
+      },
+      "data": {
+        "title": "Jobs",
+        "inputs": {
+          "inputParameters": {
+            "tree": {
+              "type": "constant",
+              "content": "jobs[name,url,color,lastBuild[number,result,timestamp,url]]",
+              "schema": {
+                "type": "string"
+              },
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "d7391fce-cf8c-41cc-9c92-de91c745a519",
+            "toolName": "Jobs",
+            "pluginID": "d0f27c73-d03e-4d81-9ece-5bd9b01fdca0",
+            "pluginName": "Jenkins get jobs",
+            "pluginVersion": "draft"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "code_i01aF",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 1100,
+          "y": 9
+        }
+      },
+      "data": {
+        "title": "SplitJobs",
+        "inputs": {
+          "inputParameters": {
+            "input": {
+              "type": "ref",
+              "content": [
+                "plugin_ltvEk"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "language": "javascript",
+          "code": "function main(args) {\n  const input = args.params.input;\n  const jobs = input.data.jobs.map(({ name, url,lastBuild }) => (\n    { name, 'url': lastBuild.url, 'result': lastBuild.result  })\n  );\n  const failedJobs = jobs.filter((build) => build.result === 'FAILURE');\n  //let keys = Object.keys(input.data.jobs);\n  return {\n    result: { jobs, failedJobs }\n  };\n}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "string",
+              "description": "代码执行结果"
+            }
+          },
+          "required": [
+            "result"
+          ]
+        },
+        "exceptionConfig": {
+          "retryTimes": 3,
+          "timeoutSeconds": 30,
+          "processType": "break",
+          "executeStep": {
+            "defaultStep": "0",
+            "errorStep": "1"
+          }
+        }
+      }
+    },
+    {
+      "id": "code_j5gb4",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 1560,
+          "y": 135
+        }
+      },
+      "data": {
+        "title": "ExtractFailed",
+        "inputs": {
+          "inputParameters": {
+            "result": {
+              "type": "ref",
+              "content": [
+                "code_i01aF"
+              ]
+            }
+          },
+          "language": "javascript",
+          "code": "function main(args) {\n  const input = args.params.result;\n  const failedJobs = input.result.failedJobs.map(({name, result, url}) => {\n    return url + 'consoleText';\n    //   url: url + 'consoleText'\n    //   // method: 'GET',\n    //   // headers: { Authorization: \"Basic YW1pcjoxMTFkY2Y5YWExOTRhMGViMmZkNjg5OTU5NWExODExOTU1\" }\n    // };\n  });\n  return {\n    result: failedJobs\n  };\n}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "array",
+              "extra": {
+                "index": 1
+              },
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": []
+        },
+        "exceptionConfig": {
+          "retryTimes": 3,
+          "timeoutSeconds": 30,
+          "processType": "break",
+          "executeStep": {
+            "defaultStep": "0",
+            "errorStep": "1"
+          }
+        }
+      }
+    },
+    {
+      "id": "end_EpfpK",
+      "type": "2",
+      "meta": {
+        "position": {
+          "x": 3428,
+          "y": 26
+        }
+      },
+      "data": {
+        "title": "结束",
+        "inputs": {
+          "inputParameters": {
+            "allJobs": {
+              "type": "ref",
+              "content": [
+                "code_i01aF",
+                "result"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "failedSummaries": {
+              "type": "ref",
+              "content": [
+                "loop_CSHMa",
+                "result"
+              ],
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "streaming": false
+        },
+        "streaming": false
+      }
+    },
+    {
+      "id": "loop_CSHMa",
+      "type": "5",
+      "meta": {
+        "position": {
+          "x": 1920,
+          "y": 0
+        }
+      },
+      "data": {
+        "title": "循环",
+        "inputs": {
+          "loopParam": {
+            "type": "arrayLoop",
+            "loopNum": {
+              "type": "constant",
+              "content": 5,
+              "schema": {
+                "type": "integer"
+              }
+            },
+            "loopArray": {
+              "failedJobs": {
+                "type": "ref",
+                "content": [
+                  "code_j5gb4",
+                  "result"
+                ],
+                "extra": {
+                  "index": 0
+                }
+              }
+            },
+            "intermediateVar": {}
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "ref",
+              "content": [
+                "llm_e21cP",
+                "output"
+              ]
+            }
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "block_start_5hcTm",
+          "type": "15",
+          "meta": {
+            "position": {
+              "x": 32,
+              "y": 45
+            }
+          },
+          "data": {
+            "title": "开始"
+          }
+        },
+        {
+          "id": "block_end_KHnmD",
+          "type": "16",
+          "meta": {
+            "position": {
+              "x": 1116,
+              "y": 45
+            }
+          },
+          "data": {
+            "title": "结束"
+          }
+        },
+        {
+          "id": "plugin_MG6tS",
+          "type": "19",
+          "meta": {
+            "position": {
+              "x": 344,
+              "y": 10
+            }
+          },
+          "data": {
+            "title": "GetConsoleTextFromUr",
+            "inputs": {
+              "inputParameters": {
+                "url": {
+                  "type": "ref",
+                  "content": [
+                    "loop_CSHMa_locals",
+                    "failedJobs"
+                  ],
+                  "extra": {
+                    "index": 0
+                  }
+                }
+              },
+              "pluginParam": {
+                "toolID": "082ebcc8-87b7-4b50-a90e-94e0daa13d72",
+                "toolName": "GetConsoleTextFromUr",
+                "pluginID": "bb1e6da3-77af-4e03-aa5f-0e96aa41f11c",
+                "pluginName": "GetJenkinConsoleText",
+                "pluginVersion": "draft"
+              }
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "error_code": {
+                  "type": "integer",
+                  "extra": {
+                    "index": 1
+                  }
+                },
+                "error_message": {
+                  "type": "string",
+                  "extra": {
+                    "index": 2
+                  }
+                },
+                "data": {
+                  "type": "object",
+                  "extra": {
+                    "index": 3
+                  },
+                  "properties": {}
+                }
+              },
+              "required": [
+                "error_code",
+                "error_message",
+                "data"
+              ]
+            }
+          }
+        },
+        {
+          "id": "llm_e21cP",
+          "type": "3",
+          "meta": {
+            "position": {
+              "x": 804,
+              "y": 0
+            }
+          },
+          "data": {
+            "title": "大模型1",
+            "inputs": {
+              "llmParam": {
+                "systemPrompt": {
+                  "type": "template",
+                  "content": "you are a professional programmer, please review the console text and summarize in a few words the error and also include the file name related to the error"
+                },
+                "prompt": {
+                  "type": "template",
+                  "content": "{{input}}"
+                },
+                "model": {
+                  "id": "3",
+                  "name": "amirseek",
+                  "type": "deepseek-chat"
+                }
+              },
+              "inputParameters": {
+                "input": {
+                  "type": "ref",
+                  "content": [
+                    "plugin_MG6tS",
+                    "data"
+                  ],
+                  "extra": {
+                    "index": 0
+                  }
+                }
+              }
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string",
+                  "extra": {
+                    "index": 1
+                  }
+                }
+              },
+              "required": [
+                "output"
+              ]
+            }
+          }
+        }
+      ],
+      "edges": [
+        {
+          "sourceNodeID": "block_start_5hcTm",
+          "targetNodeID": "plugin_MG6tS"
+        },
+        {
+          "sourceNodeID": "llm_e21cP",
+          "targetNodeID": "block_end_KHnmD"
+        },
+        {
+          "sourceNodeID": "plugin_MG6tS",
+          "targetNodeID": "llm_e21cP"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "sourceNodeID": "start_EpfpK",
+      "targetNodeID": "plugin_ltvEk"
+    },
+    {
+      "sourceNodeID": "plugin_ltvEk",
+      "targetNodeID": "code_i01aF"
+    },
+    {
+      "sourceNodeID": "code_i01aF",
+      "targetNodeID": "end_EpfpK",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "code_i01aF",
+      "targetNodeID": "code_j5gb4",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "code_j5gb4",
+      "targetNodeID": "loop_CSHMa",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "loop_CSHMa",
+      "targetNodeID": "end_EpfpK"
+    }
+  ]
+}
