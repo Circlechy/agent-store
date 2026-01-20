@@ -2,7 +2,6 @@
 
 一个基于 OpenJiuwen 的智能文件操作助手，可以通过自然语言指令执行各种文件系统操作。
 
-演示视频见：https://clouddrive.huawei.com/p/f44740f8f2757d66225091ca3c004048
 
 ## 功能特性
 
