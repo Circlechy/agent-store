@@ -39,7 +39,7 @@ import dashscope
 
 # 配置环境变量
 os.environ.setdefault("API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-os.environ.setdefault("API_KEY", "sk-88abf93140a949adbacd394683f33811")
+os.environ.setdefault("API_KEY", "YOUR API KEY")
 os.environ.setdefault("MODEL_PROVIDER", "openai")
 os.environ.setdefault("MODEL_NAME", "qwen3-max")
 os.environ.setdefault("LLM_SSL_VERIFY", "false")

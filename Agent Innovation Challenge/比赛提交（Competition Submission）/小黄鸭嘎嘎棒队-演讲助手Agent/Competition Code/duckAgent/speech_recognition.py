@@ -34,7 +34,7 @@ def load_api_key():
         print(f"🎤 [语音识别] 已从环境变量加载API Key")
     else:
         # 使用默认API Key
-        default_api_key = "sk-88abf93140a949adbacd394683f33811"
+        default_api_key = "YOUR API KEY"
         dashscope.api_key = default_api_key
         dashscope.base_websocket_api_url = (
             "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
