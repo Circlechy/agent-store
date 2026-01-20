@@ -1,0 +1,24 @@
+es_short_term:
+  url: https://10.168.12.121:9200
+  analyzer: poisson_jieba_search
+  index: short_term
+
+es_long_term:
+  url: https://10.168.12.121:9200
+  analyzer: poisson_jieba_search
+  index: long_term
+
+es_ug_mock:
+  url: https://10.168.12.121:9200
+  analyzer: poisson_jieba_search
+  index: ug_mock
+
+meta_engine:
+  url: http://10.50.91.196:9170/search
+
+faiss_engine:  
+  vision_cache: data/image_cache
+  index: faiss_index.index
+
+event_caption_engine:
+  index_path: data/event_caption

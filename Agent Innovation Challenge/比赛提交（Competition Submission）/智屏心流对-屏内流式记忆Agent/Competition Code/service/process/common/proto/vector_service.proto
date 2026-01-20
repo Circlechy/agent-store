@@ -1,0 +1,274 @@
+syntax = "proto3";
+
+option java_package = 'com.huawei.poisson.vector';
+option java_outer_classname = "VectorSearchProtos";
+
+package proto;
+
+service VectorWorker {
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc VectorBinaryInit (VectorBinaryInitRequest) returns (VectorBinaryInitResponse) {}
+  rpc VectorBinaryReloadIndex (VectorBinaryReloadIndexRequest) returns (VectorBinaryReloadIndexResponse) {}
+  rpc DeleteIndex(DeleteRequest) returns (DeleteReply) {}
+
+  rpc BatchQuery (BatchRequest) returns (BatchResponse) {}
+  rpc FQuery (FQRequest) returns (FQResponse) {}
+  rpc GetIndexInfo (GetIndexInfoRequest) returns (GetIndexInfoResponse) {}
+  rpc GetVectorDocs(GetVectorDocsRequest) returns (GetVectorDocsResponse) {}
+  rpc CreateVectorIndex(CreateVectorIndexRequest) returns (CreateVectorIndexResponse){}
+  rpc GetNodeInfo(NodeInfoRequest) returns (NodeInfoResponse) {}
+
+  rpc Flush (FlushRequest) returns (FlushResponse) {}
+  rpc DeleteDocsByIds (DeleteByIdsRequest) returns (DeleteByIdsResponse) {}
+  rpc UpsertDocs (InsertOrUpdateRequest) returns (InsertOrUpdateResponse) {}
+}
+
+message HelloRequest {
+  string msg = 1;
+  string hmacauth = 2;
+}
+
+message HelloReply {
+  string msg = 1;
+}
+
+message DeleteRequest {
+  string hmacauth = 1;
+}
+
+message DeleteReply {
+  string msg = 1;
+}
+
+message VectorBinaryInitRequest {
+  string path = 1;
+  string hmacauth = 2;
+}
+
+message VectorBinaryInitResponse {
+  int32 code = 1;
+  string msg = 2;
+}
+
+message VectorBinaryReloadIndexRequest {
+  string path = 1;
+  string hmacauth = 2;
+  string index_name = 3;
+  string version = 4;
+}
+
+message IndexMeta {
+  string version = 1;
+  int64 ntotal = 2;
+  int64 file_size_in_bytes = 3;
+  double timestamp = 4;
+  double elapse = 5;
+  string path = 6;
+  int32 dimension = 7;
+  string index_name = 8;
+  enum Status {
+    INIT = 0;
+    LOADING = 1;
+    READY = 2;
+    ABNORMAL = 3;
+  };
+  Status status = 9;
+
+}
+
+message VectorBinaryReloadIndexResponse {
+  int32 code = 1;
+  string msg = 2;
+  IndexMeta index_meta = 3;
+}
+
+message BatchRequest {
+  repeated VSQuery vsquery_list = 1;  // batch request parameters
+  string  hmacauth = 2;
+}
+
+message VSQuery {
+  string index_name = 1;
+  int32  size = 2;    // top K
+  bytes data = 3;     // vector bytes
+  bool reconstruct = 4;
+  int32 batch_size = 5;
+  int32 ns = 6;
+  string filter = 7;
+  MultiFieldFunction function = 8;
+  optional float threshold = 9;    // inner product return distance >= threshold, L2 return distance <= threshold
+  repeated string return_fields = 10;
+  optional string attr_filter = 11;
+  bool sampling = 12;
+  string request_id = 13;
+  optional int64 time_stamp = 14;
+}
+
+message BatchResponse {
+  int32 code = 1;  // result code: 200 success; -1 failed; 0 partional success
+  string msg = 2;
+  repeated SearchResult result_list = 3;
+}
+
+message SearchResult {
+  string index_name = 1;
+  bytes distance = 2;
+  bytes ids = 3;
+  int32 id_len = 4;
+  int32 size = 5;
+  repeated ScalarFieldsInOneDoc scalarFieldsInOneDoc = 6;
+}
+
+message ScalarFieldsInOneDoc {
+  repeated PbField scalarField = 1;
+}
+
+message FQRequest {
+  int32 size = 1;
+  bytes data = 2;
+  bool reconstruct = 3;
+  int32 batch_size = 4;
+  int32 ns = 5;
+  string filter = 6;
+  MultiFieldFunction function = 7;
+  string hmacauth = 8;
+  string dtype = 9;
+  bool sampling = 10;
+  string request_id = 11;
+  string index_name = 12;
+  optional float threshold = 13;
+  repeated string return_fields = 14;
+  optional string attr_filter = 15;
+  optional int64 time_stamp = 16;
+}
+
+message FQResponse {
+  int32 code = 1;
+  string msg = 2;
+  bytes distance = 3;
+  bytes ids = 4;
+  int32 id_len = 5;
+  int32 size = 6;
+  uint32 metric_type = 7;
+  string index_name = 8;
+  repeated ScalarFieldsInOneDoc scalarFieldsInOneDoc = 9;
+}
+
+message DeleteByIdsRequest {
+  repeated string ids = 1;
+  string hmacauth = 2;
+  string index_name = 3;
+}
+
+message DeleteByIdsResponse {
+  int32 code = 1;
+  string msg = 2;
+}
+
+message DocInfo {
+  string id = 1;
+  string info = 2;
+}
+
+message GetVectorDocsRequest {
+  string hmacauth = 1;
+  string index_name = 2;
+  repeated string ids = 3;
+}
+
+message GetVectorDocsResponse {
+  int32 code = 1;
+  string msg = 2;
+  repeated DocInfo docs = 3;
+}
+
+message MultiFieldFunction {
+  string type = 1;
+  float boost = 2;
+  map<string, float> weight = 3;
+}
+
+message PbField {
+  string name = 1;
+  oneof value {
+    float floatValue = 2;
+    string stringValue = 3;
+    VectorValue vectorValue = 4;
+    FloatArrayValue floatArrayValue = 5;
+    StringArrayValue stringArrayValue = 6;
+  };
+}
+
+message FloatArrayValue {
+  repeated float value = 1;
+}
+
+message StringArrayValue {
+  repeated string value = 1;
+}
+
+message VectorValue {
+  bytes value = 1;
+}
+
+message DocValue {
+  string id = 1;
+  repeated PbField fields = 2;
+  string dtype = 3;
+  optional int64 time_stamp = 4;
+}
+
+message InsertOrUpdateRequest {
+  string index_name = 1;
+  repeated DocValue doc_list = 2;
+  string hmacauth = 3;
+}
+
+message InsertOrUpdateResponse {
+  int32 code = 1;
+  string msg = 2;
+}
+
+message FlushRequest {
+  bool force = 1;
+  bool wait_if_ongoing = 2;
+  string hmacauth = 3;
+  string index_name = 4;
+}
+
+message FlushResponse {
+  int32 code = 1;
+  string msg = 2;
+}
+
+message GetIndexInfoRequest {
+  repeated string index_name_list = 1;
+  string hmacauth = 2;
+}
+
+message GetIndexInfoResponse {
+  int32 code = 1;
+  string msg = 2;
+  repeated IndexMeta index_list = 3;
+}
+
+message CreateVectorIndexRequest {
+  string hmacauth = 1;
+  string index_path = 2;
+  string mapping_json = 3;
+}
+
+message CreateVectorIndexResponse {
+  int32 code = 1;
+  string msg = 2;
+}
+
+message NodeInfoRequest {
+  string hmacauth = 1;
+}
+
+message NodeInfoResponse {
+  string node_name = 1;
+  string service_name = 2;
+  string extern_port = 3;
+}
