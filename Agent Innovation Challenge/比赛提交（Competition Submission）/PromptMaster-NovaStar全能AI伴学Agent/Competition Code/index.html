@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaStar - AI学习与情感陪伴</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/nova-orb.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="favicon.ico">
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-star"></i>
+                <span>NovaStar</span>
+                <span class="logo-subtitle">"启明星"全能AI伴学 Agent</span>
+            </div>
+            <div class="nav-tabs"></div>
+        </div>
+    </nav>
+
+    <!-- 儿童端主界面 -->
+    <main class="main-container" id="childMode">
+        <!-- Nova Orb 灵动球 -->
+        <div class="nova-orb-container">
+            <div class="nova-orb" id="novaOrb">
+                <div class="orb-core"></div>
+                <div class="orb-rings">
+                    <div class="ring ring-1"></div>
+                    <div class="ring ring-2"></div>
+                    <div class="ring ring-3"></div>
+                </div>
+                <div class="orb-particles">
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                </div>
+            </div>
+            <div class="orb-status">
+                <span class="status-text" id="orbStatus">点击开始对话</span>
+                <div class="status-transcript" id="orbTranscript"></div>
+            </div>
+        </div>
+
+        <div class="layout-grid">
+            <section class="agent-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-layer-group"></i>
+                        <span>子智能体</span>
+                    </div>
+                </div>
+                <div class="agent-group">
+                    <div class="group-title">创意创作</div>
+                    <div class="quick-actions grouped">
+                        <button class="action-btn" data-action="daily-idiom">
+                            <i class="fas fa-book"></i>
+                            <span>每日成语</span>
+                        </button>
+                        <button class="action-btn" data-action="story">
+                            <i class="fas fa-book-open"></i>
+                            <span>睡前故事</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="agent-group">
+                    <div class="group-title">星空学堂</div>
+                    <div class="quick-actions grouped">
+                        <button class="action-btn" data-action="learn-chinese">
+                            <i class="fas fa-language"></i>
+                            <span>汉字学习</span>
+                        </button>
+                        <button class="action-btn" data-action="qa-question">
+                            <i class="fas fa-question-circle"></i>
+                            <span>十万个为什么</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 聊天记录 -->
+            <section class="chat-panel">
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <i class="fas fa-comments"></i>
+                        <span>聊天记录</span>
+                    </div>
+                    <button class="clear-history-btn" id="clearChatBtn" title="清空聊天记录">
+                        <i class="fas fa-brush"></i>
+                    </button>
+                </div>
+                <div class="companion-chat" id="chatHistory">
+                    <!-- 历史聊天记录与语音记录 -->
+                </div>
+                <div class="companion-input-area">
+                    <button class="companion-voice-btn" id="chatVoiceBtn" title="语音输入">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <input type="text" class="companion-text-input" id="chatInput" placeholder="也可以打字问我哦...">
+                    <button class="companion-send-btn" id="chatSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="voice-controls" id="voiceControls">
+                    <span class="voice-status-text" id="voiceStatusText">准备语音输入</span>
+                    <button class="voice-action-btn" id="voiceCancelBtn" type="button">取消录音</button>
+                    <button class="voice-action-btn retry" id="voiceRetryBtn" type="button">重试</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 模态框：故事生成 -->
+    <div class="modal" id="storyModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeStoryModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>生成睡前故事</h2>
+            <div class="story-generator">
+                <div class="modal-input-row">
+                    <input type="text" id="storyTheme" placeholder="输入故事主题，比如：小兔子、太空冒险...">
+                    <button class="companion-voice-btn modal-voice-btn" id="storyVoiceBtn" title="语音输入">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
+                <div class="modal-voice-status" id="storyVoiceStatus">准备语音输入</div>
+                <div class="modal-voice-actions" id="storyVoiceActions">
+                    <button class="voice-action-btn" id="storyVoiceConfirmBtn" type="button">确认使用</button>
+                    <button class="voice-action-btn retry" id="storyVoiceRetryBtn" type="button">重输</button>
+                </div>
+                <button class="generate-btn" id="generateStoryBtn">
+                    <i class="fas fa-magic"></i>
+                    生成故事
+                </button>
+                <div class="story-content" id="storyContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：汉字学习 -->
+    <div class="modal" id="chineseModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeChineseModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>汉字学习</h2>
+            <div class="chinese-learning">
+                <div class="chinese-grid" id="chineseGrid"></div>
+                <button class="generate-btn" id="refreshChineseGridBtn">
+                    <i class="fas fa-random"></i>
+                    换一组
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：每日成语 -->
+    <div class="modal" id="idiomModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeIdiomModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>每日成语</h2>
+            <div class="idiom-learning">
+                <div class="idiom-grid" id="idiomGrid"></div>
+                <button class="generate-btn" id="refreshIdiomGridBtn">
+                    <i class="fas fa-random"></i>
+                    换一组
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：汉字学习内容 -->
+    <div class="modal" id="learningModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeLearningModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 id="learningTitle">汉字学习</h2>
+            <div class="learning-content" id="learningContent">正在准备讲解内容...</div>
+        </div>
+    </div>
+
+    <!-- 模态框：十万个为什么 -->
+    <div class="modal" id="qaModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeQAModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>十万个为什么</h2>
+            <div class="story-generator">
+                <div class="modal-input-row">
+                    <input type="text" id="qaQuestion" placeholder="输入你的问题，比如：为什么天空是蓝色的？">
+                    <button class="companion-voice-btn modal-voice-btn" id="qaVoiceBtn" title="语音输入">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
+                <div class="modal-voice-status" id="qaVoiceStatus">准备语音输入</div>
+                <div class="modal-voice-actions" id="qaVoiceActions">
+                    <button class="voice-action-btn" id="qaVoiceConfirmBtn" type="button">确认使用</button>
+                    <button class="voice-action-btn retry" id="qaVoiceRetryBtn" type="button">重输</button>
+                </div>
+                <button class="generate-btn" id="askQuestionBtn">
+                    <i class="fas fa-search"></i>
+                    提问
+                </button>
+                <div class="story-content" id="qaContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 脚本 -->
+    <script src="js/activity-tracker.js"></script>
+    <script src="js/nova-orb.js"></script>
+    <script src="js/content-generator.js"></script>
+    <script src="js/chat-ui.js"></script>
+    <script src="js/voice-input.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/agent-system.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
