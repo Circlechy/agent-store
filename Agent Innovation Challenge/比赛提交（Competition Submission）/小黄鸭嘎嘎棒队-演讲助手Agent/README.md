@@ -247,6 +247,13 @@ os.environ.setdefault("API_KEY", "YOUR API KEY") //替换成你的api
 并完成API KEY配置
 ---
 
+### 运行Agent
+```
+cd duckAgent
+python duck_agent.py
+```
+
+
 ## 📜 路线图
 
 * [x] PPT 结构解析
