@@ -1,5 +1,4 @@
 # ========== components.py示例代码 ==========
-import setup_path
 from config import create_model_config
 
 from openjiuwen.core.component.start_comp import Start

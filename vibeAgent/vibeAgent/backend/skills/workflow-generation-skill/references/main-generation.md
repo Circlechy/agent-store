@@ -13,15 +13,12 @@ main.py 文件用于执行和测试工作流。
 
 ## 必需的导入
 
-**关键**：`import setup_path` 必须在导入任何 openjiuwen 相关模块之前执行。
-
 ```python
 import asyncio
 import os
 import sys
 import io
 from typing import List
-import setup_path  # 必须在导入 openjiuwen 相关模块之前
 
 # 设置标准输出编码为 UTF-8（避免 Windows 控制台 GBK 编码错误）
 if sys.platform == "win32":
@@ -35,7 +32,6 @@ from openjiuwen.core.stream.base import OutputSchema
 ```
 
 **说明**：
-- `setup_path` 负责将 `openjiuwen` 目录添加到 Python 路径，必须在所有 openjiuwen 相关导入之前执行
 - 编码设置必须在文件开头执行，避免 Windows 控制台 GBK 编码错误（当输出包含 emoji 或特殊字符时）
 
 ## 环境变量设置

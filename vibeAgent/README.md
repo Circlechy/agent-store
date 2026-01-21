@@ -60,21 +60,7 @@ vibeAgent/
    cd vibeAgent
    ```
 
-3. **下载 openJiuwen（V0.1.1 版本）**
-   ```bash
-   git clone https://gitcode.com/openJiuwen/agent-core.git
-   git checkout -b branch_0.0.1 v0.1.1
-   ```
-   将 `agent-core` 文件夹移动到 `vibeAgent` 中，替换掉原本的空文件夹
-
-4. **安装依赖**
-   - **openJiuwen**
-     ```powershell
-     conda activate vibe_agent
-     cd vibeAgent\agent-core
-     pip install .
-     ```
-
+3. **安装依赖**
    - **后端（backend）**
      ```powershell
      conda activate vibe_agent
@@ -88,7 +74,7 @@ vibeAgent/
      npm install
      ```
 
-5. **配置 LLM 服务（必需）**
+4. **配置 LLM 服务（必需）**
    - 进入 `vibeAgent/backend/` 目录，复制 `.env.example` 为 `.env`
    - 配置你的 API Key 和模型服务地址：
      ```env
@@ -105,7 +91,7 @@ vibeAgent/
      MODEL_NAME=qwen3-coder-plus
      ```
 
-6. **启动服务**
+5. **启动服务**
    - **终端 1：启动后端（backend）**
      ```powershell
      cd vibeAgent\backend
@@ -120,7 +106,7 @@ vibeAgent/
      # 或手动：npm run dev
      ```
 
-7. **访问地址**
+6. **访问地址**
    - **前端界面**：`http://localhost:3000`
    - **后端 API 文档**：`http://localhost:8000/docs`
    - **健康检查**：`http://localhost:8000/api/v1/health`
