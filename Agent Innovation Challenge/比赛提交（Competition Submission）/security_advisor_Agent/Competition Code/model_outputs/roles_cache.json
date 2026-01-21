@@ -1,0 +1,17 @@
+[
+  {
+    "username": "billing_service",
+    "role_definition": "Manages customer support tickets and billing operations, including creating and updating tickets, retrieving customer details for support, accessing payment information for billing queries, and checking authentication data. Performs both point lookups for specific customer, ticket, or payment records, and bulk operations for searching tickets by message content, filtering customers by attributes, or generating customer ticket counts.",
+    "sensitivity_level": "HIGH"
+  },
+  {
+    "username": "support_agent",
+    "role_definition": "Provides customer support by handling support tickets, including searching and viewing customer information, assigning tickets to agents, creating new tickets, and accessing payment and authentication data for issue resolution. Uses both point lookups for individual records and bulk operations for list views, customer searches, and ticket filtering.",
+    "sensitivity_level": "HIGH"
+  },
+  {
+    "username": "analytics_user",
+    "role_definition": "Conducts data analysis on user usage events to generate reports on event frequencies, user engagement trends, and statistical summaries over various time periods. Primarily performs bulk operations for data aggregation and analysis, such as scanning event logs for counts, groupings, and time-based trends, with no point lookups.",
+    "sensitivity_level": "LOW"
+  }
+]

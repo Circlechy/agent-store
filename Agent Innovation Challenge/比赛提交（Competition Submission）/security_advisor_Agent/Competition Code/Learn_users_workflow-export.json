@@ -1,0 +1,903 @@
+{
+  "nodes": [
+    {
+      "id": "check_roles_cache",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 1560,
+          "y": 17
+        }
+      },
+      "data": {
+        "title": "fetch_role_definition_cache",
+        "inputs": {
+          "inputParameters": {},
+          "language": "python",
+          "code": "import os\nROLE_FILE = '/tmp/roles_cache.json'\n\ndef main(args: Args):\n    if os.path.exists(ROLE_FILE):\n        with open(ROLE_FILE, 'r') as f:\n            return {\"content\": f.read(), \"exists\": True}\n    return {\"content\": \"\", \"exists\": False}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string"
+            },
+            "exists": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "exists"
+          ]
+        },
+        "exceptionConfig": {
+          "timeoutSeconds": 30
+        }
+      }
+    },
+    {
+      "id": "condition_roles",
+      "type": "4",
+      "meta": {
+        "position": {
+          "x": 2020,
+          "y": 10
+        }
+      },
+      "data": {
+        "title": "check_role_definition_cache",
+        "branches": [
+          {
+            "conditions": [
+              {
+                "left": {
+                  "type": "ref",
+                  "content": [
+                    "check_roles_cache",
+                    "exists"
+                  ]
+                },
+                "operator": "eq",
+                "right": {
+                  "type": "constant",
+                  "content": true,
+                  "schema": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ],
+            "branchId": "yes_roles"
+          },
+          {
+            "conditions": [],
+            "branchId": "no_roles"
+          }
+        ]
+      }
+    },
+    {
+      "id": "llm_roles",
+      "type": "3",
+      "meta": {
+        "position": {
+          "x": 2480,
+          "y": 66
+        }
+      },
+      "data": {
+        "title": "llm_roles_definer",
+        "inputs": {
+          "llmParam": {
+            "systemPrompt": {
+              "type": "template",
+              "content": "ROLE:\nYou are a Senior Business Logic Interpreter and User Behavior Analyst. Your job is to reverse-engineer business intent from database query logs.\n\nINPUT DATA:\nYou will receive a \"User BehaviorReport\" containing:\n\nUsernames (the database role).\n\nA list of representative SQL queries executed by that user.\n\nTASK:\nFor each user, analyze their query patterns and generate a \"Semantic Role Definition\".\n\nGUIDELINES:\n\nIgnore Syntax, Focus on Intent: Do not just repeat \"User selected from table X\". Instead, say \"User retrieves customer support history\" or \"User generates monthly revenue reports\".\n\nIdentify Sensitivity: Explicitly note if the user accesses sensitive tables (e.g., users, auth_credentials, payments) or modifies data (INSERT, UPDATE, DELETE).\n\nConsolidate: If a user runs 50 queries about \"tickets\", summarize it as a single responsibility.\n\nSanitize: Your output MUST NOT contain any raw SQL code or snippet. It must be pure natural language.\n\nDetect Access Granularity: Analyze the WHERE clauses in the queries. You MUST explicitly state if the user performs \"Point Lookups\" (fetching single records via unique IDs/keys) or \"Bulk Operations\" (scanning full tables or large ranges). For example: \"User retrieves specific transaction details by ID\" (Point Lookup) vs. \"User exports all daily transactions\" (Bulk).\n\nOUTPUT FORMAT (JSON List):\n[\n{\n\"username\": \"<db_username>\",\n\"role_definition\": \"<High-level description of duties, data access needs, and access granularity (Point Lookup vs Bulk).>\",\n\"sensitivity_level\": \"LOW\" | \"HIGH\"\n}\n]"
+            },
+            "prompt": {
+              "type": "template",
+              "content": "Here are the raw logs for analysis:\n{{logs}}\n\nGenerate the Role Definitions now."
+            },
+            "model": {
+              "id": "5",
+              "name": "DeepSeek Reasoner",
+              "type": "deepseek-reasoner"
+            }
+          },
+          "inputParameters": {
+            "logs": {
+              "type": "ref",
+              "content": [
+                "aggregator",
+                "user_behavior"
+              ]
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "condition_contracts",
+      "type": "4",
+      "meta": {
+        "position": {
+          "x": 4780,
+          "y": 10
+        }
+      },
+      "data": {
+        "title": "check_role_contract_cache",
+        "branches": [
+          {
+            "conditions": [
+              {
+                "left": {
+                  "type": "ref",
+                  "content": [
+                    "check_contracts_cache",
+                    "exists"
+                  ]
+                },
+                "operator": "eq",
+                "right": {
+                  "type": "constant",
+                  "content": true,
+                  "schema": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ],
+            "branchId": "yes_contracts"
+          },
+          {
+            "conditions": [],
+            "branchId": "no_contracts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "check_contracts_cache",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 4320,
+          "y": 17
+        }
+      },
+      "data": {
+        "title": "fetch_role_contract_cache",
+        "inputs": {
+          "inputParameters": {},
+          "language": "python",
+          "code": "import os\nFILE = '/tmp/contracts_cache.json'\ndef main(args: Args):\n    if os.path.exists(FILE):\n        with open(FILE, 'r') as f:\n            return {\"content\": f.read(), \"exists\": True}\n    return {\"content\": \"\", \"exists\": False}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string"
+            },
+            "exists": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "exists"
+          ]
+        },
+        "exceptionConfig": {
+          "timeoutSeconds": 30
+        }
+      }
+    },
+    {
+      "id": "start",
+      "type": "1",
+      "meta": {
+        "position": {
+          "x": 180,
+          "y": 34
+        }
+      },
+      "data": {
+        "title": "Start",
+        "outputs": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "id": "code_AmVW7",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 7080,
+          "y": 15
+        }
+      },
+      "data": {
+        "title": "save_masking_policies",
+        "inputs": {
+          "inputParameters": {
+            "input": {
+              "type": "ref",
+              "content": [
+                "llm_qJfmL",
+                "output"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "language": "python",
+          "code": "import os\ndef main(args: Args):\n    path = '/tmp/masking.sql'\n    data = args.params['input'].replace('```json','').replace('```','').strip()\n    with open(path, 'w') as f: f.write(data)\n    return {\"saved_content\": data}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "saved_content": {
+              "type": "string",
+              "description": "代码执行结果"
+            }
+          },
+          "required": [
+            "saved_content"
+          ]
+        },
+        "exceptionConfig": {
+          "retryTimes": 3,
+          "timeoutSeconds": 30,
+          "processType": "break",
+          "executeStep": {
+            "defaultStep": "0",
+            "errorStep": "1"
+          }
+        }
+      }
+    },
+    {
+      "id": "unifier_roles",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 3400,
+          "y": 15
+        }
+      },
+      "data": {
+        "title": "junction_role_definition",
+        "inputs": {
+          "inputParameters": {
+            "from_cache": {
+              "type": "ref",
+              "content": [
+                "check_roles_cache",
+                "content"
+              ]
+            },
+            "from_llm": {
+              "type": "ref",
+              "content": [
+                "save_roles",
+                "saved_content"
+              ]
+            }
+          },
+          "language": "python",
+          "code": "def main(args: Args):\n    # Return whichever input is not null/empty\n    return {\"final_roles\": args.params.get('from_llm') or args.params.get('from_cache')}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "final_roles": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "final_roles"
+          ]
+        },
+        "exceptionConfig": {
+          "timeoutSeconds": 30
+        }
+      }
+    },
+    {
+      "id": "unifier_contracts",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 6160,
+          "y": 15
+        }
+      },
+      "data": {
+        "title": "jusction_role_contract",
+        "inputs": {
+          "inputParameters": {
+            "from_cache": {
+              "type": "ref",
+              "content": [
+                "check_contracts_cache",
+                "content"
+              ]
+            },
+            "from_llm": {
+              "type": "ref",
+              "content": [
+                "save_contracts",
+                "saved_content"
+              ]
+            }
+          },
+          "language": "python",
+          "code": "def main(args: Args):\n    return {\"final_result\": args.params.get('from_llm') or args.params.get('from_cache')}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "final_result": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "final_result"
+          ]
+        },
+        "exceptionConfig": {
+          "timeoutSeconds": 30
+        }
+      }
+    },
+    {
+      "id": "end",
+      "type": "2",
+      "meta": {
+        "position": {
+          "x": 8000,
+          "y": 32
+        }
+      },
+      "data": {
+        "title": "End",
+        "inputs": {
+          "inputParameters": {
+            "result": {
+              "type": "ref",
+              "content": [
+                "unifier_contracts",
+                "final_result"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "save_contracts",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 5700,
+          "y": 81
+        }
+      },
+      "data": {
+        "title": "save_role_contract",
+        "inputs": {
+          "inputParameters": {
+            "content": {
+              "type": "ref",
+              "content": [
+                "llm_contracts",
+                "output"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "language": "python",
+          "code": "import os\ndef main(args: Args):\n    path = '/tmp/contracts_cache.json'\n    data = args.params['content'].replace('```json','').replace('```','').strip()\n    with open(path, 'w') as f: f.write(data)\n    return {\"saved_content\": data}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "saved_content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "saved_content"
+          ]
+        },
+        "exceptionConfig": {
+          "timeoutSeconds": 30
+        }
+      }
+    },
+    {
+      "id": "plugin_MvRud",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 640,
+          "y": 12
+        }
+      },
+      "data": {
+        "title": "Fetching queries",
+        "inputs": {
+          "inputParameters": {},
+          "pluginParam": {
+            "toolID": "0f8ac57b-1429-414e-8e62-d6d9fe86c141",
+            "toolName": "Fetching queries",
+            "pluginID": "698a18aa-7b49-498f-8d88-6fef3b431aa3",
+            "pluginName": "schema_fetcher",
+            "pluginVersion": "v0.0.2"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "aggregator",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 1100,
+          "y": 15
+        }
+      },
+      "data": {
+        "title": "queries_normalizer",
+        "inputs": {
+          "inputParameters": {
+            "queries": {
+              "type": "ref",
+              "content": [
+                "plugin_MvRud",
+                "data"
+              ],
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "language": "python",
+          "code": "import requests\nimport json\nfrom collections import defaultdict\n\ndef main(args: Args):\n    # Config\n    MAX_SAMPLES = 30\n    queries = args.params['queries']\n\n    # Process\n    user_activity = defaultdict(set)\n    for q in queries:\n        user = q.get('username', 'unknown_user')\n        sql = q.get('normalized_query') or q.get('query', '')\n        sql = sql.strip()\n        if len(sql) > 200: sql = sql[:200] + \"...\"\n        user_activity[user].add(sql)\n\n    summary = []\n    for user, sql_set in user_activity.items():\n        summary.append({\n            \"username\": user,\n            \"samples\": list(sql_set)[:MAX_SAMPLES]\n        })\n\n    return {\n        \"user_behavior\": json.dumps(summary, indent=2)\n    }"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "user_behavior": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "user_behavior"
+          ]
+        },
+        "exceptionConfig": {
+          "timeoutSeconds": 30
+        }
+      }
+    },
+    {
+      "id": "plugin_BaGi9",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 3860,
+          "y": 12
+        }
+      },
+      "data": {
+        "title": "Fetching schema",
+        "inputs": {
+          "inputParameters": {},
+          "pluginParam": {
+            "toolID": "2fdf7fd7-dd6e-45a6-b3b5-749963fb169f",
+            "toolName": "Fetching schema",
+            "pluginID": "698a18aa-7b49-498f-8d88-6fef3b431aa3",
+            "pluginName": "schema_fetcher",
+            "pluginVersion": "v0.0.1"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "llm_contracts",
+      "type": "3",
+      "meta": {
+        "position": {
+          "x": 5240,
+          "y": 66
+        }
+      },
+      "data": {
+        "title": "llm_role_contract",
+        "inputs": {
+          "llmParam": {
+            "systemPrompt": {
+              "type": "template",
+              "content": "## 人设\n你是一位首席数据库安全架构师，专门负责在企业数据环境中强制执行“最小权限”原则。你的核心使命是确保每个用户和应用程序只能访问其完成工作所绝对必需的数据，不多不少。\n\n你的专业技能包括：\n- 深入理解数据库模式（Schema）、表结构、列属性及元数据标签。\n- 能够精准解析业务角色描述，并将其翻译为具体的数据访问需求。\n- 精通设计基于“允许列表”的精细化安全策略。\n- 具备将复杂的业务逻辑和安全规则转化为结构化、可执行契约的能力。\n\n## 任务描述\n你的核心任务是充当“自然语言到数据库权限”的翻译器与强制过滤器。给定一个数据库结构定义（包含表和列的敏感度标签）和一系列用自然语言描述的业务角色职责，你需要为每个角色生成一份严格的安全契约。\n\n这份契约的目标是：\n1.  **实现精准映射**：将模糊的业务意图（如“管理客户信息”）精确映射到数据库模式中必不可少的具体表、列和操作上。\n2.  **落实最小权限**：通过生成明确的“允许列表”，消除默认的宽泛权限（如`SELECT *`），确保权限的授予是明确、具体且经过业务理由充分论证的。\n3.  **生成可执行策略**：输出机器可读的JSON格式安全契约，该契约可直接用于配置数据库访问控制、数据安全网关或进行策略验证，从而在运行时强制执行定义好的最小权限。\n\n## 约束条件\n在完成<任务描述>时，你必须严格遵守以下边界和规则：\n1.  **输出纯净性**：你只能输出最终的安全契约JSON，不能包含任何额外的解释、说明或Markdown代码块标记。\n2.  **输入严格性**：你必须完全基于提供的 `{{Database Schema}}` 和 `{{Role Definitions}}` 进行分析和生成。\n3.  **敏感数据排除**：如果某列被标记为敏感标签（如 `PII`、`Secret`），而角色定义中**没有明确**的业务需求证明需要访问它，则**必须**将该列从允许列表中排除。\n4.  **禁止通配符**：在任何情况下都不允许使用列通配符（`*`）。`columns` 数组必须明确列出每一个被允许访问的列名。\n5.  **操作权限推导**：\n    *   默认仅授予 `SELECT` 权限。\n    *   只有在角色定义中明确出现“创建”、“新增”、“修改”、“更新”或“删除”、“移除”等动词时，才可考虑授予 `INSERT`、`UPDATE` 或 `DELETE` 权限。\n6.  **行数范围限定**：\n    *   如果角色描述针对特定实体（例如“查看**某个**客户的订单”），则 `rows_count` 必须设置为 `1`，且必须在 `condition` 中说明需要通过ID或关键字段进行过滤。\n    *   只有当角色明确需要进行批量分析、报告或“查看所有”时，才能将 `rows_count` 设置为 `\"all\"`。\n7.  按照<输出格式>生成最终结果。\n8.  按照<执行步骤>一步一步执行分析过程。\n\n## 执行步骤\n请遵循以下步骤，为每个角色生成安全契约：\n1.  **解析输入**：仔细阅读并理解提供的 `{{Database Schema}}`（表、列、标签）和 `{{Role Definitions}}`（每个角色的业务描述）。\n2.  **遍历角色**：针对 `{{Role Definitions}}` 中列出的每一个角色，独立进行以下分析。\n3.  **意图与模式映射**：\n    *   根据角色描述，确定其需要接触哪些核心业务实体（如“客户”、“订单”、“产品”）。\n    *   在 `{{Database Schema}}` 中找到对应的表。\n    *   针对每个表，逐列判断：该列是否为角色完成其描述任务所**必需**？注意应用<约束条件>第3条（敏感数据排除）。\n4.  **定义操作与范围**：\n    *   **操作**：根据角色描述中的动词，严格按<约束条件>第5条确定 `operations` 数组内容。\n    *   **行数**：根据角色是对特定实例还是整体进行操作，按<约束条件>第6条确定 `rows_count` 为 `1` 或 `\"all\"`。\n5.  **撰写业务上下文**：\n    *   `condition`：为每张表的权限条目清晰说明**为什么**需要这些列，以及**如何**进行限制（例如，“仅允许在通过`transaction_id`筛选后，查看信用卡号的末四位用于对账”）。\n    *   `global_policy`：为整个角色写一句总结，概括其核心数据访问意图，用于运行时的高层级策略验证。\n6.  **组装与输出**：将所有角色的分析结果，严格按照<输出格式>组装成最终的JSON对象。\n\n## 输出格式\n```json\n{\n  \"contracts\": [\n    {\n      \"role\": \"{{Role Name}}\",\n      \"permissions\": [\n        {\n          \"schema\": \"{{schema_name}}\",\n          \"table\": \"{{table_name}}\",\n          \"operations\": [\"SELECT\"],\n          \"columns\": [\"{{col1}}\", \"{{col2}}\"],\n          \"rows_count\": 1,\n          \"condition\": Business justification for access and constraints\n        }\n      ],\n      \"global_policy\": \"{{Summary of role intent}}\"\n    }\n  ]\n}\n```\n**重要格式要求**：\n*   输出必须是**纯JSON文本**。\n*   JSON结构必须完全符合上述定义。\n*   `rows_count` 的值只能是数字 `1` 或字符串 `\"all\"`。\n*   `operations` 数组中的元素必须是 `\"SELECT\"`， `\"INSERT\"`， `\"UPDATE\"`， `\"DELETE\"` 中的一个或多个。"
+            },
+            "prompt": {
+              "type": "template",
+              "content": "**Database Schema (with Labels):**\n{{schema}}\n\n**User Role Definitions:**\n{{roles}}\n\nGenerate the final Security Contracts."
+            },
+            "model": {
+              "id": "5",
+              "name": "DeepSeek Reasoner",
+              "type": "deepseek-reasoner"
+            }
+          },
+          "inputParameters": {
+            "schema": {
+              "type": "ref",
+              "content": [
+                "plugin_BaGi9",
+                "data"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "roles": {
+              "type": "ref",
+              "content": [
+                "unifier_roles",
+                "final_roles"
+              ],
+              "extra": {
+                "index": 1
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "save_roles",
+      "type": "10",
+      "meta": {
+        "position": {
+          "x": 2940,
+          "y": 81
+        }
+      },
+      "data": {
+        "title": "save_role_definition",
+        "inputs": {
+          "inputParameters": {
+            "content": {
+              "type": "ref",
+              "content": [
+                "llm_roles",
+                "output"
+              ]
+            }
+          },
+          "language": "python",
+          "code": "import os\ndef main(args: Args):\n    path = '/tmp/roles_cache.json'\n    data = args.params['content'].replace('```json','').replace('```','').strip()\n    with open(path, 'w') as f: f.write(data)\n    return {\"saved_content\": data}"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "saved_content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "saved_content"
+          ]
+        },
+        "exceptionConfig": {
+          "timeoutSeconds": 30
+        }
+      }
+    },
+    {
+      "id": "plugin_LnLBp",
+      "type": "19",
+      "meta": {
+        "position": {
+          "x": 7540,
+          "y": 10
+        }
+      },
+      "data": {
+        "title": "query_executor",
+        "inputs": {
+          "inputParameters": {
+            "query": {
+              "type": "ref",
+              "content": [
+                "code_AmVW7",
+                "saved_content"
+              ],
+              "extra": {
+                "index": 0
+              }
+            }
+          },
+          "pluginParam": {
+            "toolID": "72e74f11-e1b1-4a06-9e6a-e48adc53313e",
+            "toolName": "query_executor",
+            "pluginID": "698a18aa-7b49-498f-8d88-6fef3b431aa3",
+            "pluginName": "schema_fetcher",
+            "pluginVersion": "v0.0.4"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "error_code": {
+              "type": "integer",
+              "extra": {
+                "index": 1
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "extra": {
+                "index": 2
+              }
+            },
+            "data": {
+              "type": "object",
+              "extra": {
+                "index": 3
+              },
+              "properties": {}
+            }
+          },
+          "required": [
+            "error_code",
+            "error_message",
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "id": "llm_qJfmL",
+      "type": "3",
+      "meta": {
+        "position": {
+          "x": 6620,
+          "y": 0
+        }
+      },
+      "data": {
+        "title": "llm_masking_policies",
+        "inputs": {
+          "llmParam": {
+            "systemPrompt": {
+              "type": "template",
+              "content": "**Character Profile**\n\n- Role: Database Security Policy Generator.\n\n- Strengths: Familiar with dynamic data masking technology, capable of automatically generating SQL mask policy scripts based on database schema and role permissions.\n\n**Task Description**\n\n- Objective: Design and generate SQL scripts for dynamic data masking policies for a specified database schema {{schema}}. This policy allows specific roles to access tables containing sensitive data, but masks the sensitive information to avoid plaintext exposure, thus balancing data security and business needs. This is especially inportant to mask data for data analytics users who can agragate the data, but shall not view sepcific personal indintifier information (pii)\n\n- Expected Impact: Enhance data privacy protection, reduce security risks, and support roles in performing necessary operations without completely restricting access permissions.\n\n**Constraints**\n\n1. Output must contain only SQL query statements, without any additional text, comments, or explanations.\n\n2. Generate a masking policy using the specified syntax structure: `CREATE MASKING POLICY policy_name maskall ON LABEL(label_name) FILTER ON ROLES(role_list);`\n\n3. Placeholders such as `{{schema}}` need to be replaced with the actual database schema name during execution; other placeholders (such as `policy_name`, etc.) should be defined according to the specific scenario.\n\n4. The script should be directly writable into the database executable file, and the format should be correct and error-free.\n\n5. Strictly follow the order of the <Execution Steps> to generate the script, ensuring logical integrity.\n\n**Execution Steps**\n\n1. Identify all tables and columns containing sensitive data in `{{schema}}`.\n\n2. Define or associate existing labels (LABELs) for this sensitive data for group management.\n\n3. The roles that need to be included in the masking policies are the roles that have no permissions to the sensitve data columns as in the {{schema}} and {{contract}}. \n\n4. Combine the information to generate a `CREATE MASKING POLICY` statement, ensuring the syntax matches the provided example: `CREATE MASKING POLICY maskpol2 maskall ON LABEL(mask_lb2) FILTER ON ROLES(dev_mask, bob_mask);`\n\n5. Repeat steps 1-5 to generate corresponding statements for other sensitive data or roles in `{{schema}}`, covering all necessary scenarios.\n\n**Output Format**\n\n- The output is in plain text format, with one complete SQL statement per line.\n\n- Each statement ends with a semicolon (;).\n\n- Statements are separated by newlines, with no blank lines or indentation.\n\n- Example Output Structure (based on placeholders):\n\nCREATE MASKING POLICY {{policy_name}} maskall ON LABEL({{label_name}}) FILTER ON ROLES(roles list);\n\n**Character**\n\n- Role: Database Security Policy Generator.\n\n- Strengths: Familiar with dynamic data masking technology, capable of automatically generating SQL mask policy scripts based on database schema and role permissions.\n\n**Task Description**\n\n- Objective: Design and generate an SQL script for a dynamic data masking policy for a specified database schema {{schema}}. This policy allows specific roles to access tables containing sensitive data, but masks the sensitive information to avoid plaintext exposure, thus balancing data security and business needs.\n\n- Expected Impact: Enhance data privacy protection, reduce security risks, and support roles in performing necessary operations without completely restricting access permissions.\n\n**Constraints**\n\n1. The output must contain only SQL query statements, without any additional text, comments, or explanations.\n\n2. Generate a masking policy using the specified syntax structure: `CREATE MASKING POLICY policy_name maskall ON LABEL(label_name) FILTER ON ROLES(role_list);`\n\n3. Placeholders such as `{{schema}}` need to be replaced with the actual database schema name during execution; other placeholders (such as `policy_name`, etc.) should be defined according to the specific scenario.\n\n4. The script should be directly writable into the database executable file, and the format should be correct and error-free.\n\n5. Strictly follow the order of the <Execution Steps> to generate the script, ensuring logical integrity.\n\n**Execution Steps**\n\n1. Identify all tables and columns containing sensitive data in `{{schema}}`.\n\n2. Define or associate existing labels (LABELs) for this sensitive data for group management.\n\n3. Determine the masking type (such as randommasking, partialmasking, etc.), and select the appropriate masking method based on business requirements.\n\n4. List the roles that need to be masked. These roles should have access to sensitive data but do not need to view the plaintext.\n\n5. Combine the information to generate a `CREATE MASKING POLICY` statement, ensuring the syntax matches the provided example: `CREATE MASKING POLICY maskpol2 randommasking ON LABEL(mask_lb2) FILTER ON ROLES(dev_mask, bob_mask);`\n\n6. Repeat steps 1-5 to generate corresponding statements for other sensitive data or roles in `{{schema}}`, covering all necessary scenarios.\n\n**Output Format**\n\n- The output is in plain text format, with one complete SQL statement per line.\n\n- Each statement ends with a semicolon (;).\n\n- Statements are separated by newlines, with no blank lines or indentation.\n\n- Example output structure (based on placeholders):\n\nCREATE MASKING POLICY {{policy_name}} maskall ON LABEL({{label_name}}) FILTER ON ROLES(roles list);"
+            },
+            "prompt": {
+              "type": "template",
+              "content": "{{input}}"
+            },
+            "model": {
+              "id": "4",
+              "name": "DeepSeek Chat V3.2",
+              "type": "deepseek-chat"
+            }
+          },
+          "inputParameters": {
+            "contract": {
+              "type": "ref",
+              "content": [
+                "unifier_contracts",
+                "final_result"
+              ],
+              "extra": {
+                "index": 0
+              }
+            },
+            "schema": {
+              "type": "ref",
+              "content": [
+                "plugin_BaGi9",
+                "data"
+              ],
+              "extra": {
+                "index": 1
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string",
+              "extra": {
+                "index": 1
+              }
+            }
+          },
+          "required": [
+            "output"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "sourceNodeID": "aggregator",
+      "targetNodeID": "check_roles_cache",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "check_roles_cache",
+      "targetNodeID": "condition_roles",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "condition_roles",
+      "targetNodeID": "unifier_roles",
+      "sourcePortID": "yes_roles"
+    },
+    {
+      "sourceNodeID": "condition_roles",
+      "targetNodeID": "llm_roles",
+      "sourcePortID": "no_roles"
+    },
+    {
+      "sourceNodeID": "llm_roles",
+      "targetNodeID": "save_roles"
+    },
+    {
+      "sourceNodeID": "check_contracts_cache",
+      "targetNodeID": "condition_contracts",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "condition_contracts",
+      "targetNodeID": "unifier_contracts",
+      "sourcePortID": "yes_contracts"
+    },
+    {
+      "sourceNodeID": "condition_contracts",
+      "targetNodeID": "llm_contracts",
+      "sourcePortID": "no_contracts"
+    },
+    {
+      "sourceNodeID": "plugin_BaGi9",
+      "targetNodeID": "check_contracts_cache"
+    },
+    {
+      "sourceNodeID": "start",
+      "targetNodeID": "plugin_MvRud"
+    },
+    {
+      "sourceNodeID": "llm_qJfmL",
+      "targetNodeID": "code_AmVW7"
+    },
+    {
+      "sourceNodeID": "code_AmVW7",
+      "targetNodeID": "plugin_LnLBp",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "save_roles",
+      "targetNodeID": "unifier_roles",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "unifier_roles",
+      "targetNodeID": "plugin_BaGi9",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "save_contracts",
+      "targetNodeID": "unifier_contracts",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "unifier_contracts",
+      "targetNodeID": "llm_qJfmL",
+      "sourcePortID": "0"
+    },
+    {
+      "sourceNodeID": "plugin_LnLBp",
+      "targetNodeID": "end"
+    },
+    {
+      "sourceNodeID": "llm_contracts",
+      "targetNodeID": "save_contracts"
+    },
+    {
+      "sourceNodeID": "plugin_MvRud",
+      "targetNodeID": "aggregator"
+    }
+  ]
+}

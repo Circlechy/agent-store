@@ -1,0 +1,94 @@
+{
+  "contracts": [
+    {
+      "role": "billing_service",
+      "permissions": [
+        {
+          "schema": "public",
+          "table": "support_tickets",
+          "operations": ["SELECT", "INSERT", "UPDATE"],
+          "columns": ["ticket_id", "customer_id", "message", "created_at", "handled_by"],
+          "rows_count": "all",
+          "condition": "用于管理支持票据，包括通过ticket_id进行点查找，通过message内容搜索票据，以及创建和更新票据记录。"
+        },
+        {
+          "schema": "public",
+          "table": "customers",
+          "operations": ["SELECT"],
+          "columns": ["customer_id", "email", "full_name", "phone", "country_code", "created_at"],
+          "rows_count": "all",
+          "condition": "用于检索客户详情以支持票据处理，包括通过customer_id点查找和通过属性过滤客户。"
+        },
+        {
+          "schema": "public",
+          "table": "payments",
+          "operations": ["SELECT"],
+          "columns": ["payment_id", "customer_id", "card_last4", "amount", "currency", "created_at"],
+          "rows_count": "all",
+          "condition": "用于计费查询，包括通过payment_id或customer_id点查找支付记录，访问卡号后四位和金额信息。"
+        },
+        {
+          "schema": "public",
+          "table": "auth_accounts",
+          "operations": ["SELECT"],
+          "columns": ["customer_id", "last_login"],
+          "rows_count": "all",
+          "condition": "用于检查客户认证状态，如最后登录时间，用于支持操作。"
+        }
+      ],
+      "global_policy": "管理客户支持票据和计费操作，包括创建和更新票据、检索客户详情、访问支付信息以及检查认证数据，支持点查找和批量操作。"
+    },
+    {
+      "role": "support_agent",
+      "permissions": [
+        {
+          "schema": "public",
+          "table": "support_tickets",
+          "operations": ["SELECT", "INSERT", "UPDATE"],
+          "columns": ["ticket_id", "customer_id", "message", "created_at", "handled_by"],
+          "rows_count": "all",
+          "condition": "用于处理支持票据，包括创建新票据、通过ticket_id点查找、搜索消息内容、以及分配票据给代理。"
+        },
+        {
+          "schema": "public",
+          "table": "customers",
+          "operations": ["SELECT"],
+          "columns": ["customer_id", "email", "full_name", "phone", "country_code", "created_at"],
+          "rows_count": "all",
+          "condition": "用于搜索和查看客户信息以解决票据问题，包括通过customer_id点查找和通过属性搜索客户。"
+        },
+        {
+          "schema": "public",
+          "table": "payments",
+          "operations": ["SELECT"],
+          "columns": ["payment_id", "customer_id", "card_last4", "amount", "currency", "created_at"],
+          "rows_count": "all",
+          "condition": "用于访问支付信息以解决客户问题，包括通过payment_id或customer_id点查找支付记录。"
+        },
+        {
+          "schema": "public",
+          "table": "auth_accounts",
+          "operations": ["SELECT"],
+          "columns": ["customer_id", "last_login"],
+          "rows_count": "all",
+          "condition": "用于检查客户认证状态以协助问题解决，如验证账户活动。"
+        }
+      ],
+      "global_policy": "提供客户支持，处理支持票据，包括创建和分配票据、搜索和查看客户信息、访问支付和认证数据以解决问题，支持点查找和批量操作。"
+    },
+    {
+      "role": "analytics_user",
+      "permissions": [
+        {
+          "schema": "public",
+          "table": "usage_events",
+          "operations": ["SELECT"],
+          "columns": ["event_id", "customer_id", "event_type", "event_time"],
+          "rows_count": "all",
+          "condition": "用于分析用户使用事件，生成事件频率、用户参与趋势和统计报告，仅进行批量数据聚合和分析操作。"
+        }
+      ],
+      "global_policy": "进行用户使用事件的数据分析，生成报告和趋势统计，仅执行批量聚合操作。"
+    }
+  ]
+}
