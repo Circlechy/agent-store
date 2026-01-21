@@ -1,11 +1,10 @@
 <p align="center">
-  <img src="assets/logo2.png" width="180" alt="MovieGen Logo">
+  <img src="img.png" width="180" alt="MovieGen Logo">
 </p>
-
 <h1 align="center">MovieGen</h1>
 
 <p align="center">
-  <b>🎬 60 秒短剧生成 Agent —— 多 Agent 结构化规划 · Seedance(方舟) 音画渲染 · ffmpeg 一键装配</b>
+  <b>🎬短剧生成 Agent —— 多 Agent 结构化规划 · Seedance(方舟) 音画渲染 · ffmpeg 一键装配</b>
 </p>
 
 <p align="center">
