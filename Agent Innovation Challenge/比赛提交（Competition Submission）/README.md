@@ -1,3 +1,0 @@
-## README
-
-The competition results are submitted in the directory, with folders named using the team name + agent name.
