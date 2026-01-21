@@ -11,6 +11,14 @@ JiuwenFintech Agent是一个基于**多智能体系统（Multi-Agent System, MAS
 该系统通过**模拟专业证券公司投研团队**的协作模式，集成多个专业化AI智能体，实现任务分解、协同推理与交叉校验，显著提升分析效率与覆盖广度。
 每个智能体具备领域专精能力，并能在统一协调机制下进行信息交换与共识达成，模拟真实投研团队的协作模式，旨在为用户提供**专业级、全方位、多角度、自动化、可信赖**的证券分析服务。
 
+以2025年的数据为基础，基于JiuwenFintech生成的报告，构造给出买入评级股票的投资组合，投资组合在2026年1月1日至2026年1月19日投资总收益为14.13%，
+高于上证综指同期1.94%的涨幅，取的12.19%的$\alpha$收益。 具体的报告与投资组合构建标的可参考`output`文件夹。
+<div align="center">
+  <img src="./assets/ReturnCompare.png" width="80%" alt="JiuwenFintech Slogan" />
+</div>
+
+<br>
+
 ## 系统架构
 JiuwenFintech Agent采用**三层级联式多智能体架构（Three-Tier Cascaded Multi-Agent Architecture）**，通过角色分工、任务递进与观点博弈机制，模拟专业投研团队从数据处理到投资决策的完整工作流。
 各层级智能体具备明确职责边界与上下文感知能力，形成“**感知 → 分析 → 辩证 → 决策**”的闭环推理链。
@@ -149,16 +157,6 @@ config = dict(project_dir=os.path.abspath(os.path.join(os.path.dirname(__file__)
 workflow = JiuwenFintechWorkflow(config)
 workflow.run("")  # 股票代码字符串，如：workflow.run("000001")
 ```
-
-## 回测验证
-
-以2025年的数据为基础，基于JiuwenFintech生成的报告，构造给出买入评级股票的投资组合，投资组合在2026年1月1日至2026年1月19日投资总收益为14.13%，
-高于上证综指同期1.94%的涨幅，取的12.19%的$\alpha$收益。 具体的报告与投资组合构建标的可参考`output`文件夹。
-<div align="center">
-  <img src="./assets/ReturnCompare.png" width="80%" alt="JiuwenFintech Slogan" />
-</div>
-
-<br>
 
 <div align="center">
   <img src="./assets/LOGO.png" width="15%" alt="JiuwenFintech Slogan" />
