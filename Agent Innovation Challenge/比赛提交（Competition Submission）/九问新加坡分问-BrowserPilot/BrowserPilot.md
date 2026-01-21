@@ -43,7 +43,7 @@ Browser Pilot 是一个浏览器级 AI 助手，能够理解网页语义、执�
 ### 整体架构
 
 <p align="center">
-  <img src="assets/架构图_zh.svg" alt="Architecture" width="800">
+  <img src="Competition Code/assets/架构图_zh.svg" alt="Architecture" width="800">
 </p>
 
 Browser Pilot 由**浏览器插件（前端）** 和 **Agent 服务（后端）** 两部分组成。
