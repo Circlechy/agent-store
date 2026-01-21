@@ -66,7 +66,7 @@ Agent 先出方案，你点头再动手，预授权命令无需反复确认
 │   └──────────────────────────────────────────────────────┘     │
 │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
 │   │ 主 Agent    │  │ Sub Agent   │  │ Skills 系统 │            │
-│   │ (Sonnet 4)  │  │ (Haiku 3.5) │  │ 可扩展插件  │            │
+│   │ (GLM-4)     │  │ (GLM-4-Air) │  │ 可扩展插件  │            │
 │   │ 复杂推理    │  │ 简单任务    │  │ 领域增强    │            │
 │   └─────────────┘  └─────────────┘  └─────────────┘            │
 └───────────────────────────┬─────────────────────────────────────┘
@@ -145,7 +145,7 @@ Agent 先出方案，你点头再动手，预授权命令无需反复确认
 子Agent 工作原理：
 
 ┌──────────────────────────────────────────────┐
-│              主 Agent (Sonnet 4)              │
+│              主 Agent (GLM-4)                │
 │  - 任务分解与派发                             │
 │  - 结果汇总与报告生成                         │
 └──────────────┬───────────────────────────────┘
@@ -154,7 +154,8 @@ Agent 先出方案，你点头再动手，预授权命令无需反复确认
     ▼          ▼          ▼
 ┌────────┐ ┌────────┐ ┌────────┐
 │子Agent1│ │子Agent2│ │子Agent3│
-│(Haiku) │ │(Haiku) │ │(Haiku) │
+│(GLM-4  │ │(GLM-4  │ │(GLM-4  │
+│  Air)  │ │  Air)  │ │  Air)  │
 │独立上下文│ │独立上下文│ │独立上下文│
 └────────┘ └────────┘ └────────┘
     │          │          │
@@ -259,10 +260,10 @@ allowed-tools: read_file, grep, glob
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │   用户请求 ──▶ 任务复杂度分析 ──┬──▶ 复杂任务 ──▶ 主模型   │
-│                                 │     (40-50%)    Sonnet 4  │
+│                                 │     (40-50%)    GLM-4    │
 │                                 │                           │
-│                                 └──▶ 简单任务 ──▶ 小模型   │
-│                                       (50-60%)    Haiku 3.5 │
+│                                 └──▶ 简单任务 ──▶ 轻量模型 │
+│                                       (50-60%)    GLM-4-Air │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
 │  💡 效果：相比单一模型方案，成本降低 70-80%                  │
@@ -271,10 +272,10 @@ allowed-tools: read_file, grep, glob
 
 | 任务类型 | 复杂度 | 使用模型 | 原因 |
 |---------|--------|---------|------|
-| 代码架构设计 | 高 | Sonnet 4 | 需要深度推理 |
-| Bug 根因分析 | 高 | Sonnet 4 | 复杂逻辑推断 |
-| 文件内容读取 | 低 | Haiku 3.5 | 简单信息提取 |
-| 代码格式化 | 低 | Haiku 3.5 | 机械操作 |
+| 代码架构设计 | 高 | GLM-4 | 需要深度推理 |
+| Bug 根因分析 | 高 | GLM-4 | 复杂逻辑推断 |
+| 文件内容读取 | 低 | GLM-4-Air | 简单信息提取 |
+| 代码格式化 | 低 | GLM-4-Air | 机械操作 |
 
 ---
 
@@ -516,10 +517,10 @@ allowed-tools: read_file, grep, glob
 
 ```bash
 # Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/openjiuwen/code/main/install.sh | bash
+curl -fsSL https://gitcode.com/SnapeK/openjiuwen-code/raw/main/install.sh | bash
 
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/openjiuwen/code/main/install.ps1 | iex
+irm https://gitcode.com/SnapeK/openjiuwen-code/raw/main/install.ps1 | iex
 
 # 或手动安装
 git clone https://gitcode.com/SnapeK/openjiuwen-code.git
@@ -558,8 +559,8 @@ jiuwen
 
 - **Agent 框架**: openJiuwen agent-core SDK
 - **推理模式**: ReAct (Reasoning + Acting)
-- **主模型**: Claude Sonnet 4 / GPT-4
-- **辅助模型**: Claude Haiku 3.5 / GPT-3.5
+- **主模型**: GLM-4 (智谱 AI)
+- **辅助模型**: GLM-4-Air (智谱 AI)
 - **CLI 框架**: prompt_toolkit + Rich
 - **搜索引擎**: ripgrep (高性能代码搜索)
 - **跨平台**: Python 3.11+
