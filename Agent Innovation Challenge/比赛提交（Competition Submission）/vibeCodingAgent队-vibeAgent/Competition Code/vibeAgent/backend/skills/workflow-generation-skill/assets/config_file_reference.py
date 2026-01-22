@@ -1,7 +1,6 @@
 # ========== config.py示例代码 ==========
 # 1. 环境配置
 import os
-import setup_path # 必须在导入 openjiuwen 之前
 
 API_BASE = os.getenv("API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 API_KEY = os.getenv("API_KEY", "")

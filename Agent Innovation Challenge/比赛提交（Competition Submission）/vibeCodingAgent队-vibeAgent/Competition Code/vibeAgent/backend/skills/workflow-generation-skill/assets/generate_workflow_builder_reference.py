@@ -1,6 +1,4 @@
 # ========== 参考workflow_builder.py示例代码 ==========
-import setup_path
-
 from config import create_workflow_config, WORKFLOW_ID, WORKFLOW_NAME, WORKFLOW_VERSION, WORKFLOW_DESCRIPTION, AGENT_ID, AGENT_VERSION, AGENT_DESCRIPTION
 from components import (
     create_start_component,

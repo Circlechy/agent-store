@@ -1,5 +1,5 @@
-# Backend V3 依赖
-
+# Backend依赖
+openjiuwen==0.1.1
 # Web 框架
 # 使用稳定版本以避免中间件配置错误
 fastapi>=0.104.0,<0.120.0
