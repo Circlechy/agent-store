@@ -355,3 +355,9 @@ export const incrementalBuildAPI = {
   },
 }
 
+// 部署 API
+export const deployAPI = {
+  deploy: (data: { workflow_dir: string }) =>
+    apiClient.post('/workflow/deploy', data),
+}
+

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Tree, Tabs, Button, Space, Typography, message, Spin } from 'antd'
-import { FolderOutlined, FileOutlined, BranchesOutlined, DownloadOutlined, PlayCircleOutlined } from '@ant-design/icons'
+import { FolderOutlined, FileOutlined, BranchesOutlined, DownloadOutlined, PlayCircleOutlined, RocketOutlined } from '@ant-design/icons'
 import type { DataNode } from 'antd/es/tree'
 import Editor from '@monaco-editor/react'
 import FileViewer from '../FileViewer/FileViewer.tsx'
@@ -15,6 +15,9 @@ interface CodeDirectoryProps {
   defaultActiveTab?: string  // 默认激活的tab
   isBuildCompleted?: boolean  // 是否所有代码生成完成
   onTestRun?: () => void  // 试运行回调
+  onDeploy?: () => void  // 一键部署回调
+  isTestCompleted?: boolean  // 试运行是否成功完成
+  isDeploying?: boolean  // 是否正在部署
 }
 
 export interface FileTreeItem {
@@ -25,7 +28,7 @@ export interface FileTreeItem {
   children?: FileTreeItem[]
 }
 
-function CodeDirectory({ files = [], workflow, workflowDirectory, agentMode = 'workflow', onTabChange, defaultActiveTab, isBuildCompleted = false, onTestRun }: CodeDirectoryProps) {
+function CodeDirectory({ files = [], workflow, workflowDirectory, agentMode = 'workflow', onTabChange, defaultActiveTab, isBuildCompleted = false, onTestRun, onDeploy, isTestCompleted = false, isDeploying = false }: CodeDirectoryProps) {
   const [selectedFile, setSelectedFile] = useState<FileTreeItem | null>(null)
   const [viewerVisible, setViewerVisible] = useState(false)
   const [activeTab, setActiveTab] = useState<string>(defaultActiveTab || 'files')
@@ -57,6 +60,29 @@ function CodeDirectory({ files = [], workflow, workflowDirectory, agentMode = 'w
       }}
     >
       试运行
+    </Button>
+  ) : null
+
+  const deployButton = onDeploy && agentMode === 'workflow' ? (
+    <Button
+      size="small"
+      icon={<RocketOutlined />}
+      onClick={onDeploy}
+      disabled={!isTestCompleted || !isBuildCompleted}
+      loading={isDeploying}
+      type={isTestCompleted && isBuildCompleted ? 'primary' : 'default'}
+      title={!isTestCompleted ? '请先完成试运行' : !isBuildCompleted ? '工作流尚未生成完成' : '一键部署工作流服务'}
+      style={{
+        background: isTestCompleted && isBuildCompleted
+          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+          : undefined,
+        border: isTestCompleted && isBuildCompleted ? 'none' : undefined,
+        opacity: isTestCompleted && isBuildCompleted ? 1 : 0.5,
+        marginLeft: '8px',
+        cursor: isTestCompleted && isBuildCompleted ? 'pointer' : 'not-allowed',
+      }}
+    >
+      一键部署
     </Button>
   ) : null
 
@@ -295,8 +321,9 @@ function CodeDirectory({ files = [], workflow, workflowDirectory, agentMode = 'w
         }}
         tabBarExtraContent={{
           right: (
-            <div style={{ display: 'flex', alignItems: 'center', paddingRight: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', paddingRight: 12, gap: '8px' }}>
               {testRunButton}
+              {deployButton}
             </div>
           ),
         }}
