@@ -8,7 +8,6 @@ components.py 中实现所有的组件创建函数，每个组件创建函数必
 
 ## components.py 必需的导入
 ```python
-import setup_path
 from config import create_model_config
 
 # 组件导入（根据实际使用的组件类型，选择需要的导入）
@@ -292,7 +291,6 @@ def create_branch_component() -> BranchComponent:
 ## 代码生成要求
 1. **import语句必须全部集中在文件开头**
    - 所有import语句必须放在文件的最开始位置，不要分散在各个组件示例中
-   - 必须导入：`import setup_path`（必须在导入 openjiuwen 之前）
    - 必须导入：`from config import create_model_config`
    - 根据实际使用的组件类型，选择需要的导入语句
 

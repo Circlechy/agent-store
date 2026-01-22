@@ -14,7 +14,6 @@
 
 ```python
 import os
-import setup_path  # 必须在导入 openjiuwen 之前
 
 # 1. 环境变量配置
 API_BASE = os.getenv("API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
