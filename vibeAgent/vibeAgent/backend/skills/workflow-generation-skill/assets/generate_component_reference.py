@@ -2,7 +2,6 @@
 # **重要说明**：生成components.py时，必须将所有import语句集中在文件开头，不要分散在各个组件示例中
 
 # ========== 导入语句（必须放在文件开头） ==========
-import setup_path
 from config import create_model_config
 
 # 组件导入（根据实际使用的组件类型，选择需要的导入）
