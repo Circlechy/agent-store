@@ -1,17 +1,51 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
-from registration_agent.agents.base import SimpleAgent, make_card
+from openjiuwen.agent.config.base import AgentConfig
+from openjiuwen.core.agent.agent import BaseAgent
+
 from registration_agent.agents.clinic_index import format_doctors, format_qa
 from registration_agent.utils.llm import llm_chat_json
 
 
-class DoctorTriageAgent(SimpleAgent):
+class DoctorTriageAgent(BaseAgent):
     def __init__(self):
-        super().__init__(make_card(name="doctor_triage_agent", description="医生选择助手：从医生池选择最终1名医生"))
+        super().__init__(AgentConfig(id="doctor_triage_agent", description="医生选择助手：从医生池选择最终1名医生"))
 
-    async def run(self, *, patient_text: str, qa: list[dict[str, str]], doctors: list[dict[str, Any]], available_time: str) -> dict[str, Any]:
+    async def invoke(self, inputs: dict, runtime=None) -> dict:
+        payload_raw = inputs.get("query")
+        if isinstance(payload_raw, str):
+            try:
+                payload = json.loads(payload_raw)
+            except Exception:
+                payload = {}
+        elif isinstance(payload_raw, dict):
+            payload = payload_raw
+        else:
+            payload = {}
+
+        patient_text = str(payload.get("patient_text", "") or "")
+        qa = payload.get("qa") or []
+        doctors = payload.get("doctors") or []
+        available_time = str(payload.get("available_time", "") or "")
+        if not isinstance(qa, list):
+            qa = []
+        if not isinstance(doctors, list):
+            doctors = []
+
+        return await self._run(
+            patient_text=patient_text,
+            qa=qa,
+            doctors=doctors,
+            available_time=available_time,
+        )
+
+    async def stream(self, inputs: dict, runtime=None):
+        yield await self.invoke(inputs, runtime=runtime)
+
+    async def _run(self, *, patient_text: str, qa: list[dict[str, str]], doctors: list[dict[str, Any]], available_time: str) -> dict[str, Any]:
         doctors_text = format_doctors(doctors)
         messages = [
             {

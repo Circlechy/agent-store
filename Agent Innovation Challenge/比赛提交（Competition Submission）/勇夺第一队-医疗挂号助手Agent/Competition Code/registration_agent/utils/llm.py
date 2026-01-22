@@ -1,16 +1,18 @@
 import os
 from typing import Any
 
-from openjiuwen.core.foundation.llm import ModelFactory
+try:
+    # pip 版本 openjiuwen
+    from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
+except Exception:  # pragma: no cover
+    # 兼容旧版本路径（如存在）
+    from openjiuwen.core.foundation.llm import ModelFactory  # type: ignore
 
 
 os.environ.setdefault("API_BASE", "https://api.deepseek.com/v1")
 os.environ.setdefault("MODEL_PROVIDER", "openai")
 os.environ.setdefault("MODEL_NAME", "deepseek-chat")
 os.environ.setdefault("API_KEY", "sk-738b635f64264a62a73665a41739022b")
-
-# openjiuwen 默认会读取 LLM_SSL_VERIFY / LLM_SSL_CERT。
-# 如果 LLM_SSL_VERIFY=true 但未配置证书，会直接抛错；这里做一个兜底，避免本地默认环境被卡住。
 os.environ.setdefault("LLM_SSL_VERIFY", "false")
 if os.getenv("LLM_SSL_VERIFY", "").strip().lower() in {"true", "1", "yes"} and not os.getenv("LLM_SSL_CERT"):
     os.environ["LLM_SSL_VERIFY"] = "false"

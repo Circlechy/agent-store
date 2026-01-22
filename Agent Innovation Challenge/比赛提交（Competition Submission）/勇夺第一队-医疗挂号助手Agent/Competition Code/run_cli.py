@@ -28,7 +28,7 @@ async def main():
                 ans = input("请回答：").strip()
                 res = await app.step(
                     session_id=session_id,
-                    payload={"answer": ans, "next_stage": res.get("next_stage", "intake")},
+                    payload={"answer": ans},
                 )
                 continue
             if t == "doctor_time_select":

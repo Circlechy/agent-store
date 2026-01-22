@@ -99,9 +99,9 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    server = HTTPServer(("172.20.208.1", 8080), Handler)
-    print("HTTP server listening on http://172.20.208.1:8080")
-    print("Open UI: http://172.20.208.1:8080/")
+    server = HTTPServer(("127.0.0.1", 8080), Handler)
+    print("HTTP server listening on http://127.0.0.1:8080")
+    print("Open UI: http://127.0.0.1:8080/")
     print("POST /session -> {session_id}")
     print("POST /step -> drive the state machine")
     server.serve_forever()
