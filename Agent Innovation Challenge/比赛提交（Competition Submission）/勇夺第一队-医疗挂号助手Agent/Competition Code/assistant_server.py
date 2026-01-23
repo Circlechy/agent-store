@@ -5,9 +5,6 @@ from mcp.server.session import ServerSession
 from pydantic import BaseModel
 
 from registration_agent.orchestrator import Orchestrator
-from registration_agent.agents.clinic_index import build_clinic_index
-from registration_agent.utils.paths import assistant_dir
-from registration_agent.utils.io import read_json
 
 
 mcp = FastMCP(
@@ -18,150 +15,93 @@ mcp = FastMCP(
     stateless_http=False,
 )
 
-
-USER_PROFILE_PATH = assistant_dir() / "user_profile.json"
-
-
 class AdditionalInfoResponse(BaseModel):
     result: str
 
 _orchestrator = Orchestrator()
-
-
-def _load_profile_text() -> tuple[str, dict]:
-    if not USER_PROFILE_PATH.exists():
-        return "", {"空闲时间": "任意时间"}
-    data = read_json(USER_PROFILE_PATH)
-    lines = [f"{k}：{v}" for k, v in data.items()]
-    return "用户档案：\n" + "\n".join(lines), data
-
-
 @mcp.tool()
 async def process_user_query(user_query: str, ctx: Context[ServerSession, None]) -> str:
-    # profile: no privacy/permission layer, use real profile directly
-    profile_text, profile_data = _load_profile_text()
-    available_time = str(profile_data.get("空闲时间", ""))
+    # Use openjiuwen ControllerGroup.invoke for the full flow.
+    # Keep a stable conversation_id for the whole interactive session.
+    conversation_id = getattr(ctx, "session_id", None)
+    if conversation_id is None:
+        conversation_id = "mcp_session"
 
-    description = user_query
-    if profile_text:
-        description = f"{user_query}\n\n{profile_text}"
+    payload: dict = {"user_query": user_query}
 
-    qa: list[dict[str, str]] = []
-    next_stage = "intake"
+    for _ in range(12):
+        res = await _orchestrator.group.invoke(
+            {
+                "query": json.dumps(payload, ensure_ascii=False),
+                "conversation_id": str(conversation_id),
+            }
+        )
 
-    intake = _orchestrator.group.agents["intake"]  # type: ignore
-    primary_triage = _orchestrator.group.agents["primary_triage"]  # type: ignore
-    secondary_triage = _orchestrator.group.agents["secondary_triage"]  # type: ignore
-    doctor_triage = _orchestrator.group.agents["doctor_triage"]  # type: ignore
+        if not isinstance(res, dict):
+            return str(res)
 
-    idx = build_clinic_index()
-    primaries = sorted(idx.keys())
-    if not primaries:
-        return "doctor_data 为空或不存在"
+        if res.get("status") == "done":
+            return str(res.get("final_response", ""))
 
-    selected_primary = ""
-    selected_secondaries: list[str] = []
-    selected_doctor: dict = {}
+        if res.get("status") != "need_input":
+            return json.dumps(res, ensure_ascii=False)
 
-    # iterate stages with LLM-driven optional clarify
-    for _ in range(8):
-        if next_stage == "intake":
-            r = await intake.run(user_text=description, qa=qa)
-            if r.get("need_clarify"):
-                payload = json.dumps({"type": "clarify", "question": r.get("question", "")}, ensure_ascii=False)
-                res = await ctx.elicit(message=payload, schema=AdditionalInfoResponse)
-                ans = ""
-                if res.action == "accept" and getattr(res, "data", None) is not None:
-                    ans = str(res.data.result or "")
-                qa.append({"q": str(r.get("question", "")), "a": ans})
-                next_stage = "intake"
-                continue
-            next_stage = "primary"
+        t = str(res.get("type", ""))
+        if t == "clarify":
+            msg = json.dumps({"type": "clarify", "question": res.get("question", "")}, ensure_ascii=False)
+            r = await ctx.elicit(message=msg, schema=AdditionalInfoResponse)
+            ans = ""
+            if r.action == "accept" and getattr(r, "data", None) is not None:
+                ans = str(r.data.result or "")
+            payload = {"answer": ans, "next_stage": res.get("next_stage", "intake")}
+            continue
 
-        if next_stage == "primary":
-            r = await primary_triage.run(patient_text=description, qa=qa, primaries=primaries)
-            if r.get("need_clarify"):
-                payload = json.dumps({"type": "clarify", "question": r.get("question", "")}, ensure_ascii=False)
-                res = await ctx.elicit(message=payload, schema=AdditionalInfoResponse)
-                ans = ""
-                if res.action == "accept" and getattr(res, "data", None) is not None:
-                    ans = str(res.data.result or "")
-                qa.append({"q": str(r.get("question", "")), "a": ans})
-                next_stage = "primary"
-                continue
-            selected_primary = str(r.get("primary", "")).strip()
-            next_stage = "secondary"
-
-        if next_stage == "secondary":
-            secondaries = sorted((idx.get(selected_primary) or {}).keys())
-            if not secondaries:
-                return f"一级门诊 {selected_primary} 下没有二级门诊"
-            r = await secondary_triage.run(
-                patient_text=description,
-                qa=qa,
-                primary=selected_primary,
-                secondaries=secondaries,
+        if t == "doctor_time_select":
+            msg = json.dumps(
+                {
+                    "type": "doctor_time_select",
+                    "question": "请回复医生编号（1-3）：",
+                    "options": res.get("options", []),
+                },
+                ensure_ascii=False,
             )
-            if r.get("need_clarify"):
-                payload = json.dumps({"type": "clarify", "question": r.get("question", "")}, ensure_ascii=False)
-                res = await ctx.elicit(message=payload, schema=AdditionalInfoResponse)
-                ans = ""
-                if res.action == "accept" and getattr(res, "data", None) is not None:
-                    ans = str(res.data.result or "")
-                qa.append({"q": str(r.get("question", "")), "a": ans})
-                next_stage = "secondary"
-                continue
-            selected_secondaries = list(r.get("secondaries", []) or [])
-            next_stage = "doctor"
+            r = await ctx.elicit(message=msg, schema=AdditionalInfoResponse)
+            pick = ""
+            if r.action == "accept" and getattr(r, "data", None) is not None:
+                pick = str(r.data.result or "")
+            try:
+                idx = int(pick.strip()) - 1
+            except Exception:
+                idx = -1
+            payload = {"selected_index": idx}
+            continue
 
-        if next_stage == "doctor":
-            pool: list[dict] = []
-            for s in selected_secondaries:
-                pool.extend((idx.get(selected_primary, {}).get(s) or []))
+        if t == "time_select":
+            msg = json.dumps(
+                {
+                    "type": "time_select",
+                    "question": "请回复时间编号：",
+                    "doctor": res.get("doctor", {}),
+                    "time_slots": res.get("time_slots", []),
+                },
+                ensure_ascii=False,
+            )
+            r = await ctx.elicit(message=msg, schema=AdditionalInfoResponse)
+            pick = ""
+            if r.action == "accept" and getattr(r, "data", None) is not None:
+                pick = str(r.data.result or "")
+            slots = list(res.get("time_slots") or [])
+            try:
+                idx = int(pick.strip()) - 1
+            except Exception:
+                idx = -1
+            chosen = slots[idx] if 0 <= idx < len(slots) else ""
+            payload = {"selected_time": chosen}
+            continue
 
-            seen: set[tuple[str, str]] = set()
-            uniq: list[dict] = []
-            for d in pool:
-                key = (str(d.get("hospital_id", "")), str(d.get("id", "")))
-                if key in seen:
-                    continue
-                seen.add(key)
-                uniq.append(d)
-            if not uniq:
-                return "所选二级门诊下没有医生数据"
+        return json.dumps(res, ensure_ascii=False)
 
-            r = await doctor_triage.run(patient_text=description, qa=qa, doctors=uniq[:200], available_time=available_time)
-            if r.get("need_clarify"):
-                payload = json.dumps({"type": "clarify", "question": r.get("question", "")}, ensure_ascii=False)
-                res = await ctx.elicit(message=payload, schema=AdditionalInfoResponse)
-                ans = ""
-                if res.action == "accept" and getattr(res, "data", None) is not None:
-                    ans = str(res.data.result or "")
-                qa.append({"q": str(r.get("question", "")), "a": ans})
-                next_stage = "doctor"
-                continue
-
-            selected_doctor = r.get("selected_doctor") or {}
-            break
-
-    doctor = selected_doctor
-
-    lines = [""]
-    lines.append(f"医院: {doctor.get('hospital_name', doctor.get('hospital', '未提供'))}")
-    lines.append(f"医生: {doctor.get('name', '未提供')}")
-    lines.append(
-        f"科室: {doctor.get('primary_department', '未提供')} / {doctor.get('secondary_department', '未提供')}"
-    )
-    lines.append(f"挂号时间: {doctor.get('appointment_time', '未提供')}")
-    if doctor.get("reason"):
-        lines.append(f"推荐理由: {doctor.get('reason')}")
-    if doctor.get("appointment_url"):
-        lines.append(f"挂号链接: {doctor.get('appointment_url')}")
-    if doctor.get("profile_url"):
-        lines.append(f"医生主页: {doctor.get('profile_url')}")
-    final_response = "\n".join(lines).strip()
-
-    return final_response
+    return "对话轮次过多，已停止。"
 
 
 if __name__ == "__main__":

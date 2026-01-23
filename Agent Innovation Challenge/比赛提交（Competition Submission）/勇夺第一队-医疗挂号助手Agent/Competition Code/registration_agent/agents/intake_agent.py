@@ -1,16 +1,40 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
-from registration_agent.agents.base import SimpleAgent, make_card
+from openjiuwen.agent.config.base import AgentConfig
+from openjiuwen.core.agent.agent import BaseAgent
+
 from registration_agent.utils.llm import llm_chat_json
 
 
-class IntakeAgent(SimpleAgent):
+class IntakeAgent(BaseAgent):
     def __init__(self):
-        super().__init__(make_card(name="intake_agent", description="总挂号助手：判断是否需要回问补充"))
+        super().__init__(AgentConfig(id="intake_agent", description="总挂号助手：判断是否需要回问补充"))
 
-    async def run(self, *, user_text: str, qa: list[dict[str, str]]) -> dict[str, Any]:
+    async def invoke(self, inputs: dict, runtime=None) -> dict:
+        payload_raw = inputs.get("query")
+        if isinstance(payload_raw, str):
+            try:
+                payload = json.loads(payload_raw) if payload_raw.strip().startswith("{") else {"user_text": payload_raw}
+            except Exception:
+                payload = {"user_text": payload_raw}
+        elif isinstance(payload_raw, dict):
+            payload = payload_raw
+        else:
+            payload = {}
+
+        user_text = str(payload.get("user_text", "") or "")
+        qa = payload.get("qa") or []
+        if not isinstance(qa, list):
+            qa = []
+        return await self._run(user_text=user_text, qa=qa)
+
+    async def stream(self, inputs: dict, runtime=None):
+        yield await self.invoke(inputs, runtime=runtime)
+
+    async def _run(self, *, user_text: str, qa: list[dict[str, str]]) -> dict[str, Any]:
         messages = [
             {
                 "role": "system",

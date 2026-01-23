@@ -1,17 +1,44 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
-from registration_agent.agents.base import SimpleAgent, make_card
+from openjiuwen.agent.config.base import AgentConfig
+from openjiuwen.core.agent.agent import BaseAgent
+
 from registration_agent.agents.clinic_index import format_list, format_qa
 from registration_agent.utils.llm import llm_chat_json
 
 
-class PrimaryTriageAgent(SimpleAgent):
+class PrimaryTriageAgent(BaseAgent):
     def __init__(self):
-        super().__init__(make_card(name="primary_triage_agent", description="一级分诊助手：选1个一级门诊，必要时回问"))
+        super().__init__(AgentConfig(id="primary_triage_agent", description="一级分诊助手：选1个一级门诊，必要时回问"))
 
-    async def run(self, *, patient_text: str, qa: list[dict[str, str]], primaries: list[str]) -> dict[str, Any]:
+    async def invoke(self, inputs: dict, runtime=None) -> dict:
+        payload_raw = inputs.get("query")
+        if isinstance(payload_raw, str):
+            try:
+                payload = json.loads(payload_raw)
+            except Exception:
+                payload = {}
+        elif isinstance(payload_raw, dict):
+            payload = payload_raw
+        else:
+            payload = {}
+
+        patient_text = str(payload.get("patient_text", "") or "")
+        qa = payload.get("qa") or []
+        primaries = payload.get("primaries") or []
+        if not isinstance(qa, list):
+            qa = []
+        if not isinstance(primaries, list):
+            primaries = []
+        return await self._run(patient_text=patient_text, qa=qa, primaries=[str(x) for x in primaries])
+
+    async def stream(self, inputs: dict, runtime=None):
+        yield await self.invoke(inputs, runtime=runtime)
+
+    async def _run(self, *, patient_text: str, qa: list[dict[str, str]], primaries: list[str]) -> dict[str, Any]:
         messages = [
             {
                 "role": "system",
