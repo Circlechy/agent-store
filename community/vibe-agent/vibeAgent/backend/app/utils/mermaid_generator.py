@@ -598,6 +598,61 @@ class MermaidGenerator:
         
         return node_id
     
+    def _filter_isolated_nodes(self, nodes: List[Dict], edges: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+        """
+        过滤掉孤立节点（既没有入边也没有出边的节点）
+        
+        注意：start 和 end 节点即使只有一边的连接也会被保留
+        
+        Args:
+            nodes: 节点列表
+            edges: 边列表
+            
+        Returns:
+            过滤后的节点列表和边列表
+        """
+        if not nodes:
+            return nodes, edges
+        
+        # 收集所有有连接的节点ID（出现在边的 from 或 to 中）
+        connected_node_ids = set()
+        for edge in edges:
+            connected_node_ids.add(edge['from'])
+            connected_node_ids.add(edge['to'])
+        
+        # 识别孤立节点：既不在 connected_node_ids 中，也不是 start/end 节点
+        node_ids_set = {node['id'] for node in nodes}
+        isolated_node_ids = set()
+        
+        for node in nodes:
+            node_id = node['id']
+            node_type = node.get('type', 'process')
+            
+            # start 和 end 节点即使没有连接也保留（它们可能是工作流的入口/出口）
+            if node_type in ['start', 'end']:
+                continue
+            
+            # 如果节点既没有入边也没有出边，则认为是孤立的
+            if node_id not in connected_node_ids:
+                isolated_node_ids.add(node_id)
+        
+        # 如果没有孤立节点，直接返回
+        if not isolated_node_ids:
+            return nodes, edges
+        
+        # 过滤掉孤立节点
+        filtered_nodes = [node for node in nodes if node['id'] not in isolated_node_ids]
+        
+        # 过滤掉与孤立节点相关的边（虽然理论上不应该有，但为了安全起见）
+        filtered_edges = [
+            edge for edge in edges 
+            if edge['from'] not in isolated_node_ids and edge['to'] not in isolated_node_ids
+        ]
+        
+        logger.debug(f"过滤掉 {len(isolated_node_ids)} 个孤立节点: {isolated_node_ids}")
+        
+        return filtered_nodes, filtered_edges
+    
     def generate_mermaid(self, workflow_data: Dict[str, any]) -> str:
         """
         生成 Mermaid 流程图代码
@@ -610,6 +665,9 @@ class MermaidGenerator:
         """
         nodes = workflow_data.get('nodes', [])
         edges = workflow_data.get('edges', [])
+        
+        # 过滤掉孤立节点
+        nodes, edges = self._filter_isolated_nodes(nodes, edges)
         
         if not nodes:
             return "graph TD\n    Start[开始] --> End[结束]"

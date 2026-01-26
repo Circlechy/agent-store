@@ -1,14 +1,4 @@
 import { useState, useRef, useEffect } from 'react'
-<<<<<<< HEAD:community/vibe-agent/vibeAgent/frontend/src/pages/WorkflowBuilderIncremental.tsx
-import { Layout, Card, Button, Space, Typography, message, Input, Spin } from 'antd'
-import { DownloadOutlined, PlayCircleOutlined } from '@ant-design/icons'
-import BuildProcess, { BuildStep } from '../components/BuildProcess/BuildProcess.tsx'
-import CodeDirectory, { FileTreeItem } from '../components/CodeDirectory/CodeDirectory.tsx'
-import WorkflowChat from '../components/WorkflowChat/WorkflowChat.tsx'
-import ErrorDisplay from '../components/ErrorDisplay/ErrorDisplay.tsx'
-import AgentModeSelector, { AgentMode } from '../components/AgentModeSelector'
-import { incrementalBuildAPI } from '../services/api.ts'
-=======
 import { Layout, Card, Button, Space, Typography, message, Input, Spin, Modal, Divider } from 'antd'
 import { DownloadOutlined, PlayCircleOutlined, RocketOutlined } from '@ant-design/icons'
 import BuildProcess, { BuildStep } from '../components/BuildProcess/BuildProcess'
@@ -17,7 +7,6 @@ import WorkflowChat from '../components/WorkflowChat/WorkflowChat'
 import ErrorDisplay from '../components/ErrorDisplay/ErrorDisplay'
 import AgentModeSelector, { AgentMode } from '../components/AgentModeSelector'
 import { incrementalBuildAPI, deployAPI } from '../services/api'
->>>>>>> 1d025af (feat: 增加工作流一键部署功能):vibeAgent/vibeAgent/frontend/src/pages/WorkflowBuilderIncremental.tsx
 
 const { Content } = Layout
 const { Title } = Typography
