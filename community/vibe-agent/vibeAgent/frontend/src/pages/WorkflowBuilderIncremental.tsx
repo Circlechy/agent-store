@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { Layout, Card, Button, Space, Typography, message, Input, Spin } from 'antd'
-import { DownloadOutlined, PlayCircleOutlined } from '@ant-design/icons'
-import BuildProcess, { BuildStep } from '../components/BuildProcess/BuildProcess.tsx'
-import CodeDirectory, { FileTreeItem } from '../components/CodeDirectory/CodeDirectory.tsx'
-import WorkflowChat from '../components/WorkflowChat/WorkflowChat.tsx'
-import ErrorDisplay from '../components/ErrorDisplay/ErrorDisplay.tsx'
+import { Layout, Card, Button, Space, Typography, message, Input, Spin, Modal, Divider } from 'antd'
+import { DownloadOutlined, PlayCircleOutlined, RocketOutlined } from '@ant-design/icons'
+import BuildProcess, { BuildStep } from '../components/BuildProcess/BuildProcess'
+import CodeDirectory, { FileTreeItem } from '../components/CodeDirectory/CodeDirectory'
+import WorkflowChat from '../components/WorkflowChat/WorkflowChat'
+import ErrorDisplay from '../components/ErrorDisplay/ErrorDisplay'
 import AgentModeSelector, { AgentMode } from '../components/AgentModeSelector'
-import { incrementalBuildAPI } from '../services/api.ts'
+import { incrementalBuildAPI, deployAPI } from '../services/api'
 
 const { Content } = Layout
 const { Title } = Typography
@@ -37,6 +37,10 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
   const [isWaitingInteraction, setIsWaitingInteraction] = useState(false)  // 是否等待交互回复
   const [showChatPanel, setShowChatPanel] = useState(false)  // 控制右侧对话面板显示
   const [activeCodeTab, setActiveCodeTab] = useState<string>('files')  // 控制代码区域的tab
+  const [isTestCompleted, setIsTestCompleted] = useState(false)  // 构建流程中的测试是否完成（用于构建流程）
+  const [isUserTestRunCompleted, setIsUserTestRunCompleted] = useState(false)  // 用户试运行是否成功完成（用于控制一键部署按钮）
+  const [isDeploying, setIsDeploying] = useState(false)  // 是否正在部署
+  const [deployInfo, setDeployInfo] = useState<string | null>(null)  // 部署信息
   // 思考过程流式显示定时器映射：stepId -> timer
   const streamingTimersRef = useRef<Map<string, number>>(new Map())
   // 思考过程流式显示状态映射：stepId -> { targetText, currentIndex }
@@ -150,6 +154,9 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
     setOriginalUserInput(query)
     setWorkflowDescription(undefined)
     setIsModifying(false)  // 第一次构建不是修改流程
+    setIsTestCompleted(false)  // 重置构建流程测试状态
+    setIsUserTestRunCompleted(false)  // 重置用户试运行状态
+    setDeployInfo(null)  // 重置部署信息
     // 注意：不重置conversationId，保持多轮对话的连续性
 
     // 创建AbortController用于取消请求
@@ -1095,10 +1102,14 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
         
         // ✅ 测试完成后，如果测试失败，不重置迭代编号（后续会进入迭代修复）
         // 如果测试成功，重置迭代编号（同时更新 state 和 ref）
+        // 注意：这里的 test_completed 是构建流程中的测试，不影响用户试运行状态
         if (testResult.success) {
           setCurrentIteration(0)
           currentIterationRef.current = 0
-          console.log(`✅ [test_completed] 测试成功，重置迭代编号`)
+          setIsTestCompleted(true)  // 标记构建流程测试完成
+          console.log(`✅ [test_completed] 构建流程测试成功，重置迭代编号`)
+        } else {
+          setIsTestCompleted(false)  // 构建流程测试失败
         }
         break
 
@@ -1133,6 +1144,7 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
             error: failedTestResult.error || event.message,
           },
         })
+        setIsTestCompleted(false)  // 构建流程测试失败
         break
 
       case 'iteration_started':
@@ -1184,7 +1196,7 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
         break
 
       case 'build_completed':
-        // 根据三种模式动态设置“构建完成”文案
+        // 根据三种模式动态设置"构建完成"文案
         const modeLabel =
           agentMode === 'agent' ? '智能助手' : agentMode === 'multi_agent' ? '多智能体系统' : '工作流'
         updateStep('completed', {
@@ -1197,7 +1209,9 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
         // ✅ 构建完成，重置迭代编号（同时更新 state 和 ref）
         setCurrentIteration(0)
         currentIterationRef.current = 0
-        console.log(`✅ [build_completed] 构建完成，重置迭代编号`)
+        // ✅ 构建完成后，重置用户试运行状态，确保用户需要重新试运行才能部署
+        setIsUserTestRunCompleted(false)
+        console.log(`✅ [build_completed] 构建完成，重置迭代编号和用户试运行状态`)
         
         // 更新生成的文件
         if (event.data?.generated_files) {
@@ -1260,6 +1274,129 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
     }
     // TODO: 实现执行功能
     message.info('执行功能开发中...')
+  }
+
+  // 处理一键部署
+  const handleDeploy = () => {
+    if (!savedDirectory) {
+      message.warning('工作流尚未生成完成，无法部署')
+      return
+    }
+
+    if (!isUserTestRunCompleted) {
+      message.warning('请先完成试运行，确保工作流正常运行')
+      return
+    }
+
+    // 直接执行部署（API_KEY 将从后端 .env 文件读取）
+    performDeploy()
+  }
+
+  // 执行部署
+  const performDeploy = async () => {
+    if (!savedDirectory) {
+      message.error('工作流目录不存在')
+      return
+    }
+
+    setIsDeploying(true)
+    setDeployInfo(null)
+
+    try {
+      const response: any = await deployAPI.deploy({
+        workflow_dir: savedDirectory,
+      })
+
+      if (response?.success) {
+        setDeployInfo(response.usage_info || '')
+        message.success('部署成功！')
+        
+        // 显示部署信息对话框
+        Modal.info({
+          title: '部署成功',
+          width: 800,
+          content: (
+            <div style={{ marginTop: '16px' }}>
+              <Typography.Paragraph>
+                <Typography.Text strong>服务地址：</Typography.Text>
+                <Typography.Link href={response.service_url} target="_blank">
+                  {response.service_url}
+                </Typography.Link>
+              </Typography.Paragraph>
+              <Typography.Paragraph>
+                <Typography.Text strong>API 文档：</Typography.Text>
+                <Typography.Link href={`${response.service_url}/docs`} target="_blank">
+                  {response.service_url}/docs
+                </Typography.Link>
+              </Typography.Paragraph>
+              {response.service_path && (
+                <Typography.Paragraph>
+                  <Typography.Text strong>服务文件和使用说明已保存到：</Typography.Text>
+                  <Typography.Text code>vibeAgent\vibeAgent\experiments对应文件夹下</Typography.Text>
+                </Typography.Paragraph>
+              )}
+              {response.api_key_note && (
+                <>
+                  <Divider />
+                  <Typography.Paragraph>
+                    <Typography.Text type="warning" strong>⚠️ 注意：</Typography.Text>
+                    <br />
+                    <Typography.Text>{response.api_key_note}</Typography.Text>
+                  </Typography.Paragraph>
+                </>
+              )}
+              {response.quick_start && (
+                <>
+                  <Divider />
+                  <Typography.Paragraph>
+                    <Typography.Text strong>🚀 快速开始：</Typography.Text>
+                  </Typography.Paragraph>
+                  <Typography.Paragraph>
+                    <pre style={{ 
+                      background: '#f5f5f5', 
+                      padding: '12px', 
+                      borderRadius: '4px',
+                      overflow: 'auto',
+                      maxHeight: '300px',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      marginBottom: 0
+                    }}>
+                      {response.quick_start}
+                    </pre>
+                  </Typography.Paragraph>
+                </>
+              )}
+              <Divider />
+              <Typography.Paragraph>
+                <Typography.Text strong>具体使用说明：</Typography.Text>
+              </Typography.Paragraph>
+              <Typography.Paragraph>
+                <pre style={{ 
+                  background: '#f5f5f5', 
+                  padding: '12px', 
+                  borderRadius: '4px',
+                  overflow: 'auto',
+                  maxHeight: '400px',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word'
+                }}>
+                  {response.usage_info || ''}
+                </pre>
+              </Typography.Paragraph>
+            </div>
+          ),
+          okText: '知道了',
+        })
+      } else {
+        message.error(response?.message || '部署失败')
+      }
+    } catch (error: any) {
+      console.error('部署失败:', error)
+      message.error(`部署失败: ${error?.message || '未知错误'}`)
+    } finally {
+      setIsDeploying(false)
+    }
   }
 
   const handleModify = async (modificationRequest: string) => {
@@ -1393,6 +1530,8 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
             finalContent = event.content || '执行成功，但未返回输出内容。'
             setIsWaitingInteraction(false)
             setInteractionRequest(null)
+            // 标记用户试运行成功完成
+            setIsUserTestRunCompleted(true)
             // 更新conversation_id（如果后端返回了新的）
             if (event.conversation_id && event.conversation_id !== currentConvId) {
               setConversationId(event.conversation_id)
@@ -1403,6 +1542,8 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
             errorMessage = event.error || event.message || '未知错误'
             setIsWaitingInteraction(false)
             setInteractionRequest(null)
+            // 标记用户试运行失败
+            setIsUserTestRunCompleted(false)
           }
         }
       )
@@ -1423,6 +1564,8 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
           finalContent = event.content || '执行成功，但未返回输出内容。'
           setIsWaitingInteraction(false)
           setInteractionRequest(null)
+          // 标记试运行成功完成
+          setIsTestCompleted(true)
           // 更新conversation_id（如果后端返回了新的）
           if (event.conversation_id && event.conversation_id !== currentConvId) {
             setConversationId(event.conversation_id)
@@ -1433,6 +1576,8 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
           errorMessage = event.error || event.message || '未知错误'
           setIsWaitingInteraction(false)
           setInteractionRequest(null)
+          // 标记试运行失败
+          setIsTestCompleted(false)
           break
         }
       }
@@ -1446,6 +1591,8 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
       console.error('执行工作流失败:', error)
       setIsWaitingInteraction(false)
       setInteractionRequest(null)
+      // 标记用户试运行失败
+      setIsUserTestRunCompleted(false)
       return `执行失败: ${error?.message || '未知错误'}`
     }
   }
@@ -1479,12 +1626,16 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
             finalContent = event.content || '执行成功，但未返回输出内容。'
             setIsWaitingInteraction(false)
             setInteractionRequest(null)
+            // 标记用户试运行成功完成
+            setIsUserTestRunCompleted(true)
           } else if (event.type === 'error') {
             // 执行错误
             hasError = true
             errorMessage = event.error || event.message || '未知错误'
             setIsWaitingInteraction(false)
             setInteractionRequest(null)
+            // 标记用户试运行失败
+            setIsUserTestRunCompleted(false)
           }
         }
       )
@@ -1500,12 +1651,16 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
           finalContent = event.content || '执行成功，但未返回输出内容。'
           setIsWaitingInteraction(false)
           setInteractionRequest(null)
+          // 标记试运行成功完成
+          setIsTestCompleted(true)
           break
         } else if (event.type === 'error') {
           hasError = true
           errorMessage = event.error || event.message || '未知错误'
           setIsWaitingInteraction(false)
           setInteractionRequest(null)
+          // 标记试运行失败
+          setIsTestCompleted(false)
           break
         }
       }
@@ -1515,6 +1670,8 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
       console.error('继续执行失败:', error)
       setIsWaitingInteraction(false)
       setInteractionRequest(null)
+      // 标记用户试运行失败
+      setIsUserTestRunCompleted(false)
       return `继续执行失败: ${error?.message || '未知错误'}`
     }
   }
@@ -1673,6 +1830,9 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
                 onTabChange={setActiveCodeTab}
                 isBuildCompleted={!isBuilding && generatedFiles.length > 0 && !!savedDirectory}
                 onTestRun={() => setShowChatPanel(true)}
+                onDeploy={handleDeploy}
+                isTestCompleted={isUserTestRunCompleted}
+                isDeploying={isDeploying}
               />
             ) : (
               <div
@@ -1772,6 +1932,25 @@ function WorkflowBuilderIncremental({ initialQuery }: WorkflowBuilderProps) {
             >
               执行工作流
             </Button>
+            {agentMode === 'workflow' && (
+              <Button 
+                icon={<RocketOutlined />} 
+                onClick={handleDeploy}
+                disabled={!isUserTestRunCompleted}
+                loading={isDeploying}
+                type={isUserTestRunCompleted ? 'primary' : 'default'}
+                title={!isUserTestRunCompleted ? '请先完成试运行' : '一键部署工作流服务'}
+                style={{
+                  background: isUserTestRunCompleted 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                    : undefined,
+                  border: isUserTestRunCompleted ? 'none' : undefined,
+                  opacity: isUserTestRunCompleted ? 1 : 0.6,
+                }}
+              >
+                一键部署
+              </Button>
+            )}
             <Button icon={<DownloadOutlined />} onClick={handleDownload}>
               下载代码
             </Button>

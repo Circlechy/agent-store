@@ -221,9 +221,8 @@ htmlcov/
 *.7z
 
 # project specific
-# 忽略 experiments 目录内的所有内容，但保留目录本身
-vibeAgent/experiments/.gitkeep
-# 但保留 .gitkeep 文件
+# 忽略 experiments 目录内的所有内容，但保留 .gitkeep 文件
+vibeAgent/experiments/*
 !vibeAgent/experiments/.gitkeep
 
 # wisdom
