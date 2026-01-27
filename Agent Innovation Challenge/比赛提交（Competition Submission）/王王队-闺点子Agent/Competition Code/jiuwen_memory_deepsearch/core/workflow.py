@@ -6,6 +6,7 @@ from jiuwen_memory_deepsearch.utils.config import deepsearch_config
 
 os.environ.setdefault("LLM_SSL_VERIFY", "false")
 os.environ["WORKFLOW_EXECUTE_TIMEOUT"] = str(deepsearch_config.get("workflow.execution_timeout", 7200))
+os.environ["NO_PROXY"] = "127.0.0.1,7.242.109.94"
 
 from openjiuwen.agent.common.schema import WorkflowSchema
 from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
@@ -14,7 +15,7 @@ from openjiuwen.core.runner.runner import Runner
 from openjiuwen.core.workflow.base import BranchRouter, Workflow
 from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
 
-from jiuwen_memory_deepsearch.core.node import ImageIntentRecognitionNode, SearchAnswerNode, SearchEndNode, \
+from jiuwen_memory_deepsearch.core.node import FeedbackSearchWayNode, ImageIntentRecognitionNode, SearchAnswerNode, SearchEndNode, \
     SearchEntryNode, SearchTeamNode, ShowImageNode, \
     StartNode
 
@@ -32,20 +33,28 @@ class DeepsearchAgent:
 
     async def run(self, inputs):
         try:
-            # 为每次运行生成唯一的 conversation_id，避免 workflow 状态冲突
-            conversation_id = f"ds-{uuid.uuid4().hex[:8]}"
-            is_image = inputs.get("is_image", False)
-            if is_image:
-                inputs = {
-                    "image_path": inputs.get("image_path", ""),
-                    "conversation_id": conversation_id
+            session_id = inputs.get("session_id") or f"ds-{uuid.uuid4().hex[:8]}"
+            interactive_input = inputs.get("interactive_input")
+            logger.info(f'[DeepsearchAgent] run: session_id: {session_id}')
+            logger.info(f'[DeepsearchAgent] run: interactive_input: {interactive_input}')
+            if interactive_input is not None:
+                run_inputs = {
+                    "query": interactive_input,
+                    "conversation_id": session_id
                 }
             else:
-                inputs = {
-                    "query": inputs.get("query", ""),
-                    "conversation_id": conversation_id
-                }
-            async for chunk in Runner.run_agent_streaming(agent=self.agent, inputs=inputs):
+                is_image = inputs.get("is_image", False)
+                if is_image:
+                    run_inputs = {
+                        "image_path": inputs.get("image_path", ""),
+                        "conversation_id": session_id
+                    }
+                else:
+                    run_inputs = {
+                        "query": inputs.get("query", ""),
+                        "conversation_id": session_id
+                    }
+            async for chunk in Runner.run_agent_streaming(agent=self.agent, inputs=run_inputs):
                 # logger.error(f"{chunk}")
                 yield chunk
         except Exception as e:
@@ -95,6 +104,7 @@ class DeepsearchAgent:
         )
 
         flow.add_workflow_comp("image_intent_recognition", ImageIntentRecognitionNode())
+        flow.add_workflow_comp("feedback_search_way", FeedbackSearchWayNode())
         flow.add_workflow_comp("entry", SearchEntryNode())
         flow.add_workflow_comp("team", SearchTeamNode())
         flow.add_workflow_comp("answer", SearchAnswerNode())
@@ -102,13 +112,9 @@ class DeepsearchAgent:
 
         flow.set_end_comp("end", SearchEndNode())
 
-        flow.add_conditional_connection("start",
-                                        router=self._conditional_router("start",
-                                                                        ["image_intent_recognition",
-                                                                         "entry",
-                                                                         "end"]))
-        flow.add_conditional_connection("image_intent_recognition",
-                                        router=self._conditional_router("image_intent_recognition", ["entry", "end"]))
+        flow.add_conditional_connection("start", router=self._conditional_router("start", ["image_intent_recognition", "entry", "end"]))
+        flow.add_conditional_connection("image_intent_recognition", router=self._conditional_router("image_intent_recognition", ["feedback_search_way", "end"]))
+        flow.add_connection("feedback_search_way", "entry")
         flow.add_conditional_connection("entry", router=self._conditional_router("entry", ["team", "end"]))
         # flow.add_connection("entry", "team")
         flow.add_connection("team", "answer")
