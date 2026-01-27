@@ -57,9 +57,39 @@
               </template>
             </ChatMessage>
 
+            <!-- FeedbackSearchWay 节点 -->
+            <ChatMessage
+              v-else-if="msg.agent === 'feedback_search_way'"
+              :message="msg"
+            >
+              <template #content>
+                <div class="feedback-search-way">
+                  <div class="feedback-prompt">{{ msg.content || '请选择搜索方式' }}</div>
+                  <div class="feedback-actions">
+                    <NButton
+                      v-for="option in searchWayOptions"
+                      :key="option.value"
+                      :disabled="msg.choice || msg.isSubmitting"
+                      :style="getFeedbackButtonStyle(option.value === msg.choiceValue)"
+                      :class="[
+                        'feedback-button',
+                        option.value === msg.choiceValue ? 'feedback-button--selected' : 'feedback-button--idle'
+                      ]"
+                      @click="submitSearchWay(option.label, option.value, msg)"
+                    >
+                      {{ option.label }}
+                    </NButton>
+                  </div>
+                  <div v-if="msg.choice" class="feedback-selected">
+                    已选择：{{ msg.choice }}
+                  </div>
+                </div>
+              </template>
+            </ChatMessage>
+
             <!-- Entry 节点 -->
             <ChatMessage
-              v-if="msg.agent === 'entry'"
+              v-else-if="msg.agent === 'entry'"
               :message="msg"
             >
               <template #content>
@@ -93,7 +123,8 @@
             
             <!-- Answer 节点 -->
             <template v-else-if="msg.agent === 'answer'">
-              <ChatMessage :message="msg">
+              <!-- 1. 闺点子支招 (我猜你想问 + 根据) -->
+              <ChatMessage :message="{...msg, agentLabel: '💡 闺点子支招'}">
                 <template #content>
                   <div v-if="parseAnswerContent(msg.content)" class="answer-display">
                     <!-- 原始问题 -->
@@ -112,7 +143,17 @@
                         </div>
                       </div>
                     </div>
+                  </div>
+                  <div v-else>
+                    {{ msg.content }}
+                  </div>
+                </template>
+              </ChatMessage>
 
+              <!-- 2. 闺点子推荐 (回答 + 闺点子show图) -->
+              <ChatMessage v-if="parseAnswerContent(msg.content)" :message="{...msg, agentLabel: '✨ 闺点子推荐'}">
+                <template #content>
+                  <div class="answer-display">
                     <!-- 最终结论 -->
                     <div class="answer-section final-section">
                       <div class="section-tag conclusion-tag">回答</div>
@@ -126,20 +167,6 @@
                     <!-- 迁移后的 ShowImage 图片展示区域 -->
                     <div class="answer-section image-section" v-if="getRelatedImages(index) && getRelatedImages(index).length > 0">
                       <div class="section-tag">闺点子show图</div>
-                      <div class="image-grid">
-                        <div v-for="(imgItem, idx) in getRelatedImages(index)" :key="idx" class="image-item">
-                           <div class="image-wrapper">
-                             <NImage :src="getApiUrl(imgItem.url || imgItem)" alt="闺点子show图" class="recommend-image" object-fit="cover" />
-                             <div v-if="imgItem.source" class="image-source-tag">{{ imgItem.source }}</div>
-                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-else>
-                    {{ msg.content }}
-                    <!-- 纯文本模式下也尝试显示图片 -->
-                    <div class="show-image-display" v-if="getRelatedImages(index) && getRelatedImages(index).length > 0" style="margin-top: 1rem;">
                       <div class="image-grid">
                         <div v-for="(imgItem, idx) in getRelatedImages(index)" :key="idx" class="image-item">
                            <div class="image-wrapper">
@@ -183,6 +210,7 @@
 <script setup>
 import { onMounted, ref, watch, nextTick, computed } from "vue";
 import { useMessage, NButton, NImage } from "naive-ui";
+import MarkdownIt from 'markdown-it';
 
 import ChatInput from "../components/ChatInput.vue";
 import ChatMessage from "../components/ChatMessage.vue";
@@ -203,8 +231,46 @@ const { isConnected, isSearching, reconnectAttempts, startSearch, stopSearch } =
 const isHealthy = ref(false);
 const messageContainer = ref(null);
 const userAtBottom = ref(true);
+const sessionId = ref(null);
 const streamProcessor = new StreamMessageProcessor();
 const messageFilter = new MessageDisplayFilter();
+const searchWayOptions = [
+  { label: "记忆搜索", value: "memory" },
+  { label: "智能搜索", value: "smart" }
+];
+
+const getFeedbackButtonStyle = (isSelected) => {
+  if (isSelected) {
+    return {
+      "--n-color": "var(--primary-color)",
+      "--n-color-hover": "#e11d48",
+      "--n-color-pressed": "#be123c",
+      "--n-text-color": "#ffffff",
+      "--n-text-color-hover": "#ffffff",
+      "--n-text-color-pressed": "#ffffff",
+      "--n-border": "1px solid var(--primary-color)",
+      "--n-border-hover": "1px solid #e11d48",
+      "--n-border-pressed": "1px solid #be123c",
+      "--n-color-disabled": "var(--primary-color)",
+      "--n-text-color-disabled": "#ffffff",
+      "--n-border-disabled": "1px solid var(--primary-color)"
+    };
+  }
+  return {
+    "--n-color": "#ffffff",
+    "--n-color-hover": "#fdf2f8",
+    "--n-color-pressed": "#fce7f3",
+    "--n-text-color": "var(--text-main)",
+    "--n-text-color-hover": "var(--primary-color)",
+    "--n-text-color-pressed": "var(--primary-color)",
+    "--n-border": "1px solid var(--border-color)",
+    "--n-border-hover": "1px solid var(--primary-color)",
+    "--n-border-pressed": "1px solid var(--primary-color)",
+    "--n-color-disabled": "#ffffff",
+    "--n-text-color-disabled": "var(--text-secondary)",
+    "--n-border-disabled": "1px solid var(--border-color)"
+  };
+};
 
 /**
  * 动态计算搜索进度文案
@@ -231,82 +297,82 @@ const searchingStatusText = computed(() => {
   return "深度搜索中...";
 });
 
-const parsePlannerContent = (content) => {
-  if (!content) return null;
-  try {
-    let cleanContent = content.trim();
-    if (typeof cleanContent === 'string' && cleanContent.startsWith('```')) {
-      cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-    }
-    return typeof cleanContent === 'string' ? JSON.parse(cleanContent) : cleanContent;
-  } catch (e) {
-    console.warn('⚠️ 无法解析 planner 内容:', e);
-    return null;
+const safeJsonParse = (content) => {
+  if (!content || typeof content !== 'string') return content;
+  
+  let cleanContent = content.trim();
+  if (cleanContent.startsWith('```')) {
+    cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
   }
+
+  try {
+    return JSON.parse(cleanContent);
+  } catch (e) {
+    // 尝试修复单引号 JSON (LLM 常见非标输出)
+    try {
+      // 1. 修复键名: 'key': -> "key":
+      // 2. 修复字符串值: : 'value' -> : "value"
+      let fixed = cleanContent
+        .replace(/(['])(\w+)(['])\s*:/g, '"$2":')
+        .replace(/:\s*'([^']*)'/g, ': "$1"');
+      return JSON.parse(fixed);
+    } catch (e2) {
+      return null;
+    }
+  }
+};
+
+const parsePlannerContent = (content) => {
+  const parsed = safeJsonParse(content);
+  if (!parsed) return null;
+  return parsed;
 };
 
 const parseRecognitionContent = (content) => {
   if (!content) return null;
   
   // 1. 优先尝试正则表达式提取（支持流式输出中的不完整 JSON）
-  const keywordMatch = content.match(/"search_keyword":\s*"([^"]*)"?/);
-  const queryMatch = content.match(/"generated_query":\s*"([^"]*)"?/);
-  const needQueryMatch = content.match(/"need_query":\s*(true|false|"[^"]*")/i);
+  // 改进正则以支持单引号和双引号
+  const keywordMatch = content.match(/["']search_keyword["']:\s*["']([^"']*)["']?/);
+  const queryMatch = content.match(/["']generated_query["']:\s*["']([^"']*)["']?/);
+  const needQueryMatch = content.match(/["']need_query["']:\s*(true|false|["'][^"']*["'])/i);
   
   let needQuery = true;
   if (needQueryMatch) {
-    const val = needQueryMatch[1].replace(/"/g, '').toLowerCase();
+    const val = needQueryMatch[1].replace(/["']/g, '').toLowerCase();
     if (val === 'false') needQuery = false;
   }
   
   if (keywordMatch || queryMatch) {
     return {
       search_keyword: (keywordMatch ? keywordMatch[1] : '').replace(/\\"/g, '"') || '识别中...',
-      generated_query: (queryMatch ? queryMatch[1] : '').replace(/\\"/g, '"') || '正在生成建议...',
+      generated_query: (queryMatch ? queryMatch[1] : '').replace(/\\"/g, '"') || '正在生成问题...',
       need_query: needQuery
     };
   }
 
   // 2. 备选方案：全量 JSON 解析
-  try {
-    // 处理可能存在的 Markdown 代码块包裹
-    let cleanContent = content.trim();
-    if (cleanContent.startsWith('```')) {
-      cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-    }
-    
-    const parsed = typeof cleanContent === 'string' ? JSON.parse(cleanContent) : cleanContent;
-    
-    // 解析 need_query
-    let parsedNeedQuery = parsed.need_query;
-    if (parsedNeedQuery === 'False' || parsedNeedQuery === false || parsedNeedQuery === 'false') {
-        parsedNeedQuery = false;
-    } else {
-        parsedNeedQuery = true;
-    }
+  const parsed = safeJsonParse(content);
+  if (!parsed) return null;
 
-    return {
-      search_keyword: parsed.extracted_info?.search_keyword || parsed.search_keyword || '未知关键词',
-      generated_query: parsed.generated_query || '暂无推荐查询',
-      need_query: parsedNeedQuery
-    };
-  } catch (e) {
-    return null;
+  // 解析 need_query
+  let parsedNeedQuery = parsed.need_query;
+  if (parsedNeedQuery === 'False' || parsedNeedQuery === false || parsedNeedQuery === 'false') {
+      parsedNeedQuery = false;
+  } else {
+      parsedNeedQuery = true;
   }
+
+  return {
+    search_keyword: parsed.extracted_info?.search_keyword || parsed.search_keyword || '未知关键词',
+    generated_query: parsed.generated_query || '暂无推荐查询',
+    need_query: parsedNeedQuery
+  };
 };
 
 const parseShowImageContent = (content) => {
-  if (!content) return null;
-  try {
-    let cleanContent = content.trim();
-    if (cleanContent.startsWith('```')) {
-      cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-    }
-    const parsed = typeof cleanContent === 'string' ? JSON.parse(cleanContent) : cleanContent;
-    return Array.isArray(parsed) ? parsed : null;
-  } catch (e) {
-    return null;
-  }
+  const parsed = safeJsonParse(content);
+  return Array.isArray(parsed) ? parsed : null;
 };
 
 const parseAnswerContent = (content) => {
@@ -374,12 +440,48 @@ const getRelatedImages = (index) => {
   return null;
 };
 
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+  breaks: true
+});
+
+// 自定义链接渲染
+const defaultRender = md.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options);
+};
+
+md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  const aIndex = tokens[idx].attrIndex('class');
+  if (aIndex < 0) {
+    tokens[idx].attrPush(['class', 'source-link']);
+  } else {
+    tokens[idx].attrs[aIndex][1] += ' source-link';
+  }
+  const tIndex = tokens[idx].attrIndex('target');
+  if (tIndex < 0) {
+    tokens[idx].attrPush(['target', '_blank']);
+  }
+  return defaultRender(tokens, idx, options, env, self);
+};
+
 const formatRichText = (text) => {
   if (!text) return '';
-  // 处理 [标题: 链接] 格式
-  return text
-    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="source-link">$1</a>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // 预处理：识别非标准引用格式 [来源:xxx](yyy)
+  // 如果括号内不是标准 URL 或包含多个引用标识，则预先转换为美化标签
+  const processedText = text.replace(/\[(来源:[^\]]+)\]\(([^)]+)\)/g, (match, label, ref) => {
+    const isStandardUrl = /^(https?:\/\/|mailto:|tel:|\/|#)/.test(ref.trim());
+    const isMultiple = ref.includes(',');
+    
+    if (!isStandardUrl || isMultiple) {
+      return `<span class="source-link" title="${ref.trim()}">${label}</span>`;
+    }
+    return match; // 交给 markdown-it 处理标准链接
+  });
+
+  return md.render(processedText);
 };
 
 const scrollToBottom = () => {
@@ -399,6 +501,116 @@ const onScroll = () => {
   const distance =
     container.scrollHeight - container.scrollTop - container.clientHeight;
   userAtBottom.value = distance <= threshold;
+};
+
+const createStreamHandlers = (options = {}) => {
+  let currentInfoCollectorId = null;
+  const onChunk = (chunk) => {
+    if (chunk && chunk.event === 'metadata') {
+      if (chunk.session_id) {
+        sessionId.value = chunk.session_id;
+      }
+      if (chunk.image_url) {
+        console.log('🖼️ 收到图片元数据:', chunk.image_url);
+        const baseUrl = getApiUrl('').replace('/api/v1', '').replace(/\/$/, '');
+        const fullImageUrl = `${baseUrl}${chunk.image_url}`;
+        for (let i = messages.value.length - 1; i >= 0; i--) {
+          if (messages.value[i].role === 'user') {
+            messages.value[i] = { ...messages.value[i], imageUrl: fullImageUrl, content: '' };
+            messages.value = [...messages.value];
+            break;
+          }
+        }
+      }
+      return;
+    }
+
+    if (chunk && chunk.event === 'interaction') {
+      if (chunk.session_id) {
+        sessionId.value = chunk.session_id;
+      }
+      messages.value.push({
+        id: `interaction-${Date.now()}`,
+        role: 'assistant',
+        agent: 'feedback_search_way',
+        agentLabel: '🧭 选择搜索方式',
+        content: chunk.prompt || '请选择搜索方式',
+        sessionId: chunk.session_id || sessionId.value,
+        choice: null,
+        choiceValue: null,
+        isSubmitting: false,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const processedMessage = streamProcessor.processChunk(chunk);
+    if (processedMessage) {
+      const agent = processedMessage.agent;
+      if (messageFilter.shouldDisplay(agent)) {
+        let existingIndex = -1;
+        for (let i = 0; i < messages.value.length; i++) {
+          if (messages.value[i].id === processedMessage.id) {
+            existingIndex = i;
+            break;
+          }
+        }
+        if (existingIndex === -1) {
+          const newMsg = {
+            id: processedMessage.id,
+            role: processedMessage.role,
+            content: processedMessage.content,
+            timestamp: processedMessage.timestamp,
+            agent: processedMessage.agent,
+            agentLabel: processedMessage.agentLabel,
+            agentColor: processedMessage.agentColor,
+            bgColor: processedMessage.bgColor,
+            showRaw: processedMessage.showRaw,
+            rawData: processedMessage.rawData,
+            isComplete: processedMessage.isComplete,
+            duration: processedMessage.duration
+          };
+          messages.value.push(newMsg);
+        } else {
+          messages.value[existingIndex].content = processedMessage.content;
+          messages.value[existingIndex].rawData = processedMessage.rawData;
+          messages.value[existingIndex].isComplete = processedMessage.isComplete;
+          messages.value[existingIndex].duration = processedMessage.duration;
+          messages.value = [...messages.value];
+        }
+      }
+      if (messageFilter.isIntermediateAgent(agent)) {
+        if (!currentInfoCollectorId) {
+          currentInfoCollectorId = `info_collector-${Date.now()}`;
+          messages.value.push({
+            id: currentInfoCollectorId,
+            role: 'assistant',
+            agent: 'info_collector',
+            stepsData: streamProcessor.getStepsData(),
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          const idx = messages.value.findIndex(m => m.id === currentInfoCollectorId);
+          if (idx !== -1) {
+            messages.value[idx].stepsData = streamProcessor.getStepsData();
+            messages.value = [...messages.value];
+          }
+        }
+      }
+    }
+  };
+
+  const onComplete = () => {
+    if (options.completeMessage) {
+      message.success(options.completeMessage);
+    }
+  };
+
+  const onError = (err) => {
+    message.error(err?.message || options.errorMessage || "搜索过程中发生错误");
+  };
+
+  return { onChunk, onComplete, onError };
 };
 
 // 监视整个 messages 数组及其深层变化
@@ -431,102 +643,9 @@ const handleSend = (file) => {
   
   // 重置状态
   streamProcessor.reset();
-  
-  let currentInfoCollectorId = null;
-
-  const onChunk = (chunk) => {
-    // 处理后端发送的元数据（如图片 URL）
-    if (chunk && chunk.event === 'metadata' && chunk.image_url) {
-      console.log('🖼️ 收到图片元数据:', chunk.image_url);
-      const baseUrl = getApiUrl('').replace('/api/v1', '').replace(/\/$/, '');
-      const fullImageUrl = `${baseUrl}${chunk.image_url}`;
-      
-      // 查找最后一条用户消息并更新其图片预览
-      for (let i = messages.value.length - 1; i >= 0; i--) {
-        if (messages.value[i].role === 'user') {
-          // 使用对象展开确保响应式触发
-          // 收到图片后，清空"闺点子收图中..."的提示语
-          messages.value[i] = { ...messages.value[i], imageUrl: fullImageUrl, content: '' };
-          messages.value = [...messages.value];
-          break;
-        }
-      }
-      return;
-    }
-
-    // 使用流式消息处理器处理chunk
-    const processedMessage = streamProcessor.processChunk(chunk);
-
-    if (processedMessage) {
-      const agent = processedMessage.agent;
-      
-      // 只处理需要显示的 top-level 消息
-      if (messageFilter.shouldDisplay(agent)) {
-        // 检查是否已经存在该 ID 的消息
-        let existingIndex = -1;
-        for (let i = 0; i < messages.value.length; i++) {
-          if (messages.value[i].id === processedMessage.id) {
-            existingIndex = i;
-            break;
-          }
-        }
-        
-        if (existingIndex === -1) {
-          // 新消息，添加到列表
-          const newMsg = {
-            id: processedMessage.id,
-            role: processedMessage.role,
-            content: processedMessage.content,
-            timestamp: processedMessage.timestamp,
-            agent: processedMessage.agent,
-            agentLabel: processedMessage.agentLabel,
-            agentColor: processedMessage.agentColor,
-            bgColor: processedMessage.bgColor,
-            showRaw: processedMessage.showRaw,
-            rawData: processedMessage.rawData,
-            isComplete: processedMessage.isComplete,
-            duration: processedMessage.duration
-          };
-          messages.value.push(newMsg);
-        } else {
-          // 已有消息，更新内容
-          messages.value[existingIndex].content = processedMessage.content;
-          messages.value[existingIndex].rawData = processedMessage.rawData;
-          messages.value[existingIndex].isComplete = processedMessage.isComplete;
-          messages.value[existingIndex].duration = processedMessage.duration;
-          messages.value = [...messages.value];
-        }
-      }
-      
-      // 处理中间节点
-      if (messageFilter.isIntermediateAgent(agent)) {
-        if (!currentInfoCollectorId) {
-          currentInfoCollectorId = `info_collector-${Date.now()}`;
-          messages.value.push({
-            id: currentInfoCollectorId,
-            role: 'assistant',
-            agent: 'info_collector',
-            stepsData: streamProcessor.getStepsData(),
-            timestamp: new Date().toISOString()
-          });
-        } else {
-          const idx = messages.value.findIndex(m => m.id === currentInfoCollectorId);
-          if (idx !== -1) {
-            messages.value[idx].stepsData = streamProcessor.getStepsData();
-            messages.value = [...messages.value];
-          }
-        }
-      }
-    }
-  };
-
-  const onComplete = () => {
-    message.success("图片搜索已完成");
-  };
-
-  const onError = (err) => {
-    message.error(err?.message || "搜索过程中发生错误");
-  };
+  const { onChunk, onComplete, onError } = createStreamHandlers({
+    completeMessage: "图片搜索已完成"
+  });
 
   startSearch({
     file,
@@ -542,108 +661,52 @@ const handleAnalyze = () => {
   
   // 重置状态
   streamProcessor.reset();
-  
-  let currentInfoCollectorId = null;
-
-  const onChunk = (chunk) => {
-    // 处理后端发送的元数据（如图片 URL）
-    if (chunk && chunk.event === 'metadata' && chunk.image_url) {
-      console.log('🖼️ 收到图片元数据:', chunk.image_url);
-      const baseUrl = getApiUrl('').replace('/api/v1', '').replace(/\/$/, '');
-      const fullImageUrl = `${baseUrl}${chunk.image_url}`;
-      
-      // 查找最后一条用户消息并更新其图片预览
-      for (let i = messages.value.length - 1; i >= 0; i--) {
-        if (messages.value[i].role === 'user') {
-          // 使用对象展开确保响应式触发
-          // 收到图片后，清空"闺点子收图中..."的提示语
-          messages.value[i] = { ...messages.value[i], imageUrl: fullImageUrl, content: '' };
-          messages.value = [...messages.value];
-          break;
-        }
-      }
-      return;
-    }
-
-    // 使用流式消息处理器处理chunk
-    const processedMessage = streamProcessor.processChunk(chunk);
-
-    if (processedMessage) {
-      const agent = processedMessage.agent;
-      
-      // 只处理需要显示的 top-level 消息
-      if (messageFilter.shouldDisplay(agent)) {
-        // 检查是否已经存在该 ID 的消息
-        let existingIndex = -1;
-        for (let i = 0; i < messages.value.length; i++) {
-          if (messages.value[i].id === processedMessage.id) {
-            existingIndex = i;
-            break;
-          }
-        }
-        
-        if (existingIndex === -1) {
-          // 新消息，添加到列表
-          const newMsg = {
-            id: processedMessage.id,
-            role: processedMessage.role,
-            content: processedMessage.content,
-            timestamp: processedMessage.timestamp,
-            agent: processedMessage.agent,
-            agentLabel: processedMessage.agentLabel,
-            agentColor: processedMessage.agentColor,
-            bgColor: processedMessage.bgColor,
-            showRaw: processedMessage.showRaw,
-            rawData: processedMessage.rawData,
-            isComplete: processedMessage.isComplete,
-            duration: processedMessage.duration
-          };
-          messages.value.push(newMsg);
-        } else {
-          // 已有消息，更新内容
-          messages.value[existingIndex].content = processedMessage.content;
-          messages.value[existingIndex].rawData = processedMessage.rawData;
-          messages.value[existingIndex].isComplete = processedMessage.isComplete;
-          messages.value[existingIndex].duration = processedMessage.duration;
-          messages.value = [...messages.value];
-        }
-      }
-      
-      // 处理中间节点
-      if (messageFilter.isIntermediateAgent(agent)) {
-        if (!currentInfoCollectorId) {
-          currentInfoCollectorId = `info_collector-${Date.now()}`;
-          messages.value.push({
-            id: currentInfoCollectorId,
-            role: 'assistant',
-            agent: 'info_collector',
-            stepsData: streamProcessor.getStepsData(),
-            timestamp: new Date().toISOString()
-          });
-        } else {
-          const idx = messages.value.findIndex(m => m.id === currentInfoCollectorId);
-          if (idx !== -1) {
-            messages.value[idx].stepsData = streamProcessor.getStepsData();
-            messages.value = [...messages.value];
-          }
-        }
-      }
-    }
-  };
-
-  const onComplete = () => {
-    message.success("截屏分析已完成");
-  };
-
-  const onError = (err) => {
-    message.error(err?.message || "截屏分析过程中发生错误");
-  };
+  const { onChunk, onComplete, onError } = createStreamHandlers({
+    completeMessage: "截屏分析已完成"
+  });
 
   startSearch({
     action: 'screenshot',
     onChunk,
     onComplete,
     onError
+  });
+};
+
+const submitSearchWay = (choiceLabel, choiceValue, msg) => {
+  const currentSessionId = msg?.sessionId || sessionId.value;
+  if (!currentSessionId) {
+    message.error("缺少 session_id，无法继续工作流");
+    return;
+  }
+  msg.isSubmitting = true;
+  msg.choice = choiceLabel;
+  msg.choiceValue = choiceValue;
+  messages.value = [...messages.value];
+
+  streamProcessor.reset();
+
+  const { onChunk, onComplete, onError } = createStreamHandlers({
+    completeMessage: "搜索已完成"
+  });
+
+  startSearch({
+    action: 'interaction',
+    payload: {
+      session_id: currentSessionId,
+      search_way: choiceValue
+    },
+    onChunk,
+    onComplete: () => {
+      msg.isSubmitting = false;
+      messages.value = [...messages.value];
+      onComplete();
+    },
+    onError: (err) => {
+      msg.isSubmitting = false;
+      messages.value = [...messages.value];
+      onError(err);
+    }
   });
 };
 
@@ -914,6 +977,69 @@ onMounted(async () => {
   margin-top: 0.25rem;
 }
 
+.feedback-search-way {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.feedback-prompt {
+  font-size: 0.9375rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.feedback-selected {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.feedback-actions :deep(.feedback-button) {
+  min-width: 96px;
+  border-radius: 10px;
+}
+
+.feedback-actions :deep(.feedback-button--idle.n-button) {
+  --n-color: #ffffff;
+  --n-color-hover: #fdf2f8;
+  --n-color-pressed: #fce7f3;
+  --n-text-color: var(--text-main);
+  --n-text-color-hover: var(--primary-color);
+  --n-text-color-pressed: var(--primary-color);
+  --n-border: 1px solid var(--border-color);
+  --n-border-hover: 1px solid var(--primary-color);
+  --n-border-pressed: 1px solid var(--primary-color);
+  --n-color-disabled: #ffffff;
+  --n-text-color-disabled: var(--text-secondary);
+  --n-border-disabled: 1px solid var(--border-color);
+}
+
+.feedback-actions :deep(.feedback-button--selected.n-button) {
+  --n-color: var(--primary-color);
+  --n-color-hover: #e11d48;
+  --n-color-pressed: #be123c;
+  --n-text-color: #ffffff;
+  --n-text-color-hover: #ffffff;
+  --n-text-color-pressed: #ffffff;
+  --n-border: 1px solid var(--primary-color);
+  --n-border-hover: 1px solid #e11d48;
+  --n-border-pressed: 1px solid #be123c;
+  --n-color-disabled: var(--primary-color);
+  --n-text-color-disabled: #ffffff;
+  --n-border-disabled: 1px solid var(--primary-color);
+}
+
 /* 最终答案美化显示 */
 .answer-display {
   display: flex;
@@ -992,23 +1118,87 @@ onMounted(async () => {
   color: var(--primary-color);
 }
 
+:deep(.item-text p) {
+  margin: 0;
+}
+
+:deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:deep(th), :deep(td) {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+:deep(th) {
+  background-color: var(--bg-color);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+:deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+:deep(tr:nth-child(even)) {
+  background-color: #fafafa;
+}
+
+:deep(blockquote) {
+  margin: 0.5rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--primary-light);
+  background: #fdf2f8;
+  color: var(--text-secondary);
+  font-style: italic;
+  border-radius: 4px;
+}
+
+:deep(code) {
+  background: var(--bg-color);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.875em;
+  color: var(--primary-color);
+}
+
+:deep(ul), :deep(ol) {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+:deep(li) {
+  margin: 0.25rem 0;
+}
+
 :deep(.source-link) {
   display: inline-flex;
   align-items: center;
   padding: 0.1rem 0.4rem;
-  margin: 0 0.2rem;
+  margin: 0 0.1rem;
   background: var(--primary-light);
   color: var(--primary-color);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 500;
-  text-decoration: none;
+  text-decoration: none !important;
   transition: all 0.2s;
+  cursor: help; /* 增加鼠标样式提示这是一个引用信息 */
 }
 
 :deep(.source-link:hover) {
   background: var(--primary-color);
   color: white;
+  transform: translateY(-1px);
 }
 
 .show-image-display {

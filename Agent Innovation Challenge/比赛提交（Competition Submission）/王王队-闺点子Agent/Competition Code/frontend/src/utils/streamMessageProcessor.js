@@ -22,6 +22,12 @@ export class StreamMessageProcessor {
         bgColor: '#fff1f2',
         showRaw: false
       },
+      'feedback_search_way': {
+        label: '🧭 选择搜索方式',
+        color: '#db2777',
+        bgColor: '#fff1f2',
+        showRaw: false
+      },
       'planner': {
         label: '📋 闺点子计划',
         color: '#ec4899',
@@ -562,6 +568,7 @@ export class MessageDisplayFilter {
     // info_collector：用于显示 InfoCollectionPanel（包含 Steps 的 ReAct 过程）
     this.displayAgents = new Set([
       'image_intent_recognition',
+      'feedback_search_way',
       'entry',
       'planner',
       'answer',

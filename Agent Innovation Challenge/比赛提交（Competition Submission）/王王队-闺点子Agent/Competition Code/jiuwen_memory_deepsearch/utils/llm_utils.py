@@ -1,4 +1,6 @@
 import contextvars
+import copy
+import json
 import logging
 import re
 import time
@@ -147,5 +149,23 @@ async def llm_astream(messages: list,
         await runtime.write_custom_stream(stream_data)
 
     full_chunk.content = re.sub(r"^```(?:json)?\n|\n```$", "", full_chunk.content.strip())
+    
+    # 尝试修复 JSON 中的单引号问题（LLM 常见错误）
+    # 1. 修复单引号包裹的键名: 'key': -> "key":
+    # 2. 修复单引号包裹的字符串值: : 'value' -> : "value"
+    # 注意：这只是简单的启发式修复，主要针对 LLM 输出不规范的情况
+    content = full_chunk.content
+    if content.startswith('{') or content.startswith('['):
+        try:
+            # 只有当 json.loads 失败时才尝试修复
+            json.loads(content)
+        except json.JSONDecodeError:
+            # 尝试修复键名
+            content = re.sub(r"(['])(\w+)(['])\s*:", r'"\2":', content)
+            # 尝试修复字符串值（简单处理，不处理包含转义单引号的情况）
+            # 匹配 : '内容'，内容中不包含单引号
+            content = re.sub(r":\s*'([^']*)'", r': "\1"', content)
+            full_chunk.content = content
+
     response = full_chunk.model_dump()
     return response

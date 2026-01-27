@@ -115,11 +115,11 @@ export function useSSE() {
     return true;
   };
 
-  const startSearch = async ({ query, file, action, onChunk, onComplete, onError }) => {
+  const startSearch = async ({ query, file, action, payload, onChunk, onComplete, onError }) => {
     if (isSearching.value) {
       return;
     }
-    const currentInput = { query, file, action };
+    const currentInput = { query, file, action, payload };
     reconnectAttempts.value = 0;
     stopRequested = false;
     isSearching.value = true;
@@ -137,6 +137,10 @@ export function useSSE() {
         if (currentInput.action === 'screenshot') {
           url = getApiUrl("/search/screenshot");
           options.body = null; // 截屏接口无需发送体
+        } else if (currentInput.action === 'interaction') {
+          url = getApiUrl("/search/interaction");
+          options.headers = { "Content-Type": "application/json" };
+          options.body = JSON.stringify(currentInput.payload || {});
         } else if (currentInput.file) {
           url = getApiUrl("/search/image");
           const formData = new FormData();

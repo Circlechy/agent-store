@@ -46,4 +46,6 @@ class SearchContext(BaseModel):
     language: str = Field(default="zh-CN", description="语言")
     messages: List[Message] = Field(default_factory=list, description="对话消息列表")
 
+    search_way: str = Field(default="", description="搜索方式")
+
     collected_infos: List[str] = Field(default_factory=list, description="收集到的信息列表")

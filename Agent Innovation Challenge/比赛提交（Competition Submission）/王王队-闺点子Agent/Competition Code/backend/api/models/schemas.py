@@ -6,13 +6,22 @@ from pydantic import BaseModel, Field, root_validator
 
 class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=500, description="搜索字符串")
+    session_id: Optional[str] = Field(default=None, description="用于中断恢复的会话ID")
 
     @root_validator(pre=True)
     def strip_query(cls, values):
         query = values.get("query", "")
         if isinstance(query, str):
             values["query"] = query.strip()
+        session_id = values.get("session_id")
+        if isinstance(session_id, str):
+            values["session_id"] = session_id.strip() or None
         return values
+
+
+class InteractionRequest(BaseModel):
+    session_id: str = Field(..., min_length=1, description="用于中断恢复的会话ID")
+    search_way: str = Field(..., min_length=1, description="用户选择的搜索方式")
 
 
 class ErrorResponse(BaseModel):

@@ -9,11 +9,12 @@ import pyautogui
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 
-from backend.api.models.schemas import ErrorResponse, SearchRequest
+from backend.api.models.schemas import ErrorResponse, SearchRequest, InteractionRequest
 from backend.api.utils.concurrency import can_start_search, finish_search, start_search
 from backend.api.utils.sse import sse_done, sse_error, sse_message
 from backend.config.settings import settings
 from jiuwen_memory_deepsearch.core.workflow import DeepsearchAgent
+from openjiuwen.core.runtime.interaction.interactive_input import InteractiveInput
 
 logger = logging.getLogger("jiuwen_memory_deepsearch.backend.routes.search")
 
@@ -30,6 +31,32 @@ def _create_conflict_exception() -> HTTPException:
     )
 
 
+def _serialize_chunk(chunk, session_id: str):
+    chunk_type = getattr(chunk, "type", None)
+    if chunk_type is None and isinstance(chunk, dict):
+        chunk_type = chunk.get("type")
+    if chunk_type == "__interaction__":
+        payload = getattr(chunk, "payload", None)
+        if payload is None and isinstance(chunk, dict):
+            payload = chunk.get("payload", {})
+        node_id = getattr(payload, "id", None)
+        if node_id is None and isinstance(payload, dict):
+            node_id = payload.get("id")
+        prompt = getattr(payload, "value", None)
+        if prompt is None and isinstance(payload, dict):
+            prompt = payload.get("value")
+        index = getattr(chunk, "index", None)
+        if index is None and isinstance(chunk, dict):
+            index = chunk.get("index")
+        return sse_message({
+            "event": "interaction",
+            "session_id": session_id,
+            "prompt": prompt,
+            "index": index
+        })
+    return sse_message(chunk)
+
+
 @router.post("", response_class=StreamingResponse)
 async def search_endpoint(payload: SearchRequest) -> StreamingResponse:
     if settings.enable_concurrent_limit and not can_start_search():
@@ -38,9 +65,11 @@ async def search_endpoint(payload: SearchRequest) -> StreamingResponse:
     async def event_stream():
         start_search()
         agent = DeepsearchAgent()
+        session_id = payload.session_id or f"ds-{uuid.uuid4().hex[:8]}"
         try:
-            async for chunk in agent.run({"query": payload.query, "is_image": False}):
-                yield sse_message(chunk)
+            yield sse_message({"event": "metadata", "session_id": session_id})
+            async for chunk in agent.run({"query": payload.query, "is_image": False, "session_id": session_id}):
+                yield _serialize_chunk(chunk, session_id)
             yield sse_done()
         except Exception as exc:  # pragma: no cover
             logger.exception("搜索执行失败：%s", exc)
@@ -73,11 +102,12 @@ async def search_image_endpoint(file: UploadFile = File(...)) -> StreamingRespon
     async def event_stream():
         start_search()
         agent = DeepsearchAgent()
+        session_id = f"ds-{uuid.uuid4().hex[:8]}"
         try:
             # 发送图片 URL 元数据给前端
-            yield sse_message({"event": "metadata", "image_url": f"/temp/{filename}"})
-            async for chunk in agent.run({"image_path": file_path, "is_image": True}):
-                yield sse_message(chunk)
+            yield sse_message({"event": "metadata", "image_url": f"/temp/{filename}", "session_id": session_id})
+            async for chunk in agent.run({"image_path": file_path, "is_image": True, "session_id": session_id}):
+                yield _serialize_chunk(chunk, session_id)
             yield sse_done()
         except Exception as exc:
             logger.exception("图片搜索执行失败：%s", exc)
@@ -115,14 +145,45 @@ async def search_screenshot_endpoint() -> StreamingResponse:
     async def event_stream():
         start_search()
         agent = DeepsearchAgent()
+        session_id = f"ds-{uuid.uuid4().hex[:8]}"
         try:
             # 发送图片 URL 给前端
-            yield sse_message({"event": "metadata", "image_url": f"/temp/{filename}"})
-            async for chunk in agent.run({"image_path": file_path, "is_image": True}):
-                yield sse_message(chunk)
+            yield sse_message({"event": "metadata", "image_url": f"/temp/{filename}", "session_id": session_id})
+            async for chunk in agent.run({"image_path": file_path, "is_image": True, "session_id": session_id}):
+                yield _serialize_chunk(chunk, session_id)
             yield sse_done()
         except Exception as exc:
             logger.exception("截屏搜索执行失败：%s", exc)
+            yield sse_error("SEARCH_ERROR", str(exc))
+        finally:
+            finish_search()
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no"
+    }
+    return StreamingResponse(event_stream(), media_type="text/event-stream", headers=headers)
+
+
+@router.post("/interaction", response_class=StreamingResponse)
+async def search_interaction_endpoint(payload: InteractionRequest) -> StreamingResponse:
+    if settings.enable_concurrent_limit and not can_start_search():
+        raise _create_conflict_exception()
+
+    async def event_stream():
+        start_search()
+        agent = DeepsearchAgent()
+        session_id = payload.session_id
+        try:
+            yield sse_message({"event": "metadata", "session_id": session_id})
+            # 单组件中断：使用固定组件ID写入 user_inputs
+            user_input = InteractiveInput()
+            user_input.update("feedback_search_way", payload.search_way)
+            async for chunk in agent.run({"interactive_input": user_input, "session_id": session_id}):
+                yield _serialize_chunk(chunk, session_id)
+            yield sse_done()
+        except Exception as exc:
+            logger.exception("交互恢复执行失败：%s", exc)
             yield sse_error("SEARCH_ERROR", str(exc))
         finally:
             finish_search()

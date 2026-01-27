@@ -40,12 +40,13 @@ class InfoCollector:
         self._web_record_keys = set()
         self.current_step = None  # 保存当前处理的 step
 
-    async def init_tools(self):
+    async def init_tools(self, search_way):
         """
         初始化工具列表
 
         使用 MetaEngine 搜索工具进行本地记忆/历史数据搜索
         """
+        logger.info(f"[InfoCollector] init_tools, search_way: {search_way}")
         # 注册 MetaEngine 搜索引擎
         if not MetaEngineSearchWrapper.is_registered("default"):
             MetaEngineSearchWrapper.register(
@@ -79,10 +80,15 @@ class InfoCollector:
             engine_name="xiaohongshu"
         )
 
-        self.tools = [
-            meta_engine_tool,
-            xiaohongshu_search_tool
-        ]
+        if search_way == "memory":
+            self.tools = [
+                meta_engine_tool
+            ]
+        else:
+            self.tools = [
+                meta_engine_tool,
+                xiaohongshu_search_tool
+            ]
 
         logger.info(
             f"[COLLECTOR DEEPSEARCH LOAD TOOLS] {len(self.tools)} tools loaded: {[t.name for t in self.tools]}")

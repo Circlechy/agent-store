@@ -31,7 +31,8 @@ class SearchPlanReasoningNode(WorkflowComponent, ComponentExecutable):
         algorithm_inputs = {
             "messages": messages,
             "max_step_num": deepsearch_config.get("planner.max_step_num", 5),
-            "language": search_context.get("language", "zh-CN")
+            "language": search_context.get("language", "zh-CN"),
+            "search_way": search_context.get("search_way", "memory")
         }
         logger.info(
             f'[SearchPlanReasoningNode] algorithm_inputs: {algorithm_inputs}')
@@ -55,6 +56,7 @@ class SearchInfoCollectorNode(WorkflowComponent, ComponentExecutable):
         search_context = runtime.get_global_state("search_context")
         current_plan = search_context.get("current_plan", "")
         query = search_context.get("query", "")
+        search_way = search_context.get("search_way", "memory")
         collected_infos = search_context.get("collected_infos", [])
         logger.info(f'[SearchInfoCollectorNode] query: {query}')
         logger.info(f'[SearchInfoCollectorNode] current_plan: {current_plan}')
@@ -69,7 +71,7 @@ class SearchInfoCollectorNode(WorkflowComponent, ComponentExecutable):
         for step in current_plan.steps:
             if not step.step_result:
                 info_collector = InfoCollector(current_inputs)
-                await info_collector.init_tools()
+                await info_collector.init_tools(search_way)
                 async_collecting_tasks.append(info_collector.get_info(step))
                 collect_steps.append(step)
         await asyncio.gather(*async_collecting_tasks)

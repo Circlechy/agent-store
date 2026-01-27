@@ -28,7 +28,37 @@ Current Time: {{CURRENT_TIME}}
     "search_keyword": "从搜索框或页面标题推断的核心搜索词（如‘蓝牙耳机’）",
     "inferred_category": "推断的商品品类（如‘音频设备’）"
   },
-  "generated_query": "针对商品的选购指南、主流品牌排名及避坑要点"
+  "generated_query": "针对search_keyword商品的选购指南、主流品牌排名及避坑要点，怎么买最具性价比"
+}
+```
+
+### 路径B：识别为【具体商品详情页】
+**分析重点**：提取具体商品信息（品牌/型号/规格），推断用户关注点（价格对比、性价比、口碑、适配性等）。
+```json
+{
+  "need_query": "True",
+  "scene_type": "product_detail",
+  "query_intent": "单品决策",
+  "extracted_info": {
+    "search_keyword": "从标题或商品信息中提取的具体商品名称（如‘索尼a7m4相机’）",
+    "inferred_category": "推断的商品品类（如‘相机/微单’）"
+  },
+  "generated_query": "search_keyword在各平台的价格如何，怎么买最具性价比"
+}
+```
+
+### 路径C：识别为【购物车/订单支付流程页】
+**分析重点**：提取购物车中的商品/菜品信息，推断用户在结算前的风险/成分/搭配/预算等关注点。
+```json
+{
+  "need_query": "True",
+  "scene_type": "cart_checkout",
+  "query_intent": "结算前校验",
+  "extracted_info": {
+    "search_keyword": "购物车中主要商品或菜品名称（如‘海鲜、火锅、牛奶’）",
+    "inferred_category": "用户可能关注点（如‘成分过敏/健康风险/禁忌搭配/超预算’）"
+  },
+  "generated_query": "购物车包含search_keyword，是否有需要注意的成分或健康风险"
 }
 ```
 
