@@ -1,1 +1,0 @@
-Hive是基于Hadoop的一个数据仓库工具，用来进行数据抽取，转化，加载，这是一种可以存储，查询和分析存储在Hadoop中的大规模数据的机制。Hive数据仓库工具能将结构化的数据文件映射成一张表，并提供SQL查询功能，能将SQL语句转化成为MapReduce来执行。Hive的优点是学习成本低，可以通过类SQL语句实现快速MapReduce统计，使MapReduce变得更加简单，而不必开发专门的MapReduce任务。Hive十分适合对数据仓库进行分析。

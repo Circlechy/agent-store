@@ -1,3 +1,0 @@
-# Auto-generated via setup.py, based on pyproject.toml
-filelock>=3.10.2
-openjiuwen @ git+https://gitcode.com/openJiuwen/agent-core.git@0a078c57ef4c1f657653a2165cab64e6556de296

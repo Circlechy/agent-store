@@ -1,4 +1,0 @@
-openjiuwen @ git+https://gitcode.com/openJiuwen/agent-core.git@bd899c3b1c3b347fbdb7606fd51c4c6384cd720f
-pyobjc-framework-Quartz
-python-pptx          
-dashscope
