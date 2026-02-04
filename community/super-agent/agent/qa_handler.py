@@ -8,7 +8,7 @@ from openai import AsyncOpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from openjiuwen.core.common.logging import logger
-from examples.super_agent.agent.prompt_templates import (
+from agent.prompt_templates import (
     get_question_hints_prompt,
     get_answer_type_prompt,
     get_final_answer_prompt

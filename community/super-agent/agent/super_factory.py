@@ -12,8 +12,8 @@ from openjiuwen.core.component.common.configs.model_config import ModelConfig
 from openjiuwen.core.utils.llm.base import BaseModelInfo
 from openjiuwen.agent.common.schema import PluginSchema, WorkflowSchema
 
-from examples.super_agent.agent.super_config import SuperAgentConfig, SuperAgentFactory
-from examples.super_agent.agent.super_react_agent import SuperReActAgent
+from agent.super_config import SuperAgentConfig, SuperAgentFactory
+from agent.super_react_agent import SuperReActAgent
 
 
 def create_super_main_agent(

@@ -22,17 +22,17 @@ from openjiuwen.core.utils.tool.param import Param
 from openjiuwen.core.utils.tool.function.function import LocalFunction
 
 
-from examples.super_agent.agent.super_config import SuperAgentConfig
-from examples.super_agent.agent.context_manager import ContextManager
-from examples.super_agent.agent.tool_call_handler import ToolCallHandler
-from examples.super_agent.agent.qa_handler import QAHandler
-from examples.super_agent.llm.openrouter_llm import OpenRouterLLM, ContextLimitError
+from agent.super_config import SuperAgentConfig
+from agent.context_manager import ContextManager
+from agent.tool_call_handler import ToolCallHandler
+from agent.qa_handler import QAHandler
+from llm.openrouter_llm import OpenRouterLLM, ContextLimitError
 
 from openjiuwen.core.utils.tool.mcp.base import ToolServerConfig
 from openjiuwen.core.runner.runner import Runner, resource_mgr
 from mcp import StdioServerParameters
 
-from super_agent.agent.prompt_templates import process_input, get_task_instruction_prompt
+from agent.prompt_templates import process_input, get_task_instruction_prompt
 
 def _make_mcp_call_coroutine(server_name: str, tool_name: str):
     """

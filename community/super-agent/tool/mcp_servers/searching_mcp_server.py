@@ -5,7 +5,7 @@ from mcp.client.stdio import stdio_client
 from mcp import ClientSession, StdioServerParameters  # (already imported in config.py)
 import asyncio
 import httpx 
-from examples.super_agent.tool.logger import bootstrap_logger
+from tool.logger import bootstrap_logger
 from typing import List, Optional, Dict, Any
 from .utils.perplexity import PerplexitySearch
 from .utils.query_enhancer import enhance_query_for_perplexity

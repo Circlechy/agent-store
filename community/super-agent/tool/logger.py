@@ -13,7 +13,7 @@ def bootstrap_logger(
 ) -> logging.Logger:
     """Configure only this logger, not the root logger"""
     if logger is None:
-        logger = logging.getLogger("super_agent")
+        logger = logging.getLogger("super-agent")
     for handler in logger.handlers[:]:
         logger.removeHandler(handler)
 

@@ -6,19 +6,18 @@ Jiuwen agentcore is an AI agent designed for all scenarios of ToC and ToB. It ai
 
 ## 1. Data Preparation
 
-Please place your data under `examples/super_agent/data`.
+Please place your data under `/data`.
 Two sample entries have already been provided in `test.jsonl` for your reference.
 
 
 ## 2. Environment Setup
-
 Our project requires **two** Python environments: one for running the Jiuwen framework, and another for running the MCP services.
 
 ### 2.1 Prepare Jiuwen framework
 ```
 
 1. Install [uv](https://docs.astral.sh/uv/) if it is not already on your PATH.
-2. From the repo root (cd ./test-agentcore) run `uv sync` to create/update the virtual environment with the pinned dependencies in `uv.lock`.
+2. From the repo root (cd ./super-agent) run `uv sync` to create/update the virtual environment with the pinned dependencies in `uv.lock`.
 3. Run `uv pip install tiktoken` separately
 
 ```
@@ -27,14 +26,14 @@ Our project requires **two** Python environments: one for running the Jiuwen fra
 
 #### Python Environment
 
-- Python 3.12+ required (as specified in `examples/super_agent/tool/pyproject.toml`)
+- Python 3.12+ required (as specified in `/tool/pyproject.toml`)
 - Use any manager to install the dependencies (uv, conda, venv, etc.)
 
 #### Setup
 
 **Option 1: Managed Environment (Recommended)**
 
-The startup scripts will automatically detect and use a virtual environment in `examples/super_agent/tool/`. They prefer, in order:
+The startup scripts will automatically detect and use a virtual environment in `/tool/`. They prefer, in order:
 - `.venv-tool`
 - `.venv`
 - `venv`
@@ -128,5 +127,6 @@ Some mcp servers may require specific API keys. Set these in your `.env` file or
   deactivate (if you have currently activated the tool environment, e.g., .venv-tool)
   cd ../ (jump to super Agent folder)
   # macOS/Linux
+  source ./.venv/bin/activate
   uv run ./test/super_react_agent_test_run.py
   ```

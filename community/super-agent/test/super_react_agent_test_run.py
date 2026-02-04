@@ -22,16 +22,16 @@ load_dotenv()
 
 # Ensure both repo root and `examples/` are importable
 CURRENT_DIR = os.path.dirname(__file__)
-REPO_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", ".."))
-EXAMPLES_DIR = os.path.abspath(os.path.join(REPO_ROOT, "examples"))
+REPO_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+# EXAMPLES_DIR = os.path.abspath(os.path.join(REPO_ROOT, "examples"))
 
-for path in [REPO_ROOT, EXAMPLES_DIR]:
+for path in [REPO_ROOT]: #b1 
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from super_agent.agent.super_react_agent import SuperReActAgent
-from super_agent.agent.super_config import SuperAgentFactory
-from examples.super_agent.agent.prompt_templates import get_main_agent_system_prompt, get_browsing_agent_system_prompt, get_coding_agent_system_prompt
+from agent.super_react_agent import SuperReActAgent
+from agent.super_config import SuperAgentFactory
+from agent.prompt_templates import get_main_agent_system_prompt, get_browsing_agent_system_prompt, get_coding_agent_system_prompt
 from openjiuwen.core.component.common.configs.model_config import ModelConfig
 from openjiuwen.core.utils.llm.base import BaseModelInfo
 from openjiuwen.core.utils.tool.function.function import LocalFunction
@@ -53,7 +53,7 @@ os.environ.setdefault("LLM_SSL_VERIFY", "false")
 # Prefer the tooling venv for MCP servers so required deps are available.
 TOOLING_VENV_DIR = os.getenv(
     "MCP_TOOL_VENV_DIR",
-    os.path.join(REPO_ROOT, "examples", "super_agent", "tool", ".venv-tool"),
+    os.path.join(REPO_ROOT, "tool", ".venv-tool"),
 )
 
 if os.name == "nt":
@@ -68,7 +68,7 @@ MCP_TOOL_PYTHON = tooling_python if os.path.exists(tooling_python) else sys.exec
 MCP_TOOL_BIN = tooling_bin if os.path.isdir(tooling_bin) else None
 MCP_TOOL_CWD = REPO_ROOT
 
-pythonpath_entries = [REPO_ROOT, EXAMPLES_DIR]
+pythonpath_entries = [REPO_ROOT] #b2 EXAMPLES_DIR
 existing_pythonpath = os.getenv("PYTHONPATH")
 if existing_pythonpath:
     pythonpath_entries.append(existing_pythonpath)
@@ -147,7 +147,7 @@ def ensure_autobrowser_sse_server() -> None:
     args = [
         "-u",
         "-m",
-        "examples.super_agent.tool.mcp_servers.browser_use_mcp_server",
+        "tool.mcp_servers.browser_use_mcp_server",
         "--transport",
         "sse",
         "--host",
@@ -181,7 +181,7 @@ else:
     autobrowser_client_type = "stdio"
     autobrowser_params = StdioServerParameters(
         command=MCP_TOOL_PYTHON,
-        args=["-u", "-m", "examples.super_agent.tool.mcp_servers.browser_use_mcp_server", "--transport", "stdio"],
+        args=["-u", "-m", "tool.mcp_servers.browser_use_mcp_server", "--transport", "stdio"],
         env=build_tool_env({
             "ANTHROPIC_API_KEY":  os.getenv("ANTHROPIC_API_KEY"),
             "ANTHROPIC_BASE_URL": os.getenv("ANTHROPIC_BASE_URL"),
@@ -197,7 +197,7 @@ else:
     )
 
 # ===== GAIA dataset file path =====
-GAIA_DATASET_FILE_PATH = "examples/super_agent/data/test.jsonl"
+GAIA_DATASET_FILE_PATH = "data/test.jsonl"
 with open(GAIA_DATASET_FILE_PATH, 'r', encoding='utf-8') as f:
     GAIA_DATASET = [json.loads(line.strip()) for line in f if line.strip()]
 # ===== MCP 工具组与实际 MCP server 的映射 =====
@@ -215,7 +215,7 @@ MCP_TOOL_GROUPS = {
         "client_type": "stdio",
         "params": StdioServerParameters(
                     command=MCP_TOOL_PYTHON,
-                    args=["-u", "-m", "examples.super_agent.tool.mcp_servers.audio_mcp_server", "--transport", "stdio"],
+                    args=["-u", "-m", "tool.mcp_servers.audio_mcp_server", "--transport", "stdio"],
                     env=build_tool_env({
                         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
                     }),
@@ -228,7 +228,7 @@ MCP_TOOL_GROUPS = {
         "client_type": "stdio",
         "params": StdioServerParameters(
                     command=MCP_TOOL_PYTHON,
-                    args=["-u", "-m", "examples.super_agent.tool.mcp_servers.reasoning_mcp_server", "--transport", "stdio"],
+                    args=["-u", "-m", "tool.mcp_servers.reasoning_mcp_server", "--transport", "stdio"],
                     env=build_tool_env({
                         "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
                         "ANTHROPIC_BASE_URL": os.getenv("ANTHROPIC_BASE_URL"),
@@ -243,7 +243,7 @@ MCP_TOOL_GROUPS = {
         "client_type": "stdio",
         "params": StdioServerParameters(
                     command=MCP_TOOL_PYTHON,
-                    args=["-u", "-m", "examples.super_agent.tool.mcp_servers.reading_mcp_server", "--transport", "stdio"],
+                    args=["-u", "-m", "tool.mcp_servers.reading_mcp_server", "--transport", "stdio"],
                     env=build_tool_env({
                         "PATH": os.pathsep.join([MCP_TOOL_BIN, os.getenv("PATH", "")])}
                         ),
@@ -255,7 +255,7 @@ MCP_TOOL_GROUPS = {
         "client_type": "stdio",
         "params": StdioServerParameters(
                         command=MCP_TOOL_PYTHON,
-                        args=["-u", "-m", "examples.super_agent.tool.mcp_servers.searching_mcp_server", "--transport", "stdio"],
+                        args=["-u", "-m", "tool.mcp_servers.searching_mcp_server", "--transport", "stdio"],
                         env=build_tool_env({
                             "SERPER_API_KEY": os.getenv("SERPER_API_KEY"),
                             "JINA_API_KEY": os.getenv("JINA_API_KEY"),
@@ -269,7 +269,7 @@ MCP_TOOL_GROUPS = {
         "client_type": "stdio",
         "params": StdioServerParameters(
                     command=MCP_TOOL_PYTHON,
-                    args=["-u", "-m", "examples.super_agent.tool.mcp_servers.vision_mcp_server", "--transport", "stdio"],
+                    args=["-u", "-m", "tool.mcp_servers.vision_mcp_server", "--transport", "stdio"],
                     env=build_tool_env({
                         "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
                         "ANTHROPIC_BASE_URL": os.getenv("ANTHROPIC_BASE_URL"),
@@ -289,7 +289,7 @@ MCP_TOOL_GROUPS = {
         "client_type": "stdio",
         "params": StdioServerParameters(
                     command=MCP_TOOL_PYTHON,
-                    args=["-u", "-m", "examples.super_agent.tool.mcp_servers.python_server", "--transport", "stdio"],
+                    args=["-u", "-m", "tool.mcp_servers.python_server", "--transport", "stdio"],
                     env=build_tool_env({
                         "E2B_API_KEY": os.getenv("E2B_API_KEY"),
                         "E2B_TEMPLATE_ID": os.getenv("E2B_TEMPLATE_ID"),
