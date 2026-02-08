@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "id": "codyfix",
+  "name": "CodyFix",
+  "version": "1.0.0",
+  "updated_at": "2025-01-28T10:00:00Z",
+  "description": "AI-powered CI/CD assistant that analyzes failed Jenkins builds, recommends fixes, applies code changes, and triggers rebuilds automatically through natural language conversation.",
+  "author": [
+  {
+    "name": "Nizzan Kimhi",
+    "email": "nizzan.kimhi@huawei.com",
+    "github": "https://https://gitcode.com/nizzan"
+  },
+  {
+    "name": "Amir Aharon",
+    "email": "amir.aharon@huawei.com",
+    "github": "https://https://gitcode.com/aharonamir1"
+  }
+  ]
+  "license": "Apache License 2.0",
+  "tags": ["ci-cd", "jenkins", "devops", "automation", "debugging", "testing", "ai-agent"],
+  "category": "devops",
+  "platform": "Jiuwen",
+  "workflows": [
+    {
+      "id": "get-jenkins-jobs-summary",
+      "name": "GetJenkinsJobsSummary",
+      "description": "Fetches and analyzes Jenkins build logs, categorizes tests into passed and failed"
+    },
+    {
+      "id": "failed-jobs-fix-recommendations",
+      "name": "FailedJobsFixRecommendations",
+      "description": "Analyzes failed tests and generates actionable fix recommendations"
+    },
+    {
+      "id": "write-code-fixes",
+      "name": "WriteCodeFixes",
+      "description": "Applies recommended fixes to the codebase and commits changes"
+    },
+    {
+      "id": "trigger-jenkins-build",
+      "name": "TriggerJenkinsBuild",
+      "description": "Triggers a new Jenkins build to validate applied fixes"
+    }
+  ],
+  "integrations": ["jenkins", "git"],
+  "features": [
+    "Natural language interface",
+    "Automated failure analysis",
+    "AI-powered fix recommendations",
+    "Automatic code changes",
+    "Build triggering",
+    "Modular workflows - use together or independently"
+  ],
+  "requirements": {
+    "jenkins_api_access": true,
+    "repository_write_access": true,
+    "jiuwen_instance": true
+  }
+}
