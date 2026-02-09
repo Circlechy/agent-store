@@ -1,7 +1,7 @@
 
-# Jiuwen Super Agent
+# openJiuwen DeepAgent
 
-Jiuwen agentcore is an AI agent designed for all scenarios of ToC and ToB. It aims to provide a flexible, powerful and easy-to-use agent development framework, support the creation of AI agents for various complex tasks, achieve efficient and accurate execution of AI agents, help teams of all sizes and across industries build reliable AI agents that can be deployed in production environments, and help users and enterprises implement Agent AI technology.
+openJiuwen agentcore is an AI agent designed for all scenarios of ToC and ToB. It aims to provide a flexible, powerful and easy-to-use agent development framework, support the creation of AI agents for various complex tasks, achieve efficient and accurate execution of AI agents, help teams of all sizes and across industries build reliable AI agents that can be deployed in production environments, and help users and enterprises implement Agent AI technology.
 
 
 ## 1. Data Preparation
@@ -11,13 +11,13 @@ Two sample entries have already been provided in `test.jsonl` for your reference
 
 
 ## 2. Environment Setup
-Our project requires **two** Python environments: one for running the Jiuwen framework, and another for running the MCP services.
+Our project requires **two** Python environments: one for running the openJiuwen framework, and another for running the MCP services.
 
-### 2.1 Prepare Jiuwen framework
+### 2.1 Prepare openJiuwen framework
 ```
 
 1. Install [uv](https://docs.astral.sh/uv/) if it is not already on your PATH.
-2. From the repo root (cd ./super-agent) run `uv sync` to create/update the virtual environment with the pinned dependencies in `uv.lock`.
+2. From the repo root (cd ./deepagent) run `uv sync` to create/update the virtual environment with the pinned dependencies in `uv.lock`.
 3. Run `uv pip install tiktoken` separately
 
 ```
@@ -125,7 +125,7 @@ Some mcp servers may require specific API keys. Set these in your `.env` file or
 # 2. Usage
   ```
   deactivate (if you have currently activated the tool environment, e.g., .venv-tool)
-  cd ../ (jump to super Agent folder)
+  cd ../ (jump to  DeepAgent folder)
   # macOS/Linux
   source ./.venv/bin/activate
   uv run ./test/super_react_agent_test_run.py
