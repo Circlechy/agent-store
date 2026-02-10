@@ -1,0 +1,14 @@
+ { "schema_version": "1.0.0",
+ 	   "id": "moviegen",
+ 	   "name": "MovieGen Agent",
+ 	   "version": "1.0.0",
+ 	   "updated_at": "2026-01-21T11:34:03Z",
+ 	   "description": "基于多智能体架构的短剧生成系统，通过视频生成模型生成每段短剧片段并拼接成完整的短剧。",
+ 	   "author": {
+ 	     "name": "zhiting gao",
+ 	     "email": "1040637765@qq.com",
+ 	     "github": "https://gitcode.com/AFSDFASD " },
+ 	   "license": "Apache License 2.0",
+ 	   "tags": ["aigc", "short drama"],
+ 	   "category": "entertainment"
+ 	 }
