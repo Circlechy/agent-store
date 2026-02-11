@@ -1,0 +1,98 @@
+[project]
+name = "tomato-review"
+version = "0.1.5.5"
+description = "Python code review agent using pylint and PEP knowledge base"
+readme = "TomatoReviewer.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Flash Tomato Team"},
+]
+dependencies = [
+    "rich",
+    "filelock>=3.10.2",
+    "openjiuwen>=0.1.4",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.scripts]
+tomato-review = "tomato_review.cli:cli_entry"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["tomato_review", "tomato_review.agent", "tomato_review.pep_kb"]
+
+[tool.setuptools.package-data]
+"tomato_review" = ["version.txt", ".pylintrc", ".mypy.ini"]
+
+# Formatting & Linting
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.pylint.MAIN]
+ignore-paths = ["^(examples|tests)/.*"]
+load-plugins = ["pylint.extensions.bad_builtin"]
+py-version = "3.11"
+
+[tool.pylint."DEPRECATED BUILTINS"]
+bad-functions = ["print"]
+
+[tool.pylint.FORMAT]
+max-line-length = 120
+
+[tool.pylint.DESIGN]
+max-return = 5
+max-args = 10
+max-locals = 15
+max-branches = 25
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "import-outside-toplevel",
+    "missing-module-docstring",
+    "too-few-public-methods",
+    "use-dict-literal",
+    "use-list-literal",
+    "unused-argument",
+    "too-many-nested-blocks",
+    "too-many-positional-arguments",
+    "too-many-instance-attributes",
+    "too-many-ancestors",
+    "broad-exception-caught",
+    "broad-exception-raised",
+    "missing-timeout",
+]
+
+# Type Checking
+[tool.mypy]
+python_version = "3.11"
+
+# Required to catch inconsistent return types
+check_untyped_defs = true
+
+# Ignore certain issues to stay minimal
+disable_error_code = ["index"]
+disallow_untyped_defs = false
+disallow_any_unimported = false
+disallow_any_expr = false
+disallow_any_decorated = false
+warn_unused_ignores = false
+warn_return_any = false
+ignore_missing_imports = true
+
+# No constraints on optional
+no_implicit_optional = false
+strict_optional = false
+
+# Show errors
+show_error_codes = true
