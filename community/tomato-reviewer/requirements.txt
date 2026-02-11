@@ -1,0 +1,4 @@
+# Auto-generated for tomato-review 0.1.5.5, based on pyproject.toml
+rich
+filelock>=3.10.2
+openjiuwen>=0.1.4
