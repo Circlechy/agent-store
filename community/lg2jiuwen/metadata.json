@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "id": "lg2jiuwen",
+  "name": "LG2Jiuwen Migration Tool",
+  "version": "2.1.0",
+  "updated_at": "2026-02-12T00:00:00Z",
+  "description": "LangGraph 到 openJiuwen 的自动化代码迁移工具，基于AST解析和规则优先AI兜底的策略，一键将 LangGraph Agent 转换为 openJiuwen 工作流项目。已验证 11 个不同领域的 Agent 迁移。",
+  "github": "https://gitcode.com/hanyang_np/LangGraph2openJiuwenTool",
+  "license": "Apache License 2.0",
+  "tags": ["migration", "langgraph", "agent", "code-generation", "ast"],
+  "category": "devtool"
+}
