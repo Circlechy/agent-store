@@ -1,0 +1,14 @@
+ { "schema_version": "1.0.0",
+ 	   "id": "vibeAgent",
+ 	   "name": "Vibe Agent",
+ 	   "version": "1.0.0",
+ 	   "updated_at": "2026-02-14T11:12:03Z",
+ 	   "description": "通过自然语言生成workflow/multi agent/agent",
+ 	   "author": {
+ 	     "name": "jianjun tao",
+ 	     "email": "taojianjun1995@163.com",
+ 	     "github": "https://gitcode.com/taojianjun/openJiuwen-vibeCoding" },
+ 	   "license": "Apache License 2.0",
+ 	   "tags": ["vibe coding", "agent", "openJiuwen"],
+ 	   "category": "devtool"
+ 	 }
