@@ -1,0 +1,14 @@
+ { "schema_version": "0.1.0",
+ 	   "id": "novastar",
+ 	   "name": "NovaStar Agent",
+ 	   "version": "0.1.0",
+ 	   "updated_at": "2026-02-25T10:52:00Z",
+ 	   "description": "儿童伴学agent，用于3-12岁儿童陪伴、启蒙和百科学习等，以多模态方式实现和儿童交互",
+ 	   "author": {
+ 	     "name": "hanmeng",
+ 	     "email": "arianameng@163.com",
+ 	     "github": "https://gitcode.com/hanmeng950809" },
+ 	   "license": "Apache License 2.0",
+ 	   "tags": ["agent", "Child Education", "Kids Companion", "Child Guide"],
+ 	   "category": "entertainment"
+ 	 }
