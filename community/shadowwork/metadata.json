@@ -1,0 +1,14 @@
+ { "schema_version": "0.1.0",
+ 	   "id": "shadowwork",
+ 	   "name": "ShadowWork",
+ 	   "version": "0.1.0",
+ 	   "updated_at": "2026-02-28T15:55:00Z",
+ 	   "description": "职场工作记录智能助手，低干扰融入工作流，自动完成工作记录、整理与复盘，支持多模态输入和智能复盘报告生成",
+ 	   "author": {
+ 	     "name": "limiaoran",
+ 	     "email": "li.miaoran@foxmail.com",
+ 	     "github": "https://gitcode.com/miaoran_li" },
+ 	   "license": "Apache License 2.0",
+ 	   "tags": ["agent", "Work Assistant", "Productivity", "Work Record", "Task Management"],
+	   "category": "productivity"
+ 	 }
