@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "id": "FortuneTellingAgent",
+  "version": "1.0.0",
+  "updated_at": "2026-03-09T012:15:00Z",
+  "description": "基于 AI Agent 的传统文化占卜与命理解读应用，前后端一体，支持六爻摇卦、生辰八字、周公解梦与大师流式对话",
+  "author": {
+    "name": "KevinYi",
+    "email": "jiaoyi4@huawei.com",
+    "github": "https://gitcode.com/KevinYi94/FortuneTellingAgent"
+  },
+  "licence": "Apache 2.0",
+  "tags": ["Zhouyi", "FortuneTelling"],
+  "category": "Entertainment"
+}
