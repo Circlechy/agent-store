@@ -8,7 +8,8 @@
   "author": {
  	     "name": "hanyang_np",
  	     "email": "hanyang13@huawei.com",
- 	     "github": "https://gitcode.com/hanyang_np/LangGraph2openJiuwenTool" },
+ 	     "gitcode": "https://gitcode.com/hanyang_np/LangGraph2openJiuwenTool",
+ 	     "github": "https://github.com/Circlechy/LangGraph2openJiuwenTool" },
   "license": "Apache License 2.0",
   "tags": ["migration", "langgraph", "agent", "code-generation", "ast"],
   "category": "devtool"
